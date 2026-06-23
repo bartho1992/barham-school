@@ -2,7 +2,7 @@ import os
 from flask import Flask, session, request, redirect, url_for, send_from_directory, render_template
 from models import db, init_data, Ecole, AnneeScolaire
 
-from datetime import timedelta
+from datetime import timedelta, datetime
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'barham-informatique-2024')
 # En production, le repertoire /app/data est necessaire pour SQLite (Render)
@@ -56,7 +56,12 @@ def get_current_annee():
     except:
         pass
         
-    return '2024-2025'
+    # Annee scolaire dynamique si rien en base
+    now = datetime.now()
+    if now.month >= 9:
+        return f'{now.year}-{now.year + 1}'
+    else:
+        return f'{now.year - 1}-{now.year}'
 
 @app.route('/favicon.ico')
 @app.route('/favicon.svg')
@@ -83,7 +88,7 @@ def inject_globals():
         ecole = None
         all_ecoles = []
         annees = []
-        current_annee = '2024-2025'
+        current_annee = get_current_annee()
     return dict(ecole=ecole, all_ecoles=all_ecoles, all_annees=annees, current_annee=current_annee)
 
 from routes_auth import *
@@ -142,7 +147,7 @@ def verifier_licence_et_session():
     from flask import request, redirect, url_for, session
     from flask_login import current_user
     from models import Licence, Ecole
-    from datetime import timedelta
+    from datetime import timedelta, datetime
     
     try:
         ecole_id = get_current_ecole_id()
