@@ -3,7 +3,7 @@ from flask_login import login_required, current_user
 from models import db, Ecole, Eleve, Paiement, Classe, CategorieTarif, Scolarite, TarifService, AbonnementService
 from app import app, get_current_ecole_id
 from datetime import datetime
-import pandas as pd
+# import pandas as pd  # Non necessaire, retire pour eviter dependance lourde
 
 try:
     import requests

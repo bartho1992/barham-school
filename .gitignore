@@ -11,7 +11,9 @@ venv/
 *.tmp
 fix_*.py
 _check*.py
+debug_*.html
 debug_*.py
+debug_admin.html
 reset_mdp*.py
 reinitialiser_mdp.py
 ajouter_cles.py
