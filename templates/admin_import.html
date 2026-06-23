@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Importation des données - {{ ecole.nom }}{% endblock %}
+{% block content %}
+<h3 class="mb-3"><i class="bi bi-upload"></i> Importation des données</h3>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">Importer les élèves</div>
+            <div class="card-body text-center">
+                <p>Cette action va importer tous les élèves depuis le fichier <code>BASE_ELEVES.csv</code> situé dans le dossier parent.</p>
+                <div class="alert alert-info small">
+                    <i class="bi bi-info-circle"></i> Les classes manquantes seront créées automatiquement. Les doublons (basés sur le code élève) seront ignorés.
+                </div>
+                <form method="POST">
+                    <button type="submit" class="btn btn-primary btn-lg w-100"><i class="bi bi-play-fill"></i> Lancer l'importation</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card shadow-sm border-warning">
+            <div class="card-header bg-warning">Informations importantes</div>
+            <div class="card-body">
+                <ul>
+                    <li>Le fichier doit être au format CSV (séparateur virgule).</li>
+                    <li>L'encodage attendu est UTF-8.</li>
+                    <li>L'importation peut prendre quelques secondes selon le volume de données.</li>
+                </ul>
+                <div class="d-grid">
+                    <a href="{{ url_for('admin') }}" class="btn btn-outline-secondary">Retour à l'administration</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

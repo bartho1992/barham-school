@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e"/>
+      <stop offset="100%" style="stop-color:#0f3460"/>
+    </linearGradient>
+  </defs>
+  <!-- Fond circulaire -->
+  <circle cx="256" cy="256" r="256" fill="url(#bg)"/>
+  <!-- Toque de graduation -->
+  <g transform="translate(256,240)">
+    <polygon points="-140,-20 140,-20 0,-70" fill="#ffc107" stroke="#ffc107" stroke-width="4"/>
+    <rect x="-160" y="-20" width="320" height="50" rx="8" fill="#ffc107"/>
+    <rect x="-120" y="30" width="240" height="15" rx="4" fill="#e94560"/>
+    <!-- Pompon -->
+    <circle cx="0" cy="50" r="12" fill="#e94560"/>
+    <line x1="0" y1="38" x2="0" y2="50" stroke="#e94560" stroke-width="3"/>
+  </g>
+  <!-- Lettre B -->
+  <text x="256" y="340" text-anchor="middle" font-family="Arial Black, sans-serif" font-weight="bold" font-size="100" fill="white" stroke="white" stroke-width="2">B</text>
+</svg>

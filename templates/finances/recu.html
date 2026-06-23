@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Reçu de Paiement - {{ paiement.id }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        html, body { height: 100%; margin: 0; padding: 0; overflow-y: auto; overflow-x: hidden; background: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .receipt-card { max-width: 700px; margin: 8px auto; background: #fff; box-shadow: 0 0 15px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; }
+        .receipt-header { background: #1a237e; color: white; padding: 12px 18px; }
+        .receipt-header h2 { font-size: 1.2rem !important; }
+        .receipt-header p { font-size: 0.75rem !important; }
+        .receipt-body { padding: 14px 22px; }
+        .receipt-footer { background: #f8f9fa; padding: 8px; text-align: center; font-size: 0.75rem; border-top: 1px solid #eee; }
+        .school-logo { font-size: 1.6rem; font-weight: bold; border-right: 2px solid rgba(255,255,255,0.2); padding-right: 12px; margin-right: 12px; }
+        .label { color: #666; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; }
+        .value { font-size: 0.85rem; font-weight: 600; color: #333; margin-bottom: 8px; }
+        .amount-box { background: #e8f5e9; padding: 10px; border-radius: 6px; border: 1px solid #c8e6c9; }
+        .amount-value { font-size: 1.2rem; font-weight: 700; color: #2e7d32; }
+        .receipt-body h3 { font-size: 1.1rem !important; }
+        .receipt-body hr { margin: 10px 0 !important; }
+        .receipt-body .row { margin-bottom: 6px !important; }
+
+        /* Ligne de découpe */
+        .cut-line { text-align: center; padding: 6px 0; color: #999; font-size: 0.7rem; letter-spacing: 4px; max-width: 700px; margin: 4px auto; border: none; position: relative; }
+        .cut-line::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; border-top: 1.5px dashed #bbb; }
+        .cut-line span { background: #f8f9fa; padding: 0 12px; position: relative; font-weight: 600; }
+        .cut-line .scissors { font-size: 1rem; }
+
+        /* Étiquette exemplaire */
+        .copy-label { text-align: center; font-size: 0.7rem; font-weight: 800; letter-spacing: 2px; color: #1a237e; margin: 0; padding: 2px; }
+        .copy-label.school { color: #c62828; }
+        .copy-label.parent { color: #1565c0; }
+
+        /* Bouton double */
+        #double-view { display: none; }
+
+        @media print {
+            .no-print { display: none; }
+            html, body { overflow: auto; }
+            body { background: white; margin: 0; }
+            .receipt-card { box-shadow: none; margin: 0 auto; max-width: 100%; border: 1px solid #ddd; page-break-after: always; }
+            .receipt-card:last-of-type { page-break-after: auto; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container no-print mt-2 mb-1 text-center">
+        <button onclick="window.print()" class="btn btn-primary btn-sm shadow"><i class="bi bi-printer"></i> Imprimer</button>
+        <button onclick="toggleDouble()" class="btn btn-outline-dark btn-sm ms-1 shadow" id="btn-double"><i class="bi bi-copy"></i> Double reçu</button>
+        <form method="POST" action="{{ url_for('paiement_annuler', id=paiement.id) }}" class="d-inline" onsubmit="return confirm('Annuler ce paiement de {{ "{:,.0f}".format(paiement.montant).replace(',', ' ') }} FCFA ?\nCette action est irreversible.');">
+            <button type="submit" class="btn btn-danger btn-sm ms-1 shadow"><i class="bi bi-x-circle"></i> Annuler</button>
+        </form>
+        <a href="{{ url_for('finances') }}" class="btn btn-outline-secondary btn-sm ms-1">Retour</a>
+    </div>
+
+    <!-- Vue simple -->
+    <div id="single-view">
+    <div class="receipt-card">
+        <div class="receipt-header d-flex align-items-center">
+            <div class="school-logo"><i class="bi bi-mortarboard"></i></div>
+            <div>
+                <h2 class="mb-0">{{ ecole.nom }}</h2>
+                <p class="mb-0 opacity-75">{{ ecole.adresse }} | Tel: {{ ecole.tel }}</p>
+            </div>
+        </div>
+
+        <div class="receipt-body">
+            <div class="row mb-2">
+                <div class="col-6">
+                    <h3 class="fw-bold text-uppercase mb-1">Reçu de Paiement</h3>
+                    <p class="text-muted small mb-0">N° {{ "%06d"|format(paiement.id) }}</p>
+                </div>
+                <div class="col-6 text-end">
+                    <div class="label">Date de paiement</div>
+                    <div class="value">{{ paiement.date_paiement.strftime('%d/%m/%Y à %H:%M') }}</div>
+                </div>
+            </div>
+
+            <hr class="mb-2 mt-2">
+
+            <div class="row mb-2">
+                <div class="col-md-6">
+                    <div class="label">Reçu de l'élève</div>
+                    <div class="value">{{ paiement.eleve.prenom }} {{ paiement.eleve.nom }}</div>
+                    
+                    <div class="label">Code / Matricule</div>
+                    <div class="value">{{ paiement.eleve.code }}</div>
+                </div>
+                <div class="col-md-6">
+                    <div class="label">Classe</div>
+                    <div class="value">{{ paiement.eleve.classe.nom if paiement.eleve.classe else 'N/A' }}</div>
+                    
+                    <div class="label">Année Scolaire</div>
+                    <div class="value">{{ current_annee }}</div>
+                </div>
+            </div>
+
+            <div class="row g-2 mb-3">
+                <div class="col-md-7">
+                    <div class="label">Objet du paiement</div>
+                    <div class="value" style="font-size: 1.1rem;">{{ paiement.type_paiement }}</div>
+                    
+                    <div class="label">Mode de paiement</div>
+                    <div class="value">{{ paiement.mode_paiement or 'Especes' }}</div>
+
+                    <div class="label">Caissier / Agent</div>
+                    <div class="value">{{ paiement.caissier }}</div>
+                </div>
+                <div class="col-md-5">
+                    <div class="amount-box text-center">
+                        <div class="label text-success">Montant Versé</div>
+                        <div class="amount-value">{{ "{:,.0f}".format(paiement.montant).replace(',', ' ') }} FCFA</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-6">
+                    <div class="text-center">
+                        <p class="text-muted small" style="font-size:0.7rem;">Cachet de l'établissement</p>
+                        <div style="height: 50px;"></div>
+                    </div>
+                </div>
+                <div class="col-6 text-center">
+                    <p class="text-muted small" style="font-size:0.7rem;">Signature du caissier</p>
+                    <div style="height: 50px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="receipt-footer">
+            <p class="mb-0 small">Merci de votre confiance. Gardez ce reçu. — {{ ecole.nom }}</p>
+        </div>
+    </div>
+    </div>
+
+    <!-- Vue double -->
+    <div id="double-view">
+        <!-- Exemplaire ÉCOLE -->
+        <p class="copy-label school">EXEMPLAIRE ÉCOLE</p>
+        <div class="receipt-card">
+            <div class="receipt-header d-flex align-items-center">
+                <div class="school-logo"><i class="bi bi-mortarboard"></i></div>
+                <div>
+                    <h2 class="mb-0">{{ ecole.nom }}</h2>
+                    <p class="mb-0 opacity-75">{{ ecole.adresse }} | Tel: {{ ecole.tel }}</p>
+                </div>
+            </div>
+            <div class="receipt-body">
+                <div class="row mb-2">
+                    <div class="col-6">
+                        <h3 class="fw-bold text-uppercase mb-1">Reçu de Paiement</h3>
+                        <p class="text-muted small mb-0">N° {{ "%06d"|format(paiement.id) }}</p>
+                    </div>
+                    <div class="col-6 text-end">
+                        <div class="label">Date de paiement</div>
+                        <div class="value">{{ paiement.date_paiement.strftime('%d/%m/%Y à %H:%M') }}</div>
+                    </div>
+                </div>
+                <hr class="mb-2 mt-2">
+                <div class="row mb-2">
+                    <div class="col-md-6">
+                        <div class="label">Reçu de l'élève</div>
+                        <div class="value">{{ paiement.eleve.prenom }} {{ paiement.eleve.nom }}</div>
+                        <div class="label">Code / Matricule</div>
+                        <div class="value">{{ paiement.eleve.code }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="label">Classe</div>
+                        <div class="value">{{ paiement.eleve.classe.nom if paiement.eleve.classe else 'N/A' }}</div>
+                        <div class="label">Année Scolaire</div>
+                        <div class="value">{{ current_annee }}</div>
+                    </div>
+                </div>
+                <div class="row g-2 mb-3">
+                    <div class="col-md-7">
+                        <div class="label">Objet du paiement</div>
+                        <div class="value" style="font-size: 1.1rem;">{{ paiement.type_paiement }}</div>
+                        <div class="label">Mode de paiement</div>
+                        <div class="value">{{ paiement.mode_paiement or 'Especes' }}</div>
+                        <div class="label">Caissier / Agent</div>
+                        <div class="value">{{ paiement.caissier }}</div>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="amount-box text-center">
+                            <div class="label text-success">Montant Versé</div>
+                            <div class="amount-value">{{ "{:,.0f}".format(paiement.montant).replace(',', ' ') }} FCFA</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-6 text-center">
+                        <p class="text-muted small" style="font-size:0.7rem;">Cachet de l'établissement</p>
+                        <div style="height: 30px;"></div>
+                    </div>
+                    <div class="col-6 text-center">
+                        <p class="text-muted small" style="font-size:0.7rem;">Signature du caissier</p>
+                        <div style="height: 30px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ligne de découpe -->
+        <div class="cut-line">
+            <span><i class="bi bi-scissors scissors"></i> DÉCOUPER ICI <i class="bi bi-scissors scissors"></i></span>
+        </div>
+
+        <!-- Exemplaire PARENT -->
+        <p class="copy-label parent">EXEMPLAIRE PARENT / ÉLÈVE</p>
+        <div class="receipt-card">
+            <div class="receipt-header d-flex align-items-center">
+                <div class="school-logo"><i class="bi bi-mortarboard"></i></div>
+                <div>
+                    <h2 class="mb-0">{{ ecole.nom }}</h2>
+                    <p class="mb-0 opacity-75">{{ ecole.adresse }} | Tel: {{ ecole.tel }}</p>
+                </div>
+            </div>
+            <div class="receipt-body">
+                <div class="row mb-2">
+                    <div class="col-6">
+                        <h3 class="fw-bold text-uppercase mb-1">Reçu de Paiement</h3>
+                        <p class="text-muted small mb-0">N° {{ "%06d"|format(paiement.id) }}</p>
+                    </div>
+                    <div class="col-6 text-end">
+                        <div class="label">Date de paiement</div>
+                        <div class="value">{{ paiement.date_paiement.strftime('%d/%m/%Y à %H:%M') }}</div>
+                    </div>
+                </div>
+                <hr class="mb-2 mt-2">
+                <div class="row mb-2">
+                    <div class="col-md-6">
+                        <div class="label">Reçu de l'élève</div>
+                        <div class="value">{{ paiement.eleve.prenom }} {{ paiement.eleve.nom }}</div>
+                        <div class="label">Code / Matricule</div>
+                        <div class="value">{{ paiement.eleve.code }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="label">Classe</div>
+                        <div class="value">{{ paiement.eleve.classe.nom if paiement.eleve.classe else 'N/A' }}</div>
+                        <div class="label">Année Scolaire</div>
+                        <div class="value">{{ current_annee }}</div>
+                    </div>
+                </div>
+                <div class="row g-2 mb-3">
+                    <div class="col-md-7">
+                        <div class="label">Objet du paiement</div>
+                        <div class="value" style="font-size: 1.1rem;">{{ paiement.type_paiement }}</div>
+                        <div class="label">Mode de paiement</div>
+                        <div class="value">{{ paiement.mode_paiement or 'Especes' }}</div>
+                        <div class="label">Caissier / Agent</div>
+                        <div class="value">{{ paiement.caissier }}</div>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="amount-box text-center">
+                            <div class="label text-success">Montant Versé</div>
+                            <div class="amount-value">{{ "{:,.0f}".format(paiement.montant).replace(',', ' ') }} FCFA</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-6 text-center">
+                        <p class="text-muted small" style="font-size:0.7rem;">Cachet de l'établissement</p>
+                        <div style="height: 30px;"></div>
+                    </div>
+                    <div class="col-6 text-center">
+                        <p class="text-muted small" style="font-size:0.7rem;">Signature du caissier</p>
+                        <div style="height: 30px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleDouble() {
+            var single = document.getElementById('single-view');
+            var double = document.getElementById('double-view');
+            var btn = document.getElementById('btn-double');
+            if (double.style.display === 'none' || double.style.display === '') {
+                single.style.display = 'none';
+                double.style.display = 'block';
+                btn.innerHTML = '<i class="bi bi-file-earmark"></i> Simple';
+                btn.classList.add('active');
+            } else {
+                single.style.display = 'block';
+                double.style.display = 'none';
+                btn.innerHTML = '<i class="bi bi-copy"></i> Double reçu';
+                btn.classList.remove('active');
+            }
+        }
+    </script>
+</body>
+</html>

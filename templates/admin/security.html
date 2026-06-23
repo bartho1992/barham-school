@@ -1,0 +1,112 @@
+﻿{% extends 'base.html' %}
+
+{% block title %}Sécurité Avancée - Développeur{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- En-tête réservé développeur -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-danger border-2">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0"><i class="bi bi-shield-lock-fill"></i> ESPACE DÉVELOPPEUR - SÉCURITÉ AVANCÉE</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning mb-0">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <strong>Attention :</strong> Ces paramètres impactent directement l'accès au système.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Paramètres de session et brute-force -->
+        <div class="col-md-6">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="bi bi-gear-fill"></i> Configuration de sécurité</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                <label class="form-label">Timeout de session (minutes)</label>
+                                <input type="number" name="session_timeout" class="form-control" value="{{ ecole.session_timeout }}" min="5" max="1440">
+                                <small class="text-muted">Durée d'inactivité avant déconnexion automatique.</small>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                <label class="form-label">Tentatives de connexion max</label>
+                                <input type="number" name="max_login_attempts" class="form-control" value="{{ ecole.max_login_attempts }}" min="1" max="20">
+                                <small class="text-muted">Nombre d'échecs autorisés avant blocage temporaire.</small>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                <label class="form-label">Durée de blocage (minutes)</label>
+                                <input type="number" name="lockout_duration" class="form-control" value="{{ ecole.lockout_duration }}" min="1" max="1440">
+                                <small class="text-muted">Temps d'attente imposé après trop d'échecs.</small>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Liste blanche IP (Optionnel)</label>
+                            <textarea name="ip_whitelist" class="form-control" rows="2" placeholder="Ex: 127.0.0.1, 192.168.1.1">{{ ecole.ip_whitelist }}</textarea>
+                            <small class="text-muted">Séparez les adresses IP par des virgules. Laissez vide pour autoriser toutes les IP.</small>
+                        </div>
+
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-danger w-100">
+                                <i class="bi bi-check-circle"></i> ENREGISTRER LES PARAMÈTRES
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dernières tentatives échouées -->
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="bi bi-eye-fill"></i> Dernières tentatives échouées</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if failed_attempts %}
+                    <div style="max-height:65vh;overflow-y:auto;overflow-x:hidden;">
+                        <table class="table table-sm mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Utilisateur</th>
+                                    <th>IP</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for attempt in failed_attempts %}
+                                <tr class="table-danger">
+                                    <td><small>{{ attempt.timestamp.strftime('%d/%m/%Y %H:%M') }}</small></td>
+                                    <td><strong>{{ attempt.username }}</strong></td>
+                                    <td><code>{{ attempt.ip_address }}</code></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-shield-check display-1 text-success"></i>
+                        <p class="mt-3 text-muted">Aucune tentative d'intrusion détectée.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

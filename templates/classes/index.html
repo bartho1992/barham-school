@@ -1,0 +1,80 @@
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿{% extends "base.html" %}
+{% block title %}Classes - {{ ecole.nom }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-1">
+    <h6 class="mb-0"><i class="bi bi-building"></i> Gestion des Classes</h6>
+    <div>
+        <button id="btnSupprimerBulk" class="btn btn-danger d-none" onclick="supprimerSelection()">
+            <i class="bi bi-trash"></i> Supprimer la selection
+        </button>
+        <a href="{{ url_for('classe_ajouter') }}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Ajouter</a>
+    </div>
+</div>
+
+<form id="formBulk" method="POST" action="{{ url_for('classes_supprimer_bulk') }}">
+    <div style="max-height:65vh;overflow-y:auto;overflow-x:hidden;">
+        <table class="table table-sm table-bordered align-middle bg-white shadow-sm">
+            <thead class="table-primary">
+                <tr>
+                    <th style="width:40px;">
+                        <input class="form-check-input" type="checkbox" id="selectAll" onchange="toggleAll(this)">
+                    </th>
+                    <th>Nom</th>
+                    <th>Niveau</th>
+                    <th>Effectif</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in classes %}
+                <tr>
+                    <td class="text-center">
+                        <input class="form-check-input classe-check" type="checkbox" name="classe_ids[]" value="{{ c.id }}" onchange="updateBouton()">
+                    </td>
+                    <td class="fw-bold">{{ c.nom }}</td>
+                    <td><span class="badge bg-secondary">{{ c.niveau or '-' }}</span></td>
+                    <td>{{ c.eleves|count }}</td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            <a href="{{ url_for('notes_saisir', classe_id=c.id, trimestre=1) }}" class="btn btn-outline-success" title="Notes"><i class="bi bi-pencil"></i></a>
+                            <a href="{{ url_for('bulletin_classe', classe_id=c.id, trimestre=1) }}" class="btn btn-outline-info" title="Bulletin"><i class="bi bi-file-text"></i></a>
+                            <a href="{{ url_for('classe_modifier', id=c.id) }}" class="btn btn-outline-warning" title="Modifier"><i class="bi bi-pencil-square"></i></a>
+                            <form method="POST" action="{{ url_for('classe_supprimer', id=c.id) }}" onsubmit="return confirm('Supprimer cette classe ? Les eleves de cette classe seront deplaces (sans classe).')">
+                                <button class="btn btn-outline-danger" title="Supprimer"><i class="bi bi-trash"></i></button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</form>
+
+<script>
+function toggleAll(source) {
+    document.querySelectorAll('.classe-check').forEach(function(cb) {
+        cb.checked = source.checked;
+    });
+    updateBouton();
+}
+
+function updateBouton() {
+    var checked = document.querySelectorAll('.classe-check:checked').length;
+    var btn = document.getElementById('btnSupprimerBulk');
+    if (checked > 0) {
+        btn.classList.remove('d-none');
+        btn.innerHTML = '<i class="bi bi-trash"></i> Supprimer (' + checked + ')';
+    } else {
+        btn.classList.add('d-none');
+    }
+}
+
+function supprimerSelection() {
+    var checked = document.querySelectorAll('.classe-check:checked').length;
+    if (checked === 0) return;
+    if (!confirm('Supprimer ' + checked + ' classe(s) ?\n\nATTENTION : Les eleves de ces classes seront deplaces (sans classe).\nLes notes et scolarites liees seront supprimees.')) return;
+    document.getElementById('formBulk').submit();
+}
+</script>
+{% endblock %}

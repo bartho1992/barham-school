@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Ajouter personnel{% endblock %}
+{% block content %}
+<h3 class="mb-3"><i class="bi bi-person-plus"></i> Ajouter un membre du personnel</h3>
+<div class="card shadow-sm"><div class="card-body">
+<form method="POST">
+    <div class="row g-3">
+        <div class="col-md-3"><label class="form-label fw-bold">Code</label><input type="text" name="code" class="form-control" value="{{ auto_code }}" required></div>
+        <div class="col-md-3"><label class="form-label fw-bold">Prenom *</label><input type="text" name="prenom" class="form-control" required></div>
+        <div class="col-md-3"><label class="form-label fw-bold">Nom *</label><input type="text" name="nom" class="form-control" required></div>
+        <div class="col-md-3"><label class="form-label">Fonction</label><input type="text" name="fonction" class="form-control" placeholder="Enseignant, Surveillant..."></div>
+        <div class="col-md-3"><label class="form-label">Telephone</label><input type="text" name="tel" class="form-control"></div>
+        <div class="col-md-3"><label class="form-label">Salaire fixe (FCFA)</label><input type="number" name="salaire_fixe" class="form-control" value="0" step="1000"></div>
+        <div class="col-md-3"><label class="form-label">Taux impot (%)</label><input type="number" name="taux_impot" class="form-control" value="5" step="0.5"></div>
+    </div>
+    <hr>
+    <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Enregistrer</button>
+    <a href="{{ url_for('personnel') }}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Retour</a>
+</form>
+</div></div>
+{% endblock %}

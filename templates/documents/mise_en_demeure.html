@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Mise en Demeure - {{ eleve.prenom }} {{ eleve.nom }}{% endblock %}
+{% block content %}
+<div class="row no-print mb-3">
+    <div class="col-12 text-end">
+        <button onclick="window.print()" class="btn btn-primary"><i class="bi bi-printer"></i> Imprimer</button>
+        <a href="{{ url_for('documents') }}" class="btn btn-secondary">Retour</a>
+    </div>
+</div>
+
+<div class="card p-5 mx-auto shadow-sm" style="max-width: 800px; border: 2px solid #ef4444;">
+    <div class="row border-bottom border-danger pb-3 mb-4">
+        <div class="col-8">
+            <h4 class="text-uppercase fw-bold">{{ ecole.nom }}</h4>
+            <p class="mb-0 small text-muted">{{ ecole.adresse }} | Tél: {{ ecole.tel }}</p>
+        </div>
+        <div class="col-4 text-end">
+            <h6 class="text-danger fw-bold">SERVICE COMPTABILITE</h6>
+            <p class="mb-0 small">Année : {{ current_annee }}</p>
+        </div>
+    </div>
+
+    <div class="text-center my-4">
+        <h2 class="text-uppercase text-danger fw-bold">MISE EN DEMEURE</h2>
+        <h5 class="text-uppercase">(Dernier Avis avant Suspension)</h5>
+    </div>
+
+    <div class="my-4 fs-5">
+        <p>A l'attention de Monsieur / Madame le Tuteur de l'élève :</p>
+        <p class="fw-bold fs-4 text-center border-bottom border-top py-2">{{ eleve.prenom }} {{ eleve.nom }} ({{ eleve.classe.nom if eleve.classe else '...' }})</p>
+        
+        <p class="mt-4">Sauf erreur ou omission de notre part, nous constatons que la situation financière de votre enfant présente un impayé de :</p>
+        <div class="bg-light p-3 text-center rounded my-3 border">
+            <h3 class="mb-0 fw-bold">.................................... FCFA</h3>
+        </div>
+
+        <p>Correspondant aux mois de : ........................................................................</p>
+        
+        <p>Nous vous prions de bien vouloir régulariser cette situation sous 48 heures afin d'éviter la suspension de l'élève des cours.</p>
+        
+        <p class="mt-4">Comptant sur votre compréhension et votre diligence.</p>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-7"></div>
+        <div class="col-5 text-center">
+            <p class="mb-0">Fait à {{ ecole.zone }}, le ....................</p>
+            <p class="fw-bold mt-2">L'Administration / Comptabilité</p>
+            <div style="height: 80px;"></div>
+            <p class="border-top pt-2">Cachet et Signature</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

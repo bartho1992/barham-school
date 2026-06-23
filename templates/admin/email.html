@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+
+{% block title %}Configuration Email - Développeur{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- En-tête réservé développeur -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-danger border-2">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0"><i class="bi bi-envelope-at-fill"></i> ESPACE DÉVELOPPEUR - CONFIGURATION EMAIL (SMTP)</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info mb-0">
+                        <i class="bi bi-info-circle"></i>
+                        Configurez le serveur SMTP pour permettre à l'application d'envoyer des emails (notifications, rapports, etc.).
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Paramètres SMTP -->
+        <div class="col-md-7">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="bi bi-server"></i> Paramètres du serveur SMTP</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <input type="hidden" name="action" value="save">
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                <label class="form-label">Serveur SMTP</label>
+                                <input type="text" name="smtp_server" class="form-control" value="{{ ecole.smtp_server }}" placeholder="ex: smtp.gmail.com">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Port</label>
+                                <input type="number" name="smtp_port" class="form-control" value="{{ ecole.smtp_port }}" placeholder="587">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Utilisateur / Email SMTP</label>
+                            <input type="text" name="smtp_user" class="form-control" value="{{ ecole.smtp_user }}" placeholder="votre-email@gmail.com">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Mot de passe SMTP</label>
+                            <div class="input-group">
+                                <input type="password" name="smtp_password" id="smtp_password" class="form-control" value="{{ ecole.smtp_password }}">
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword()">
+                                    <i class="bi bi-eye" id="password_icon"></i>
+                                </button>
+                            </div>
+                            <small class="text-muted">Pour Gmail, utilisez un "Mot de passe d'application".</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Email de l'expéditeur</label>
+                            <input type="email" name="email_expediteur" class="form-control" value="{{ ecole.email_expediteur }}" placeholder="noreply@ecole.com">
+                            <small class="text-muted">L'adresse qui apparaîtra comme expéditeur des messages.</small>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="smtp_use_tls" id="smtp_use_tls" {{ 'checked' if ecole.smtp_use_tls else '' }}>
+                                <label class="form-check-label" for="smtp_use_tls">Utiliser TLS (Recommandé)</label>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-danger w-100">
+                            <i class="bi bi-save"></i> ENREGISTRER LA CONFIGURATION
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test d'envoi -->
+        <div class="col-md-5">
+            <div class="card shadow-sm border-info">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-send-check"></i> Tester la configuration</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Envoyez un email de test pour vérifier que vos paramètres fonctionnent correctement.</p>
+                    
+                    <form method="POST">
+                        <input type="hidden" name="action" value="test">
+                        <div class="mb-3">
+                            <label class="form-label">Adresse email de destination</label>
+                            <input type="email" name="test_email" class="form-control" placeholder="destinataire@exemple.com" required>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-outline-info w-100">
+                            <i class="bi bi-send"></i> ENVOYER UN EMAIL DE TEST
+                        </button>
+                    </form>
+
+                    <div class="mt-4 p-3 bg-light rounded border">
+                        <h6><i class="bi bi-lightbulb"></i> Aide rapide :</h6>
+                        <ul class="small mb-0">
+                            <li><strong>Gmail :</strong> Port 587, TLS on. Activez la validation en 2 étapes et créez un "Mot de passe d'application".</li>
+                            <li><strong>Outlook :</strong> smtp.office365.com, Port 587, TLS on.</li>
+                            <li><strong>Hébergement classique :</strong> Vérifiez si le port 587 ou 465 est ouvert sur votre serveur.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function togglePassword() {
+    const pwd = document.getElementById('smtp_password');
+    const icon = document.getElementById('password_icon');
+    if (pwd.type === 'password') {
+        pwd.type = 'text';
+        icon.classList.replace('bi-eye', 'bi-eye-slash');
+    } else {
+        pwd.type = 'password';
+        icon.classList.replace('bi-eye-slash', 'bi-eye');
+    }
+}
+</script>
+{% endblock %}

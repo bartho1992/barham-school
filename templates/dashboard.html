@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+{% block title %}Tableau de bord - {{ ecole.nom }}{% endblock %}
+{% block content %}
+<div class="row mb-2">
+    <div class="col-12">
+        <div class="bg-primary text-white p-2 rounded shadow-sm d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+                <h5 class="mb-0"><i class="bi bi-speedometer2"></i> Tableau de bord</h5>
+                <small class="opacity-75">{{ ecole.nom }} | Année : <strong>{{ current_annee }}</strong></small>
+            </div>
+            <div class="mt-2 mt-md-0">
+                <form method="GET" action="{{ url_for('changer_annee') }}" class="d-flex align-items-center gap-1">
+                    <label class="text-white me-1 small fw-bold"><i class="bi bi-calendar3"></i> Changer :</label>
+                    <select name="annee" class="form-select form-select-sm" style="width: auto; min-width: 150px;" onchange="this.form.submit()">
+                        {% for an in all_annees %}
+                        <option value="{{ an.annee }}" {{ 'selected' if an.annee == current_annee }}>{{ an.annee }}{{ ' (active)' if an.active }}</option>
+                        {% endfor %}
+                    </select>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats cards compactes -->
+<div class="row g-2 mb-2">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm bg-info text-white h-100">
+            <div class="card-body text-center py-2">
+                <i class="bi bi-people-fill fs-3"></i>
+                <h4 class="mt-1 mb-0">{{ total_eleves }}</h4>
+                <small>Eleves</small>
+                <a href="{{ url_for('eleves') }}" class="btn btn-light btn-sm mt-1 py-0 px-2">Voir</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm bg-success text-white h-100">
+            <div class="card-body text-center py-2">
+                <i class="bi bi-building fs-3"></i>
+                <h4 class="mt-1 mb-0">{{ total_classes }}</h4>
+                <small>Classes</small>
+                <a href="{{ url_for('classes') }}" class="btn btn-light btn-sm mt-1 py-0 px-2">Voir</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm bg-warning text-white h-100">
+            <div class="card-body text-center py-2">
+                <i class="bi bi-person-badge fs-3"></i>
+                <h4 class="mt-1 mb-0">{{ total_personnel }}</h4>
+                <small>Personnel</small>
+                <a href="{{ url_for('personnel') }}" class="btn btn-light btn-sm mt-1 py-0 px-2">Voir</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm bg-primary text-white h-100">
+            <div class="card-body text-center py-2">
+                <i class="bi bi-cash-stack fs-3"></i>
+                <h4 class="mt-1 mb-0">{{ "{:,.0f}".format(total_paiements) }}</h4>
+                <small>Paiements (FCFA)</small>
+                <a href="{{ url_for('finances') }}" class="btn btn-light btn-sm mt-1 py-0 px-2">Voir</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Actions + Stats rapides -->
+<div class="row g-2 mb-2">
+    <div class="col-md-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-primary text-white py-1 px-2"><small><i class="bi bi-lightning"></i> Actions rapides</small></div>
+            <div class="card-body py-2">
+                <div class="d-grid gap-1">
+                    <a href="{{ url_for('eleve_ajouter') }}" class="btn btn-outline-primary btn-sm py-0"><i class="bi bi-person-plus"></i> Inscrire</a>
+                    <a href="{{ url_for('notes') }}" class="btn btn-outline-success btn-sm py-0"><i class="bi bi-pencil-square"></i> Notes</a>
+                    <a href="{{ url_for('paiement_ajouter') }}" class="btn btn-outline-warning btn-sm py-0"><i class="bi bi-cash"></i> Paiement</a>
+                    <a href="{{ url_for('bulletins') }}" class="btn btn-outline-info btn-sm py-0"><i class="bi bi-file-text"></i> Bulletins</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-info text-white py-1 px-2"><small><i class="bi bi-pie-chart"></i> Répartition</small></div>
+            <div class="card-body py-2 d-flex align-items-center justify-content-around">
+                <div class="text-center">
+                    <h4 class="text-info mb-0">{{ garcons }}</h4>
+                    <small class="text-muted">Garçons</small>
+                </div>
+                <div class="text-center">
+                    <h4 class="text-danger mb-0">{{ filles }}</h4>
+                    <small class="text-muted">Filles</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-danger text-white py-1 px-2"><small><i class="bi bi-exclamation-triangle"></i> Impayes</small></div>
+            <div class="card-body py-2 text-center">
+                <h4 class="text-danger mb-0">{{ "{:,.0f}".format(total_impayes) }} FCFA</h4>
+                <small class="text-muted">Total impayés</small>
+                <a href="{{ url_for('impayes') }}" class="btn btn-danger btn-sm py-0 px-2 mt-1">Voir</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Widget Flottant Derniers Paiements -->
+<style>
+.widget-paiements {
+    position: fixed;
+    bottom: 60px;
+    right: 15px;
+    width: 380px;
+    max-width: 90vw;
+    z-index: 1050;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    transition: all 0.3s ease;
+}
+.widget-paiements .card-header {
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.widget-paiements .card-header:hover {
+    background-color: #23272b !important;
+}
+.widget-paiements .toggle-icon {
+    transition: transform 0.3s ease;
+}
+.widget-paiements.collapsed .toggle-icon {
+    transform: rotate(-90deg);
+}
+.widget-paiements.collapsed .widget-body {
+    display: none;
+}
+.widget-body {
+    max-height: 250px;
+    overflow-y: auto;
+}
+</style>
+
+<div class="card widget-paiements shadow" id="widgetPaiements">
+    <div class="card-header bg-dark text-white py-2 px-3" onclick="toggleWidget()">
+        <span><small><i class="bi bi-clock-history"></i> Derniers Paiements</small></span>
+        <i class="bi bi-chevron-down toggle-icon" id="widgetToggleIcon"></i>
+    </div>
+    <div class="widget-body card-body p-0">
+        <div style="max-height:65vh;overflow-y:auto;overflow-x:hidden;">
+            <table class="table table-sm mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th><small>Date</small></th>
+                        <th><small>Eleve</small></th>
+                        <th><small>Type</small></th>
+                        <th><small>Montant</small></th>
+                        <th><small>Caissier</small></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in recent_paiements %}
+                    <tr>
+                        <td><small>{{ p.date_paiement.strftime('%d/%m/%Y') }}</small></td>
+                        <td><small>{{ p.eleve.prenom }} {{ p.eleve.nom }}</small></td>
+                        <td><span class="badge bg-light text-dark" style="font-size: 0.7rem;">{{ p.type_paiement }}</span></td>
+                        <td class="fw-bold"><small>{{ "{:,.0f}".format(p.montant) }}</small></td>
+                        <td><small>{{ p.caissier }}</small></td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5" class="text-center text-muted py-3"><small>Aucun paiement</small></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleWidget() {
+    const widget = document.getElementById('widgetPaiements');
+    widget.classList.toggle('collapsed');
+    localStorage.setItem('widgetPaiementsCollapsed', widget.classList.contains('collapsed'));
+}
+
+// Restaurer l'etat au chargement
+document.addEventListener('DOMContentLoaded', function() {
+    const widget = document.getElementById('widgetPaiements');
+    if (localStorage.getItem('widgetPaiementsCollapsed') === 'true') {
+        widget.classList.add('collapsed');
+    }
+});
+</script>
+{% endblock %}

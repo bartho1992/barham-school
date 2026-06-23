@@ -1,0 +1,90 @@
+﻿{% extends "base.html" %}
+{% block title %}Utilisateurs - {{ ecole.nom }}{% endblock %}
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2><i class="bi bi-people"></i> Gestion des Utilisateurs</h2>
+        <p class="text-muted">Consultez et gérez les informations précises de tous les utilisateurs du système.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{{ url_for('admin_user_ajouter') }}" class="btn btn-primary"><i class="bi bi-person-plus"></i> Nouvel Utilisateur</a>
+        <a href="{{ url_for('admin') }}" class="btn btn-outline-secondary ms-2">Retour</a>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div style="max-height:65vh;overflow-y:auto;overflow-x:hidden;">
+        <table class="table table-sm align-middle mb-0">
+            <thead class="table-dark">
+                <tr>
+                    <th>Utilisateur</th>
+                    <th>Clé ID</th>
+                    <th>Établissement</th>
+                    <th>Rôle</th>
+                    <th>Créé le</th>
+                    <th>Dernière connexion</th>
+                    <th class="text-end px-4">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users %}
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <div class="bg-light rounded-circle p-2 me-3">
+                                <i class="bi bi-person fs-4 text-primary"></i>
+                            </div>
+                            <div>
+                                <span class="fw-bold d-block">{{ u.username }}</span>
+                                <small class="text-muted">ID: #{{ u.id }}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <code class="text-primary fw-bold">{{ u.identifiant or '-' }}</code>
+                    </td>
+                    <td>
+                        {% if u.ecole %}
+                            <span class="badge bg-light text-dark border"><i class="bi bi-building"></i> {{ u.ecole.nom }}</span>
+                        {% else %}
+                            <span class="badge bg-secondary"><i class="bi bi-globe"></i> Accès Global</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge {{ 'bg-danger' if u.role == 'super_users' else 'bg-info text-dark' }}">
+                            {{ 'Développeur' if u.role == 'super_users' else 'Utilisateur' }}
+                        </span>
+                    </td>
+                    <td class="small text-muted">
+                        {{ u.created_at.strftime('%d/%m/%Y %H:%M') if u.created_at else 'Inconnue' }}
+                    </td>
+                    <td>
+                        {% if u.last_login %}
+                            <span class="text-success small">
+                                <i class="bi bi-clock-history"></i> {{ u.last_login.strftime('%d/%m/%Y %H:%M') }}
+                            </span>
+                        {% else %}
+                            <span class="text-muted small fst-italic">Jamais connecté</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end px-4">
+                        <div class="btn-group btn-group-sm">
+                            <a href="{{ url_for('admin_user_modifier', id=u.id) }}" class="btn btn-outline-primary" title="Modifier">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            {% if u.id != current_user.id %}
+                            <form action="{{ url_for('admin_user_supprimer', id=u.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Supprimer cet utilisateur ?')">
+                                <button type="submit" class="btn btn-outline-danger" title="Supprimer">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

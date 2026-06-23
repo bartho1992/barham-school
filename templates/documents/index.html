@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+{% block title %}Documents — {{ ecole.nom }}{% endblock %}
+{% block extra_css %}
+<style>
+    .doc-card {
+        transition: all 0.2s ease;
+        cursor: pointer;
+        text-decoration: none;
+    }
+    .doc-card:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+    .doc-card.disabled { opacity: 0.5; pointer-events: none; }
+    .doc-card .icon-wrap {
+        width: 50px; height: 50px;
+        border-radius: 14px;
+        display: flex; align-items: center; justify-content: center;
+    }
+    #search-results { max-height: 300px; overflow-y: auto; }
+    .result-item { cursor: pointer; transition: background 0.15s; }
+    .result-item:hover { background: #f1f5f9; }
+    .result-item.selected { background: #dbeafe; }
+    .badge-cat { font-size: 0.55rem; padding: 2px 8px; border-radius: 10px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
+</style>
+{% endblock %}
+{% block content %}
+<h4 class="mb-3"><i class="bi bi-printer"></i> Génération de Documents — ScolDocs</h4>
+
+<div class="row g-3">
+    <!-- Recherche -->
+    <div class="col-md-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-primary text-white py-2">
+                <small><i class="bi bi-search"></i> Rechercher un élève</small>
+            </div>
+            <div class="card-body p-2">
+                <input type="text" id="search-eleve" class="form-control form-control-sm" placeholder="Nom, prénom ou code...">
+                <div id="search-results" class="mt-2"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Documents -->
+    <div class="col-md-8">
+        <!-- Scolarité -->
+        <small class="text-muted fw-bold text-uppercase d-block mb-2" style="font-size:0.6rem; letter-spacing:1px;">
+            <i class="bi bi-mortarboard me-1"></i> Scolarité
+        </small>
+        <div class="row g-2 mb-3">
+            <div class="col-md-4">
+                <a href="#" class="card shadow-sm text-center p-2 doc-card disabled h-100" data-type="certificat" data-route="/documents/certificat/">
+                    <div class="icon-wrap bg-primary bg-opacity-10 text-primary mx-auto mb-1"><i class="bi bi-award fs-4"></i></div>
+                    <small class="fw-bold d-block">Certificat de scolarité</small>
+                    <small class="text-muted" style="font-size:0.55rem;">Sélectionnez un élève</small>
+                </a>
+            </div>
+            <div class="col-md-4">
+                <a href="#" class="card shadow-sm text-center p-2 doc-card disabled h-100" data-type="inscription" data-route="/documents/inscription/">
+                    <div class="icon-wrap bg-info bg-opacity-10 text-info mx-auto mb-1"><i class="bi bi-journal-check fs-4"></i></div>
+                    <small class="fw-bold d-block">Attestation d'inscription</small>
+                    <small class="text-muted" style="font-size:0.55rem;">Sélectionnez un élève</small>
+                </a>
+            </div>
+            <div class="col-md-4">
+                <a href="#" class="card shadow-sm text-center p-2 doc-card disabled h-100" data-type="transfert" data-route="/documents/transfert/">
+                    <div class="icon-wrap bg-warning bg-opacity-10 text-warning mx-auto mb-1"><i class="bi bi-arrow-left-right fs-4"></i></div>
+                    <small class="fw-bold d-block">Certificat de transfert</small>
+                    <small class="text-muted" style="font-size:0.55rem;">Sélectionnez un élève</small>
+                </a>
+            </div>
+        </div>
+
+        <!-- Discipline / Vie scolaire -->
+        <small class="text-muted fw-bold text-uppercase d-block mb-2" style="font-size:0.6rem; letter-spacing:1px;">
+            <i class="bi bi-exclamation-triangle me-1"></i> Discipline & Vie scolaire
+        </small>
+        <div class="row g-2 mb-3">
+            <div class="col-md-4">
+                <a href="#" class="card shadow-sm text-center p-2 doc-card disabled h-100" data-type="convocation" data-route="/documents/convocation/">
+                    <div class="icon-wrap bg-danger bg-opacity-10 text-danger mx-auto mb-1"><i class="bi bi-envelope-exclamation fs-4"></i></div>
+                    <small class="fw-bold d-block">Convocation parents</small>
+                    <small class="text-muted" style="font-size:0.55rem;">Sélectionnez un élève</small>
+                </a>
+            </div>
+            <div class="col-md-4">
+                <a href="#" class="card shadow-sm text-center p-2 doc-card disabled h-100" data-type="avertissement" data-route="/documents/avertissement/">
+                    <div class="icon-wrap bg-orange bg-opacity-10 text-warning mx-auto mb-1"><i class="bi bi-exclamation-diamond fs-4"></i></div>
+                    <small class="fw-bold d-block">Fiche d'avertissement</small>
+                    <small class="text-muted" style="font-size:0.55rem;">Sélectionnez un élève</small>
+                </a>
+            </div>
+            <div class="col-md-4">
+                <a href="#" class="card shadow-sm text-center p-2 doc-card" data-type="entree" data-route="/documents/billet_entree/">
+                    <div class="icon-wrap bg-success bg-opacity-10 text-success mx-auto mb-1"><i class="bi bi-door-open fs-4"></i></div>
+                    <small class="fw-bold d-block">Billet d'entrée</small>
+                    <small class="text-muted" style="font-size:0.55rem;">Sélectionnez un élève</small>
+                </a>
+            </div>
+            <div class="col-md-4 mt-1">
+                <a href="#" class="card shadow-sm text-center p-2 doc-card" data-type="sortie" data-route="/documents/billet_sortie/">
+                    <div class="icon-wrap bg-secondary bg-opacity-10 text-secondary mx-auto mb-1"><i class="bi bi-door-closed fs-4"></i></div>
+                    <small class="fw-bold d-block">Billet de sortie</small>
+                </a>
+            </div>
+            <div class="col-md-4 mt-1">
+                <a href="#" class="card shadow-sm text-center p-2 doc-card" data-type="renvoi" data-route="/documents/billet_renvoi/">
+                    <div class="icon-wrap bg-danger bg-opacity-10 text-danger mx-auto mb-1"><i class="bi bi-exclamation-triangle fs-4"></i></div>
+                    <small class="fw-bold d-block">Billet de renvoi</small>
+                </a>
+            </div>
+            <div class="col-md-4 mt-1">
+                <a href="#" class="card shadow-sm text-center p-2 doc-card" data-type="demeure" data-route="/documents/mise_en_demeure/">
+                    <div class="icon-wrap bg-dark bg-opacity-10 text-dark mx-auto mb-1"><i class="bi bi-bell fs-4"></i></div>
+                    <small class="fw-bold d-block">Mise en demeure</small>
+                </a>
+            </div>
+        </div>
+
+        <!-- Financier -->
+        <small class="text-muted fw-bold text-uppercase d-block mb-2" style="font-size:0.6rem; letter-spacing:1px;">
+            <i class="bi bi-cash me-1"></i> Financier
+        </small>
+        <div class="row g-2 mb-3">
+            <div class="col-md-4">
+                <a href="#" class="card shadow-sm text-center p-2 doc-card disabled h-100" data-type="recu" data-route="/documents/recu/">
+                    <div class="icon-wrap bg-success bg-opacity-10 text-success mx-auto mb-1"><i class="bi bi-receipt fs-4"></i></div>
+                    <small class="fw-bold d-block">Reçu de paiement</small>
+                    <small class="text-muted" style="font-size:0.55rem;">Sélectionnez un élève</small>
+                </a>
+            </div>
+            <div class="col-md-4">
+                <a href="#" class="card shadow-sm text-center p-2 doc-card disabled h-100" data-type="attestation_paiement" data-route="/documents/attestation_paiement/">
+                    <div class="icon-wrap bg-info bg-opacity-10 text-info mx-auto mb-1"><i class="bi bi-patch-check fs-4"></i></div>
+                    <small class="fw-bold d-block">Attestation de paiement</small>
+                    <small class="text-muted" style="font-size:0.55rem;">Sélectionnez un élève</small>
+                </a>
+            </div>
+        </div>
+
+        <!-- Autres -->
+        <small class="text-muted fw-bold text-uppercase d-block mb-2" style="font-size:0.6rem; letter-spacing:1px;">
+            <i class="bi bi-three-dots me-1"></i> Autres
+        </small>
+        <div class="row g-2 mb-3">
+            <div class="col-md-4">
+                <a href="#" class="card shadow-sm text-center p-2 doc-card disabled h-100" data-type="carte" data-route="/documents/carte/">
+                    <div class="icon-wrap bg-purple bg-opacity-10 text-purple mx-auto mb-1" style="color:#7c3aed;"><i class="bi bi-credit-card-2-front fs-4"></i></div>
+                    <small class="fw-bold d-block">Carte scolaire</small>
+                    <small class="text-muted" style="font-size:0.55rem;">Sélectionnez un élève</small>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Documents récents -->
+{% if recent_docs %}
+<div class="card shadow-sm mt-3">
+    <div class="card-header bg-light py-1">
+        <small class="fw-bold"><i class="bi bi-clock-history"></i> Derniers documents générés</small>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0 small">
+            <thead class="table-light">
+                <tr>
+                    <th>Date</th><th>Type</th><th>Élève</th><th>Statut</th><th>QR Code</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for doc in recent_docs[:10] %}
+                <tr>
+                    <td>{{ doc.date_creation.strftime('%d/%m/%Y %H:%M') }}</td>
+                    <td><span class="badge bg-light text-dark">{{ doc.type_doc.replace('_', ' ').title() }}</span></td>
+                    <td>{{ doc.eleve.prenom if doc.eleve_id else '—' }} {{ doc.eleve.nom if doc.eleve_id else '' }}</td>
+                    <td>
+                        {% if doc.statut == 'valide' %}<span class="badge bg-success">Valide</span>
+                        {% elif doc.statut == 'expire' %}<span class="badge bg-warning">Expiré</span>
+                        {% else %}<span class="badge bg-danger">Révoqué</span>{% endif %}
+                    </td>
+                    <td>
+                        {% if doc.token_verification %}
+                        <a href="{{ url_for('verification_publique', token=doc.token_verification) }}" target="_blank" class="btn btn-sm btn-outline-primary py-0 px-1" title="Voir vérification">
+                            <i class="bi bi-qr-code" style="font-size:0.7rem;"></i>
+                        </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+let selectedEleve = null;
+
+document.getElementById('search-eleve').addEventListener('input', function() {
+    const q = this.value.trim();
+    if (q.length < 2) { document.getElementById('search-results').innerHTML = ''; return; }
+    
+    fetch(`/api/rechercher_eleves?q=${encodeURIComponent(q)}`)
+        .then(r => r.json())
+        .then(data => {
+            let html = '';
+            data.forEach(e => {
+                html += `<div class="result-item p-2 border-bottom small" data-id="${e.id}" data-code="${e.code}" data-nom="${e.nom}" data-prenom="${e.prenom}">
+                    <strong>${e.prenom} ${e.nom}</strong>
+                    <span class="text-muted ms-1">${e.classe}</span>
+                    <span class="text-muted float-end" style="font-size:0.6rem;">${e.code}</span>
+                </div>`;
+            });
+            document.getElementById('search-results').innerHTML = html || '<p class="text-muted small p-2">Aucun résultat</p>';
+            
+            // Clic sur résultat
+            document.querySelectorAll('.result-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    selectedEleve = this.dataset;
+                    document.querySelectorAll('.result-item').forEach(i => i.classList.remove('selected'));
+                    this.classList.add('selected');
+                    
+                    // Activer les cartes documents
+                    document.querySelectorAll('.doc-card').forEach(card => {
+                        card.classList.remove('disabled');
+                        const route = card.dataset.route;
+                        card.href = route + selectedEleve.id;
+                        card.querySelector('small.text-muted').textContent = selectedEleve.prenom + ' ' + selectedEleve.nom;
+                    });
+                });
+            });
+        });
+});
+</script>
+{% endblock %}

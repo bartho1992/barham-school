@@ -1,0 +1,1047 @@
+{% extends "base.html" %}
+
+{% block title %}Paramètres Financiers - {{ ecole.nom }}{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Style Excel pour le tableau de scolarité */
+.scol-table { 
+    font-size: 0.65rem; 
+    border-collapse: collapse;
+    font-family: 'Segoe UI', Calibri, Arial, sans-serif;
+    background: white;
+    table-layout: auto;
+}
+.scol-table th { 
+    padding: 2px 4px !important; 
+    vertical-align: middle; 
+    background: #f0f0f0;
+    border: 1px solid #d0d0d0;
+    font-weight: 600;
+    color: #333;
+    text-align: center;
+    font-size: 0.6rem;
+    white-space: nowrap;
+}
+.scol-table td { 
+    padding: 2px 3px !important; 
+    vertical-align: middle; 
+    border: 1px solid #e0e0e0;
+    background: white;
+}
+.scol-table tr:nth-child(even) td { background: #fafafa; }
+.scol-table tr:hover td { background: #e8f4ff; }
+.scol-table .form-control-sm { 
+    padding: 1px 3px; font-size: 0.7rem; height: 22px; min-height: 22px; min-width: 40px; width: 100%;
+    border: 1px solid #ccc; text-align: right; font-weight: 600;
+}
+.scol-table .form-control-sm:focus { border: 2px solid #217346; outline: none; width: 100%; }
+.scol-table td:first-child { white-space: nowrap; font-size: 0.7rem; font-weight: 600; background: #f5f5f5; text-align: left; }
+.scol-table td:nth-child(3) { white-space: nowrap; font-size: 0.7rem; font-weight: 600; background: #f5f5f5; text-align: left; }
+.scol-table th:last-of-type { min-width: 55px; }
+.scol-table td:nth-last-child(2) { min-width: 55px; white-space: nowrap; }
+
+/* Drag & drop */
+.grip-handle { cursor: grab; color: #aaa; font-size: 0.8rem; user-select: none; padding: 2px 3px !important; width: 20px; text-align: center; vertical-align: middle !important; }
+.grip-handle:active { cursor: grabbing; }
+.grip-handle:hover { color: #198754; background: #e8f4ff; }
+.scol-table tr.drag-hover td { background: #d4edda !important; }
+.scol-table tr.drag-source td { opacity: 0.5; }
+
+.tab-nav { display: flex; gap: 4px; margin-top: 4px; border-bottom: 2px solid #dee2e6; }
+.tab-btn { 
+    padding: 4px 12px; border: none; background: transparent; color: #6c757d; 
+    font-weight: 600; font-size: 0.78rem; cursor: pointer; 
+    border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all 0.2s;
+}
+.tab-btn:hover { color: #495057; background: #f8f9fa; }
+.tab-btn.active { color: #198754; border-bottom-color: #198754; background: transparent; }
+</style>
+{% endblock %}
+
+{% block content %}
+<h6 class="mb-2"><i class="bi bi-gear"></i> Parametres Financiers</h6>
+<div class="tab-nav">
+    <button class="tab-btn active" onclick="showTab('scolarite')" id="btn-scolarite">SCOLARITÉ</button>
+    <button class="tab-btn" onclick="showTab('categories')" id="btn-categories">CATÉGORIES DE SERVICES</button>
+    <button class="tab-btn" onclick="showTab('abonnements')" id="btn-abonnements">ABONNEMENT DES ÉLÈVES AUX SERVICES</button>
+</div>
+
+<!-- Section Scolarité -->
+    <div id="tab-scolarite" class="tab-panel">
+    <div class="card">
+        <div class="card-header bg-success text-white py-0 px-2">
+            <small class="fw-bold">Scolarite</small>
+        </div>
+        <div class="card-body py-0 px-1">
+            <form action="{{ url_for('scolarite_sauvegarder') }}" method="POST">
+                <div class="d-flex justify-content-between align-items-center mb-1 small">
+                    <div class="d-flex gap-1 align-items-center flex-wrap">
+                        <label class="mb-0 fw-bold me-1" style="font-size:0.65rem;">Appliquer :</label>
+                        <input type="number" id="montant_inscription" class="form-control form-control-sm" style="width:38px;padding:0 1px;font-size:0.6rem;height:18px;" placeholder="INS">
+                        <input type="number" id="montant_janvier" class="form-control form-control-sm" style="width:38px;padding:0 1px;font-size:0.6rem;height:18px;" placeholder="JAN">
+                        <input type="number" id="montant_fevrier" class="form-control form-control-sm" style="width:38px;padding:0 1px;font-size:0.6rem;height:18px;" placeholder="FEV">
+                        <input type="number" id="montant_mars" class="form-control form-control-sm" style="width:38px;padding:0 1px;font-size:0.6rem;height:18px;" placeholder="MAR">
+                        <input type="number" id="montant_avril" class="form-control form-control-sm" style="width:38px;padding:0 1px;font-size:0.6rem;height:18px;" placeholder="AVR">
+                        <input type="number" id="montant_mai" class="form-control form-control-sm" style="width:38px;padding:0 1px;font-size:0.6rem;height:18px;" placeholder="MAI">
+                        <input type="number" id="montant_juin" class="form-control form-control-sm" style="width:38px;padding:0 1px;font-size:0.6rem;height:18px;" placeholder="JUI">
+                        <input type="number" id="montant_juillet" class="form-control form-control-sm" style="width:38px;padding:0 1px;font-size:0.6rem;height:18px;" placeholder="JUL">
+                        <input type="number" id="montant_aout" class="form-control form-control-sm" style="width:38px;padding:0 1px;font-size:0.6rem;height:18px;" placeholder="AOU">
+                        <input type="number" id="montant_septembre" class="form-control form-control-sm" style="width:38px;padding:0 1px;font-size:0.6rem;height:18px;" placeholder="SEP">
+                        <input type="number" id="montant_octobre" class="form-control form-control-sm" style="width:38px;padding:0 1px;font-size:0.6rem;height:18px;" placeholder="OCT">
+                        <input type="number" id="montant_novembre" class="form-control form-control-sm" style="width:38px;padding:0 1px;font-size:0.6rem;height:18px;" placeholder="NOV">
+                        <input type="number" id="montant_decembre" class="form-control form-control-sm" style="width:38px;padding:0 1px;font-size:0.6rem;height:18px;" placeholder="DEC">
+                        <button type="button" class="btn btn-primary btn-xs py-0 px-1" onclick="appliquerMontantSelection()" style="font-size:0.6rem;">Appliquer</button>
+                    </div>
+                     <div>
+                         <button type="button" class="btn btn-outline-danger btn-xs py-0 px-1 me-1" onclick="supprimerSelection()" style="font-size:0.6rem;"><i class="bi bi-trash"></i></button>
+                         <button type="button" class="btn btn-outline-danger btn-xs py-0 px-1" onclick="reinitialiserTout()" style="font-size:0.6rem;"><i class="bi bi-trash"></i> Tout</button>
+                     </div>
+                </div>
+                 <div class="d-flex gap-1 align-items-center border p-0 mb-1 bg-light rounded">
+                     <label class="mb-0 fw-bold small text-nowrap me-1" style="font-size:0.65rem;">Ajouter :</label>
+                     <input type="text" id="ajout_classe_nom" class="form-control form-control-sm" style="width:200px;height:22px;font-size:0.65rem;" placeholder="Noms classes (separes par virgules)">
+                     <button type="button" class="btn btn-outline-success btn-xs py-0 px-1" onclick="ajouterLigneScolarite()" style="font-size:0.65rem;">+</button>
+                 </div>
+                 <div style="max-height:40vh;overflow-y:scroll;overflow-x:scroll;">
+                     <table class="table table-sm table-bordered table-sm align-middle scol-table">
+                        <thead class="table-dark">
+                            <tr>
+                                <th style="width:20px;"></th>
+                                <th><input type="checkbox" id="selectAll" onclick="toggleSelectAll()"></th>
+                                <th>CLASSE</th>
+                                <th>INS</th>
+                                <th>JAN</th>
+                                <th>FEV</th>
+                                <th>MAR</th>
+                                <th>AVR</th>
+                                <th>MAI</th>
+                                <th>JUI</th>
+                                <th>JUL</th>
+                                <th>AOU</th>
+                                <th>SEP</th>
+                                <th>OCT</th>
+                                <th>NOV</th>
+                                <th>DEC</th>
+                                <th>TOTAL</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for s in scolarites %}
+                            <tr data-classe-id="{{ s.classe_id }}" data-scolarite-id="{{ s.id }}">
+                                <td class="grip-handle">⠿</td>
+                                <td><input type="checkbox" class="select-classe" value="{{ s.classe_id }}"></td>
+                                <td class="fw-bold bg-light">{{ s.classe.nom }}</td>
+                                <td><input type="number" name="inscription_{{s.classe_id}}" data-mois="inscription" class="form-control form-control-sm" value="{{ s.inscription|default(0)|int }}"></td>
+                                <td><input type="number" name="janvier_{{s.classe_id}}" data-mois="janvier" class="form-control form-control-sm" value="{{ s.janvier|default(0)|int }}"></td>
+                                <td><input type="number" name="fevrier_{{s.classe_id}}" data-mois="fevrier" class="form-control form-control-sm" value="{{ s.fevrier|default(0)|int }}"></td>
+                                <td><input type="number" name="mars_{{s.classe_id}}" data-mois="mars" class="form-control form-control-sm" value="{{ s.mars|default(0)|int }}"></td>
+                                <td><input type="number" name="avril_{{s.classe_id}}" data-mois="avril" class="form-control form-control-sm" value="{{ s.avril|default(0)|int }}"></td>
+                                <td><input type="number" name="mai_{{s.classe_id}}" data-mois="mai" class="form-control form-control-sm" value="{{ s.mai|default(0)|int }}"></td>
+                                <td><input type="number" name="juin_{{s.classe_id}}" data-mois="juin" class="form-control form-control-sm" value="{{ s.juin|default(0)|int }}"></td>
+                                <td><input type="number" name="juillet_{{s.classe_id}}" data-mois="juillet" class="form-control form-control-sm" value="{{ s.juillet|default(0)|int }}"></td>
+                                <td><input type="number" name="aout_{{s.classe_id}}" data-mois="aout" class="form-control form-control-sm" value="{{ s.aout|default(0)|int }}"></td>
+                                <td><input type="number" name="septembre_{{s.classe_id}}" data-mois="septembre" class="form-control form-control-sm" value="{{ s.septembre|default(0)|int }}"></td>
+                                <td><input type="number" name="octobre_{{s.classe_id}}" data-mois="octobre" class="form-control form-control-sm" value="{{ s.octobre|default(0)|int }}"></td>
+                                <td><input type="number" name="novembre_{{s.classe_id}}" data-mois="novembre" class="form-control form-control-sm" value="{{ s.novembre|default(0)|int }}"></td>
+                                <td><input type="number" name="decembre_{{s.classe_id}}" data-mois="decembre" class="form-control form-control-sm" value="{{ s.decembre|default(0)|int }}"></td>
+                                <td class="fw-bold text-end" id="total_{{s.classe_id}}">{{ s.total_annuel|default(0)|int }} FCFA</td>
+                                <td class="text-nowrap">
+                                    <button type="button" class="btn btn-success btn-xs py-0 px-1" onclick="sauvegarderLigne({{ s.classe_id }})" title="Sauvegarder" style="font-size:0.6rem;"><i class="bi bi-check-lg"></i></button>
+                                    <button type="button" class="btn btn-outline-warning btn-xs py-0 px-1 ms-1" onclick="reinitialiserLigne({{ s.classe_id }})" title="Remettre à zéro" style="font-size:0.6rem;"><i class="bi bi-arrow-counterclockwise"></i></button>
+                                    <button type="button" class="btn btn-outline-danger btn-xs py-0 px-1 ms-1" onclick="supprimerLigne({{ s.classe_id }})" title="Supprimer la ligne" style="font-size:0.6rem;"><i class="bi bi-trash"></i></button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <button type="submit" class="btn btn-success btn-xs py-0 w-100 mt-1" style="font-size:0.65rem;">Enregistrer toutes les Scolarites</button>
+            </form>
+        </div>
+    </div>
+    </div>
+
+    <!-- Section Catégories de Services -->
+    <div id="tab-categories" class="tab-panel d-none">
+    <div class="card">
+        <div class="card-header bg-primary text-white py-1">
+            <h6 class="mb-0">Categories de Services</h6>
+        </div>
+        <div class="card-body py-1 px-2">
+            <div style="max-height:65vh;overflow-y:auto;overflow-x:hidden;">
+                <table class="table table-sm table-bordered">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Catégorie Mensuel</th>
+                            <th>Catégorie Inscription</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <form action="{{ url_for('categorie_ajouter') }}" method="POST" class="d-flex gap-2">
+                                    <input type="hidden" name="type_categorie" value="mensuel">
+                                    <input type="text" name="nom" class="form-control" placeholder="Nom catégorie" required>
+                                    <button type="submit" class="btn btn-success">Ajouter</button>
+                                </form>
+                                <div class="mt-2">
+                                    {% for cat in categories_mensuel %}
+                                    <span class="badge bg-secondary">{{ cat.nom }} 
+                                        <form action="{{ url_for('categorie_supprimer', id=cat.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Supprimer?');">
+                                            <button type="submit" class="btn btn-sm btn-link text-white p-0 ms-1">×</button>
+                                        </form>
+                                    </span>
+                                    {% endfor %}
+                                </div>
+                            </td>
+                            <td>
+                                <form action="{{ url_for('categorie_ajouter') }}" method="POST" class="d-flex gap-2">
+                                    <input type="hidden" name="type_categorie" value="inscription">
+                                    <input type="text" name="nom" class="form-control" placeholder="Nom catégorie" required>
+                                    <button type="submit" class="btn btn-success">Ajouter</button>
+                                </form>
+                                <div class="mt-2">
+                                    {% for cat in categories_inscription %}
+                                    <span class="badge bg-secondary">{{ cat.nom }} 
+                                        <form action="{{ url_for('categorie_supprimer', id=cat.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Supprimer?');">
+                                            <button type="submit" class="btn btn-sm btn-link text-white p-0 ms-1">×</button>
+                                        </form>
+                                    </span>
+                                    {% endfor %}
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <!-- Section Abonnement des élèves -->
+    <div id="tab-abonnements" class="tab-panel d-none">
+    <div class="card">
+        <div class="card-header bg-dark text-white py-1">
+            <h6 class="mb-0"><i class="bi bi-person-plus"></i> Abonnement des eleves aux services</h6>
+        </div>
+        <div class="card-body py-1 px-2">
+            <form action="{{ url_for('abonnement_ajouter') }}" method="POST" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Élève</label>
+                    <input type="text" id="abonne-search" class="form-control" placeholder="Rechercher élève..." autocomplete="off">
+                    <div id="abonne-results" class="list-group shadow-sm mt-1" style="position: absolute; z-index: 1000; max-height: 200px; overflow-y: auto;"></div>
+                    <input type="hidden" name="eleve_id" id="abonne_eleve_id" required>
+                    <div id="abonne-selected" class="mt-1 p-1 border rounded bg-light d-none small">
+                        <span id="abonne-name"></span>
+                        <button type="button" class="btn btn-sm btn-link text-danger p-0 ms-2" onclick="resetAbonne()">×</button>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Catégorie de service</label>
+                    <select name="categorie_id" class="form-select" required>
+                        <option value="">Choisir...</option>
+                        {% for cat in categories_mensuel %}
+                        <option value="{{ cat.id }}">{{ cat.nom }} (mensuel)</option>
+                        {% endfor %}
+                        {% for cat in categories_inscription %}
+                        <option value="{{ cat.id }}">{{ cat.nom }} (inscription)</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold">Mois début</label>
+                    <select name="mois_debut" class="form-select" required>
+                        <option value="Janvier">Janvier</option>
+                        <option value="Février">Février</option>
+                        <option value="Mars">Mars</option>
+                        <option value="Avril">Avril</option>
+                        <option value="Mai">Mai</option>
+                        <option value="Juin">Juin</option>
+                        <option value="Juillet">Juillet</option>
+                        <option value="Août">Août</option>
+                        <option value="Septembre" selected>Septembre</option>
+                        <option value="Octobre">Octobre</option>
+                        <option value="Novembre">Novembre</option>
+                        <option value="Décembre">Décembre</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold">Mois fin</label>
+                    <select name="mois_fin" class="form-select" required>
+                        <option value="Janvier">Janvier</option>
+                        <option value="Février">Février</option>
+                        <option value="Mars">Mars</option>
+                        <option value="Avril">Avril</option>
+                        <option value="Mai">Mai</option>
+                        <option value="Juin" selected>Juin</option>
+                        <option value="Juillet">Juillet</option>
+                        <option value="Août">Août</option>
+                        <option value="Septembre">Septembre</option>
+                        <option value="Octobre">Octobre</option>
+                        <option value="Novembre">Novembre</option>
+                        <option value="Décembre">Décembre</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold">Montant perso. (FCFA)</label>
+                    <input type="number" name="montant_personnalise" class="form-control" placeholder="Laisser vide = tarif standard">
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-dark">
+                        <i class="bi bi-plus-lg"></i> Abonner l'élève
+                    </button>
+                </div>
+            </form>
+
+            <hr class="my-2">
+            <h6 class="fw-bold small">Abonnements actifs</h6>
+            <div style="max-height:65vh;overflow-y:auto;overflow-x:hidden;">
+                <table class="table table-sm table-bordered table-striped">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Élève</th>
+                            <th>Classe</th>
+                            <th>Service</th>
+                            <th>Type</th>
+                            <th>Période</th>
+                            <th>Montant perso.</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for abo in abonnements %}
+                        <tr>
+                            <td>{{ abo.eleve.prenom }} {{ abo.eleve.nom }}</td>
+                            <td>{{ abo.eleve.classe.nom if abo.eleve.classe else '-' }}</td>
+                            <td>{{ abo.categorie.nom }}</td>
+                            <td><span class="badge bg-info">{{ abo.categorie.type_categorie }}</span></td>
+                            <td>{{ abo.mois_debut }} → {{ abo.mois_fin }}</td>
+                            <td>{{ (abo.montant_personnalise|int|string + ' FCFA') if abo.montant_personnalise else 'Standard' }}</td>
+                            <td>
+                                <form action="{{ url_for('abonnement_supprimer', id=abo.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Supprimer cet abonnement ?');">
+                                    <button type="submit" class="btn btn-sm btn-danger">×</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="7" class="text-center text-muted">Aucun abonnement</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    </div>
+
+<script>
+// ============ NAVIGATION PAR ONGLETS ============
+function showTab(tabName) {
+    document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.add('d-none'); });
+    document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+    document.getElementById('tab-' + tabName).classList.remove('d-none');
+    document.getElementById('btn-' + tabName).classList.add('active');
+}
+
+// Recherche élève pour abonnement
+document.addEventListener('DOMContentLoaded', function() {
+    const abonneSearch = document.getElementById('abonne-search');
+    const abonneResults = document.getElementById('abonne-results');
+    const abonneId = document.getElementById('abonne_eleve_id');
+    const abonneSelected = document.getElementById('abonne-selected');
+    const abonneName = document.getElementById('abonne-name');
+
+    if (abonneSearch) {
+        abonneSearch.addEventListener('input', function() {
+            const q = this.value;
+            if (q.length < 2) { abonneResults.innerHTML = ''; return; }
+            fetch(`/api/eleves/search?q=${encodeURIComponent(q)}`)
+                .then(r => r.json())
+                .then(data => {
+                    abonneResults.innerHTML = '';
+                    data.forEach(el => {
+                        const btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'list-group-item list-group-item-action py-1 small';
+                        btn.innerHTML = `<strong>${el.prenom} ${el.nom}</strong> <small class="text-muted">(${el.code} | ${el.classe})</small>`;
+                        btn.onclick = function() {
+                            abonneId.value = el.id;
+                            abonneName.textContent = `${el.prenom} ${el.nom} (${el.classe})`;
+                            abonneSelected.classList.remove('d-none');
+                            abonneSearch.value = '';
+                            abonneResults.innerHTML = '';
+                            abonneSearch.disabled = true;
+                        };
+                        abonneResults.appendChild(btn);
+                    });
+                });
+        });
+    }
+});
+
+function resetAbonne() {
+    document.getElementById('abonne_eleve_id').value = '';
+    document.getElementById('abonne-selected').classList.add('d-none');
+    document.getElementById('abonne-search').disabled = false;
+    document.getElementById('abonne-search').focus();
+}
+
+
+// ============ AJOUT LIGNE SCOLARITE ============
+function ajouterLigneScolarite() {
+    const input = document.getElementById('ajout_classe_nom');
+    const rawValue = input.value.trim();
+    if (!rawValue) {
+        alert('Veuillez saisir au moins un nom de classe');
+        return;
+    }
+    
+    // Séparer par virgules, points-virgules ou sauts de ligne
+    const classesNoms = rawValue
+        .split(/[,;\n]+/)
+        .map(function(n) { return n.trim(); })
+        .filter(function(n) { return n.length > 0; });
+    
+    if (classesNoms.length === 0) {
+        alert('Veuillez saisir au moins un nom de classe valide');
+        return;
+    }
+    
+    if (!confirm(classesNoms.length + ' classe(s) vont être ajoutée(s) :\n' + classesNoms.join(', ') + '\n\nContinuer ?')) {
+        return;
+    }
+    
+    // Soumission par formulaire dynamique (provoque un rechargement de page)
+    // Les suppressions sont déjà faites côté serveur via XHR synchrone dans supprimerLigne/supprimerSelection
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/finances/parametres/scolarite/ajouter-ligne';
+
+    const hidden = document.createElement('input');
+    hidden.type = 'hidden';
+    hidden.name = 'noms_classes';
+    hidden.value = classesNoms.join(', ');
+    form.appendChild(hidden);
+    
+    document.body.appendChild(form);
+    form.submit();
+}
+
+// ============ SELECTION ET APPLICATION MONTANT ============
+function toggleSelectAll() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.select-classe');
+    checkboxes.forEach(function(cb) {
+        cb.checked = selectAll.checked;
+    });
+}
+
+function appliquerMontantSelection() {
+    const mois_list = ['inscription', 'janvier', 'fevrier', 'mars', 'avril', 'mai', 'juin',
+                       'juillet', 'aout', 'septembre', 'octobre', 'novembre', 'decembre'];
+    
+    const montants = {};
+    let hasMontant = false;
+    mois_list.forEach(function(mois) {
+        const val = parseFloat(document.getElementById('montant_' + mois).value);
+        if (!isNaN(val)) {
+            montants[mois] = val;
+            hasMontant = true;
+        }
+    });
+    
+    if (!hasMontant) {
+        alert('Veuillez entrer au moins un montant');
+        return;
+    }
+    
+    const selected = document.querySelectorAll('.select-classe:checked');
+    if (selected.length === 0) {
+        alert('Veuillez sélectionner au moins une classe');
+        return;
+    }
+    
+    if (!confirm(`Appliquer les montants à ${selected.length} classe(s) sélectionnée(s) ?`)) return;
+    
+    selected.forEach(function(cb) {
+        const tr = cb.closest('tr');
+        let total = 0;
+        mois_list.forEach(function(mois) {
+            if (montants[mois] !== undefined) {
+                const input = tr.querySelector('input[data-mois="' + mois + '"]');
+                if (input) {
+                    input.value = montants[mois];
+                    total += montants[mois];
+                }
+            }
+        });
+        const classeId = tr.dataset.classeId;
+        document.getElementById('total_' + classeId).textContent = total.toLocaleString('fr-FR') + ' FCFA';
+    });
+    
+    viderChampsApplication();
+}
+
+function viderChampsApplication() {
+    const mois_list = ['inscription', 'janvier', 'fevrier', 'mars', 'avril', 'mai', 'juin',
+                       'juillet', 'aout', 'septembre', 'octobre', 'novembre', 'decembre'];
+    mois_list.forEach(function(mois) {
+        const input = document.getElementById('montant_' + mois);
+        if (input) input.value = '';
+    });
+}
+
+// ============ SAUVEGARDE LIGNE SCOLARITE ============
+function sauvegarderLigne(classeId) {
+    const tr = document.querySelector('tr[data-classe-id="' + classeId + '"]');
+    if (!tr) return;
+    
+    const btn = tr.querySelector('button');
+    const originalHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i>';
+    
+    const data = {};
+    tr.querySelectorAll('input[data-mois]').forEach(function(input) {
+        data[input.dataset.mois] = parseFloat(input.value) || 0;
+    });
+    
+    fetch('/api/scolarite/sauvegarder/' + classeId, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        credentials: 'same-origin',
+        body: JSON.stringify(data)
+    })
+    .then(r => r.json())
+    .then(function(res) {
+        if (res.success) {
+            btn.innerHTML = '<i class="bi bi-check-lg"></i>';
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-outline-success');
+            document.getElementById('total_' + classeId).textContent = (res.total_annuel || 0).toLocaleString('fr-FR') + ' FCFA';
+            setTimeout(function() {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+                btn.classList.remove('btn-outline-success');
+                btn.classList.add('btn-success');
+            }, 1500);
+        } else {
+            btn.innerHTML = '<i class="bi bi-x-lg"></i>';
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-danger');
+            setTimeout(function() {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+                btn.classList.remove('btn-danger');
+                btn.classList.add('btn-success');
+            }, 1500);
+            alert(res.message || 'Erreur');
+        }
+    })
+    .catch(function(err) {
+        btn.innerHTML = '<i class="bi bi-x-lg"></i>';
+        btn.classList.remove('btn-success');
+        btn.classList.add('btn-danger');
+        setTimeout(function() {
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+            btn.classList.remove('btn-danger');
+            btn.classList.add('btn-success');
+        }, 1500);
+        alert('Erreur réseau : ' + err);
+    });
+}
+
+function reinitialiserLigne(classeId) {
+    if (!confirm('Réinitialiser cette ligne à 0 ?')) return;
+    
+    const tr = document.querySelector('tr[data-classe-id="' + classeId + '"]');
+    if (!tr) return;
+    
+    fetch('/api/scolarite/reinitialiser/' + classeId, {
+        method: 'POST',
+        credentials: 'same-origin'
+    })
+    .then(r => r.json())
+    .then(function(res) {
+        if (res.success) {
+            tr.querySelectorAll('input[data-mois]').forEach(function(input) {
+                input.value = 0;
+            });
+            document.getElementById('total_' + classeId).textContent = '0 FCFA';
+        } else {
+            alert(res.message || 'Erreur');
+        }
+    })
+    .catch(function(err) {
+        alert('Erreur réseau : ' + err);
+    });
+}
+
+function supprimerLigne(classeId) {
+    if (!confirm('Supprimer définitivement cette ligne de scolarité ?\nCette action est irréversible.')) return;
+    
+    const tr = document.querySelector('tr[data-classe-id="' + classeId + '"]');
+    if (!tr) return;
+    
+    // Supprimer immédiatement du DOM pour un retour visuel instantané
+    tr.remove();
+    
+    // XHR SYNCHRONE : garantit que la suppression est traitée par le serveur
+    // avant que cette fonction ne retourne (et avant tout rechargement de page)
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', '/api/scolarite/supprimer/' + classeId, false);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    try {
+        xhr.send(JSON.stringify({}));
+    } catch(e) {
+        // Ignorer les erreurs réseau
+    }
+}
+
+function supprimerSelection() {
+    const selected = document.querySelectorAll('.select-classe:checked');
+    if (selected.length === 0) {
+        alert('Veuillez sélectionner au moins une classe à supprimer');
+        return;
+    }
+    
+    const noms = [];
+    const classeIds = [];
+    selected.forEach(function(cb) {
+        const tr = cb.closest('tr');
+        const classeNom = tr.querySelector('td:nth-child(2)').textContent.trim();
+        noms.push(classeNom);
+        classeIds.push(tr.dataset.classeId);
+    });
+    
+    if (!confirm('Supprimer définitivement ' + selected.length + ' ligne(s) de scolarité ?\n\n' + noms.join(', ') + '\n\nCette action est irréversible.')) return;
+    
+    // Supprimer immédiatement les lignes du DOM pour un retour visuel instantané
+    selected.forEach(function(cb) {
+        cb.closest('tr').remove();
+    });
+    
+    // XHR SYNCHRONE pour chaque suppression : garantit que chaque suppression
+    // est traitée par le serveur avant de passer à la suivante et avant tout rechargement
+    classeIds.forEach(function(classeId) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/api/scolarite/supprimer/' + classeId, false);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        try {
+            xhr.send(JSON.stringify({}));
+        } catch(e) {
+            // Ignorer les erreurs réseau
+        }
+    });
+}
+
+function reinitialiserTout() {
+    if (!confirm('Réinitialiser TOUTES les scolarités à 0 ?\nCette action est irréversible.')) return;
+    
+    fetch('/api/scolarite/reinitialiser/tout', {
+        method: 'POST',
+        credentials: 'same-origin'
+    })
+    .then(r => r.json())
+    .then(function(res) {
+        if (res.success) {
+            document.querySelectorAll('tr[data-classe-id]').forEach(function(tr) {
+                tr.querySelectorAll('input[data-mois]').forEach(function(input) {
+                    input.value = 0;
+                });
+                const classeId = tr.dataset.classeId;
+                document.getElementById('total_' + classeId).textContent = '0 FCFA';
+            });
+        } else {
+            alert(res.message || 'Erreur');
+        }
+    })
+    .catch(function(err) {
+        alert('Erreur réseau : ' + err);
+    });
+}
+
+// ============ CHAT ASSISTANT IA PARAMETRES ============
+function toggleChat() {
+    const box = document.getElementById('chat-box');
+    box.classList.toggle('d-none');
+    if (!box.classList.contains('d-none')) {
+        document.getElementById('chat-input').focus();
+    }
+}
+
+let chatHistorique = [];
+
+function envoyerMessage() {
+    const input = document.getElementById('chat-input');
+    const msg = input.value.trim();
+    if (!msg) return;
+    
+    // Ajouter à l'historique
+    chatHistorique.push({role: 'user', content: msg});
+    
+    ajouterMessage('user', msg);
+    input.value = '';
+    
+    const loaderId = ajouterLoader();
+    
+    fetch('/api/chat', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({message: msg, history: chatHistorique})
+    })
+    .then(r => r.json())
+    .then(data => {
+        supprimerLoader(loaderId);
+        if (data.action) {
+            // C'est une action à exécuter → afficher bouton
+            ajouterActionBot(data.message, data.action, data.params);
+            // Ajouter la réponse de l'IA à l'historique
+            chatHistorique.push({role: 'assistant', content: data.message});
+        } else if (data.reply) {
+            ajouterMessage('bot', data.reply);
+            // Ajouter la réponse de l'IA à l'historique
+            chatHistorique.push({role: 'assistant', content: data.reply});
+        } else if (data.error) {
+            ajouterMessage('bot', 'Erreur : ' + data.error);
+        }
+    })
+    .catch(err => {
+        supprimerLoader(loaderId);
+        ajouterMessage('bot', 'Erreur de connexion au serveur. Vérifie que l\'application est démarrée.');
+    });
+}
+
+function effacerHistorique() {
+    chatHistorique = [];
+    const container = document.getElementById('chat-messages');
+    container.innerHTML = `
+        <div class="chat-welcome">Historique effacé ! Pose ta première question 👇</div>
+        <div class="d-flex flex-wrap gap-1 mb-2">
+            <button class="chat-quick" onclick="quickReply('scolarite')">Scolarité</button>
+            <button class="chat-quick" onclick="quickReply('categorie')">Catégories</button>
+            <button class="chat-quick" onclick="quickReply('abonnement')">Abonnement</button>
+            <button class="chat-quick" onclick="quickReply('aide')">Aide</button>
+        </div>
+    `;
+}
+
+function ajouterActionBot(message, action, params) {
+    const container = document.getElementById('chat-messages');
+    const wrapper = document.createElement('div');
+    wrapper.className = 'chat-msg chat-bot action-msg';
+    wrapper.innerHTML = `
+        <div class="mb-2">${message.replace(/\n/g, '<br>')}</div>
+        <button class="btn btn-success btn-sm w-100" onclick="executerAction(this, '${action}')" data-params='${JSON.stringify(params).replace(/'/g, "&#39;")}'>
+            <i class="bi bi-play-fill"></i> Exécuter cette action
+        </button>
+        <div class="action-result small mt-2 d-none"></div>
+    `;
+    container.appendChild(wrapper);
+    container.scrollTop = container.scrollHeight;
+}
+
+function executerAction(btn, action) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Exécution...';
+    const params = JSON.parse(btn.dataset.params);
+    const resultDiv = btn.parentElement.querySelector('.action-result');
+    
+    fetch('/api/chat/execute', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({action: action, params: params})
+    })
+    .then(r => r.json())
+    .then(data => {
+        resultDiv.classList.remove('d-none');
+        if (data.success) {
+            resultDiv.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i> ' + data.message;
+            btn.innerHTML = '<i class="bi bi-check-lg"></i> Fait !';
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-outline-secondary');
+            // Recharger la page après 1.5s pour voir les changements
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            resultDiv.innerHTML = '<i class="bi bi-x-circle-fill text-danger"></i> ' + data.message;
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-play-fill"></i> Réessayer';
+        }
+    })
+    .catch(err => {
+        resultDiv.classList.remove('d-none');
+        resultDiv.innerHTML = '<i class="bi bi-x-circle-fill text-danger"></i> Erreur réseau';
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-play-fill"></i> Réessayer';
+    });
+}
+
+function ajouterMessage(sender, texte) {
+    const container = document.getElementById('chat-messages');
+    const div = document.createElement('div');
+    div.className = `chat-msg chat-${sender}`;
+    // Support markdown simple : **texte**
+    let html = texte.replace(/\n/g, '<br>');
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    div.innerHTML = html;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+}
+
+function ajouterLoader() {
+    const container = document.getElementById('chat-messages');
+    const div = document.createElement('div');
+    const id = 'loader-' + Date.now();
+    div.id = id;
+    div.className = 'chat-msg chat-bot';
+    div.innerHTML = '<span class="typing-dots"><span></span><span></span><span></span></span>';
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+    return id;
+}
+
+function supprimerLoader(id) {
+    const el = document.getElementById(id);
+    if (el) el.remove();
+}
+
+function quickReply(key) {
+    const input = document.getElementById('chat-input');
+    input.value = key;
+    envoyerMessage();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const chatInput = document.getElementById('chat-input');
+    if (chatInput) {
+        chatInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') envoyerMessage();
+        });
+    }
+});
+
+// Message de bienvenue
+setTimeout(() => {
+    const box = document.getElementById('chat-box');
+    if (!box.classList.contains('d-none')) {
+        ajouterMessage('bot', 'Salut ! 👋 Je suis l\'assistant IA des paramètres financiers.\n\nPose-moi n\'importe quelle question en langage naturel, je te guide !');
+    }
+}, 500);
+
+// ============ DRAG & DROP REORDONNANCEMENT SCOLARITE ============
+(function() {
+    var tbody = document.querySelector('.scol-table tbody');
+    if (!tbody) return;
+    
+    var dragRow = null;
+    var ghost = null;
+    var isDragging = false;
+    var scrollContainer = null;
+    
+    function findScrollContainer() {
+        var table = document.querySelector('.scol-table');
+        var el = table;
+        while (el) {
+            var style = window.getComputedStyle(el);
+            if (style.overflowY === 'scroll' || style.overflowY === 'auto') return el;
+            el = el.parentElement;
+        }
+        return null;
+    }
+    
+    function removeHighlights() {
+        tbody.querySelectorAll('tr.drag-hover').forEach(function(r) { r.classList.remove('drag-hover'); });
+    }
+
+    function onMouseDown(e, gripEl) {
+        if (isDragging) return;
+        var row = gripEl.closest('tr');
+        if (!row) return;
+        
+        isDragging = true;
+        dragRow = row;
+        scrollContainer = findScrollContainer();
+        
+        row.classList.add('drag-source');
+        row.style.opacity = '0.35';
+        
+        // Fantôme qui suit le curseur
+        ghost = row.cloneNode(true);
+        var rect = row.getBoundingClientRect();
+        ghost.style.cssText = 'position:fixed;z-index:9999;pointer-events:none;opacity:0.9;background:#fffbe6;box-shadow:0 4px 14px rgba(0,0,0,0.18);border-radius:2px;';
+        ghost.style.width = rect.width + 'px';
+        ghost.style.left = rect.left + 'px';
+        ghost.style.top = (e.clientY - 12) + 'px';
+        document.body.appendChild(ghost);
+        
+        if (navigator.vibrate) navigator.vibrate(20);
+        e.preventDefault();
+    }
+
+    function onMouseMove(e) {
+        if (!isDragging || !dragRow) return;
+        
+        if (ghost) ghost.style.top = (e.clientY - 15) + 'px';
+        
+        removeHighlights();
+        
+        var rows = tbody.querySelectorAll('tr');
+        for (var i = 0; i < rows.length; i++) {
+            if (rows[i] === dragRow) continue;
+            var r = rows[i].getBoundingClientRect();
+            if (e.clientY >= r.top && e.clientY <= r.bottom) {
+                rows[i].classList.add('drag-hover');
+                break;
+            }
+        }
+        
+        // Auto-scroll
+        if (scrollContainer) {
+            var scRect = scrollContainer.getBoundingClientRect();
+            if (e.clientY < scRect.top + 40) scrollContainer.scrollTop -= 8;
+            else if (e.clientY > scRect.bottom - 40) scrollContainer.scrollTop += 8;
+        }
+        
+        e.preventDefault();
+    }
+
+    function onMouseUp(e) {
+        if (!isDragging || !dragRow) return;
+        
+        if (ghost && ghost.parentNode) {
+            ghost.parentNode.removeChild(ghost);
+            ghost = null;
+        }
+        
+        removeHighlights();
+        dragRow.classList.remove('drag-source');
+        dragRow.style.opacity = '';
+        
+        // Trouver la cible
+        var targetRow = null;
+        var before = false;
+        var rows = tbody.querySelectorAll('tr');
+        for (var i = 0; i < rows.length; i++) {
+            if (rows[i] === dragRow) continue;
+            var r = rows[i].getBoundingClientRect();
+            if (e.clientY >= r.top && e.clientY <= r.bottom) {
+                targetRow = rows[i];
+                before = e.clientY < r.top + r.height / 2;
+                break;
+            }
+        }
+        
+        if (targetRow && targetRow !== dragRow) {
+            if (before) tbody.insertBefore(dragRow, targetRow);
+            else if (targetRow.nextSibling) tbody.insertBefore(dragRow, targetRow.nextSibling);
+            else tbody.appendChild(dragRow);
+        }
+        
+        // Sauvegarder
+        var ids = [];
+        tbody.querySelectorAll('tr').forEach(function(r) {
+            var sid = r.dataset.scolariteId;
+            if (sid) ids.push(parseInt(sid));
+        });
+        
+        fetch('/api/scolarite/reorder', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            credentials: 'same-origin',
+            body: JSON.stringify({ids: ids})
+        }).catch(function() {});
+        
+        isDragging = false;
+        dragRow = null;
+        scrollContainer = null;
+    }
+
+    // Attacher aux poignées
+    var grips = tbody.querySelectorAll('.grip-handle');
+    grips.forEach(function(grip) {
+        grip.addEventListener('mousedown', function(e) { onMouseDown(e, grip); });
+        grip.addEventListener('touchstart', function(e) { onMouseDown(e.touches[0], grip); }, {passive: false});
+    });
+    
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('touchmove', function(e) {
+        if (!isDragging) return;
+        onMouseMove(e.touches[0]);
+        e.preventDefault();
+    }, {passive: false});
+    document.addEventListener('mouseup', onMouseUp);
+    document.addEventListener('touchend', onMouseUp);
+})();
+</script>
+
+<!-- Chat Widget -->
+<style>
+.chat-widget-btn {
+    position: fixed; bottom: 20px; right: 20px; z-index: 9999;
+    width: 56px; height: 56px; border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white; border: none; box-shadow: 0 4px 15px rgba(102,126,234,0.4);
+    font-size: 1.5rem; cursor: pointer; transition: transform .2s;
+}
+.chat-widget-btn:hover { transform: scale(1.1); }
+.chat-box {
+    position: fixed; bottom: 90px; right: 20px; z-index: 9999;
+    width: 360px; max-height: 500px; border-radius: 16px;
+    background: white; box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+    display: flex; flex-direction: column; overflow: hidden;
+    border: 1px solid #e0e0e0;
+}
+.chat-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white; padding: 14px 18px; font-weight: bold;
+    display: flex; align-items: center; justify-content: space-between;
+}
+.chat-messages { flex: 1; padding: 12px; overflow-y: auto; min-height: 280px; background: #f8f9fa; }
+.chat-msg { padding: 10px 14px; border-radius: 14px; margin-bottom: 10px; font-size: 0.9rem; line-height: 1.4; max-width: 90%; word-wrap: break-word; }
+.chat-bot { background: white; color: #333; align-self: flex-start; border-bottom-left-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+.chat-user { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; align-self: flex-end; border-bottom-right-radius: 4px; margin-left: auto; }
+.chat-input-area { padding: 10px; background: white; border-top: 1px solid #eee; display: flex; gap: 8px; }
+.chat-input { flex: 1; border: 1px solid #ddd; border-radius: 20px; padding: 8px 14px; font-size: 0.9rem; outline: none; }
+.chat-send { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 50%; width: 36px; height: 36px; cursor: pointer; }
+.chat-quick { padding: 6px 12px; background: #e9ecef; border-radius: 12px; font-size: 0.78rem; cursor: pointer; border: none; white-space: nowrap; }
+.chat-quick:hover { background: #dee2e6; }
+.chat-welcome { text-align: center; color: #888; font-size: 0.85rem; margin-bottom: 8px; }
+.typing-dots { display: inline-flex; gap: 4px; align-items: center; height: 20px; }
+.typing-dots span { width: 6px; height: 6px; background: #999; border-radius: 50%; animation: typingBounce 1.4s infinite ease-in-out both; }
+.typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+.typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+@keyframes typingBounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+.action-msg { background: #e8f5e9 !important; border-left: 3px solid #28a745; }
+.action-result { padding: 6px 10px; border-radius: 8px; background: white; }
+</style>
+
+<button class="chat-widget-btn" onclick="toggleChat()" title="Assistant IA">
+    <i class="bi bi-robot"></i>
+</button>
+
+<div id="chat-box" class="chat-box d-none">
+    <div class="chat-header">
+        <span><i class="bi bi-stars"></i> Assistant Paramètres</span>
+        <div class="d-flex gap-2">
+            <button onclick="effacerHistorique()" class="btn btn-sm text-white p-0" title="Effacer l'historique">
+                <i class="bi bi-arrow-clockwise"></i>
+            </button>
+            <button onclick="toggleChat()" class="btn btn-sm text-white p-0"><i class="bi bi-x-lg"></i></button>
+        </div>
+    </div>
+    <div class="chat-messages" id="chat-messages">
+        <div class="chat-welcome">Pose ta question sur les paramètres financiers 👇</div>
+        <div class="d-flex flex-wrap gap-1 mb-2">
+            <button class="chat-quick" onclick="quickReply('scolarite')">Scolarité</button>
+            <button class="chat-quick" onclick="quickReply('categorie')">Catégories</button>
+            <button class="chat-quick" onclick="quickReply('abonnement')">Abonnement</button>
+            <button class="chat-quick" onclick="quickReply('aide')">Aide</button>
+        </div>
+    </div>
+    <div class="chat-input-area">
+        <input type="text" id="chat-input" class="chat-input" placeholder="Tape ta question...">
+        <button onclick="envoyerMessage()" class="chat-send"><i class="bi bi-send-fill"></i></button>
+    </div>
+</div>
+{% endblock %}

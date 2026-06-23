@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Creer un compte — Barham School{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-md-5">
+        <div class="card shadow-lg border-0">
+            <div class="card-header bg-success text-white text-center py-3">
+                <h4 class="mb-0"><i class="bi bi-person-plus-fill"></i> Creer un compte</h4>
+                <small>Inscription gratuite — Essai 30 jours</small>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Nom de l'etablissement</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-building"></i></span>
+                            <input type="text" name="nom_ecole" class="form-control" placeholder="Ex: ECOLE PRIMAIRE X" required autofocus>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Identifiant</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-person"></i></span>
+                            <input type="text" name="username" class="form-control" placeholder="Votre identifiant" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Mot de passe</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                            <input type="password" name="password" id="passwordInput" class="form-control" placeholder="Minimum 3 caracteres" required>
+                            <button type="button" class="btn btn-outline-secondary" id="togglePasswordBtn">&#x1F441;&#xFE0F;</button>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100 py-2">
+                        <i class="bi bi-check-circle"></i> Creer mon compte et demarrer
+                    </button>
+                </form>
+                <hr class="my-3">
+                <p class="text-center small text-muted mb-0">
+                    Inscription gratuite — Essai 30 jours inclus.<br>
+                    Choisissez votre abonnement apres inscription.
+                </p>
+            </div>
+            <div class="card-footer text-center">
+                <small>Deja un compte ? <a href="{{ url_for('login') }}" class="fw-bold text-primary">Se connecter</a></small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var toggleBtn = document.getElementById('togglePasswordBtn');
+    var passwordInput = document.getElementById('passwordInput');
+    if (toggleBtn && passwordInput) {
+        toggleBtn.addEventListener('click', function() {
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleBtn.textContent = '\u{1F648}';
+            } else {
+                passwordInput.type = 'password';
+                toggleBtn.textContent = '\u{1F441}\u{FE0F}';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

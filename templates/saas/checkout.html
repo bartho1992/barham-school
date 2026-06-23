@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Checkout — {{ plan.nom }}{% endblock %}
+{% block extra_css %}
+<style>
+.amount-display { font-size: 2rem; font-weight: 800; color: #1e3a8a; }
+.payment-option {
+    display: block;
+    border: 3px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+}
+.payment-option:hover { border-color: #93c5fd; background: #eff6ff; }
+.payment-option input[type=radio] { accent-color: #3b82f6; width: 18px; height: 18px; }
+.payment-option:has(input:checked) { border-color: #3b82f6; background: #dbeafe; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width:600px;">
+    <h4 class="mb-1"><i class="bi bi-shield-check text-success"></i> Valider votre abonnement</h4>
+    <p class="text-muted small mb-3">Plan {{ plan.nom }} — {{ duree }} mois</p>
+
+    <!-- Montant -->
+    <div class="card shadow-sm border-0 mb-3">
+        <div class="card-body p-4 text-center">
+            <p class="text-muted small text-uppercase mb-0">Montant a payer</p>
+            <p class="amount-display mb-0">{{ "{:,.0f}".format(montant) }} FCFA</p>
+            <p class="small text-muted mt-1">Soit {{ "{:,.0f}".format(montant // duree) }} FCFA/mois</p>
+        </div>
+    </div>
+
+    <form method="POST" action="{{ url_for('abonnement_payer') }}">
+        <input type="hidden" name="plan_key" value="{{ plan_key }}">
+        <input type="hidden" name="duree" value="{{ duree }}">
+        <input type="hidden" name="montant" value="{{ montant }}">
+
+        <!-- Moyen de paiement -->
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-header bg-light">
+                <h6 class="mb-0 fw-bold"><i class="bi bi-wallet2 me-2"></i>Choisissez un moyen de paiement</h6>
+            </div>
+            <div class="card-body">
+                <div class="row g-2">
+                    {% for key, gw in passerelles.items() if gw.actif %}
+                    <div class="col-6">
+                        <label class="payment-option {% if key == 'manual' %}bg-light{% endif %}">
+                            <div class="d-flex align-items-center gap-3">
+                                <input type="radio" name="passerelle" value="{{ key }}" {% if key == 'manual' %}checked{% endif %}>
+                                <i class="bi {{ gw.icone }} fs-4 text-primary"></i>
+                                <span class="fw-semibold">{{ gw.nom }}</span>
+                            </div>
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recapitulatif -->
+        <div class="card bg-light border-0 rounded-3 p-3 mb-3">
+            <table class="table table-sm table-borderless mb-0 small">
+                <tr><td class="text-muted">Plan</td><td class="text-end fw-semibold">{{ plan.nom }}</td></tr>
+                <tr><td class="text-muted">Duree</td><td class="text-end">{{ duree }} mois</td></tr>
+                <tr><td class="text-muted">Eleves max</td><td class="text-end">{{ 'Illimite' if plan.eleves_max == -1 else plan.eleves_max }}</td></tr>
+                <tr><td class="text-muted">Personnel max</td><td class="text-end">{{ 'Illimite' if plan.personnel_max == -1 else plan.personnel_max }}</td></tr>
+                <tr class="table-group-divider"><td class="fw-bold">Total</td><td class="text-end fw-bold text-primary">{{ "{:,.0f}".format(montant) }} FCFA</td></tr>
+            </table>
+        </div>
+
+        <button type="submit" class="btn btn-success btn-lg w-100 rounded-pill">
+            <i class="bi bi-check-circle me-2"></i> Confirmer et payer
+        </button>
+    </form>
+
+    <a href="{{ url_for('abonnement') }}" class="btn btn-outline-secondary btn-sm w-100 mt-2 rounded-pill">
+        <i class="bi bi-arrow-left"></i> Retour
+    </a>
+</div>
+{% endblock %}

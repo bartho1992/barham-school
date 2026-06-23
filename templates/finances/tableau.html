@@ -1,0 +1,42 @@
+﻿{% extends "base.html" %}
+{% block title %}Tableau financier - {{ ecole.nom }}{% endblock %}
+{% block content %}
+<h3 class="mb-3"><i class="bi bi-table"></i> Tableau Financier</h3>
+<div class="card shadow-sm">
+    <div class="card-header bg-primary text-white">
+        <strong>{{ ecole.nom }}</strong> | Annee: {{ current_annee }} | {{ ecole.zone }}
+    </div>
+    <div class="card-body">
+        <div style="max-height:65vh;overflow-y:auto;overflow-x:hidden;">
+            <table class="table table-sm table-bordered table-sm align-middle text-center">
+                <thead class="table-primary">
+                    <tr>
+                        <th></th>
+                        {% for t in types %}
+                        <th colspan="5">{{ t }}</th>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <th>Mois</th>
+                        {% for t in types %}
+                        <th>Attendu</th><th>Recu</th><th>Restant</th><th>Depenses</th><th>Total</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="table-warning"><td colspan="{{ 1 + types|length * 5 }}"><strong>RELIQUATS</strong></td></tr>
+                    {% for mois in mois_list %}
+                    <tr>
+                        <td class="fw-bold">{{ mois }}</td>
+                        {% for t in types %}
+                        <td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<a href="{{ url_for('finances') }}" class="btn btn-secondary mt-3"><i class="bi bi-arrow-left"></i> Retour</a>
+{% endblock %}

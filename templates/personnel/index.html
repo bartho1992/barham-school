@@ -1,0 +1,29 @@
+﻿{% extends "base.html" %}
+{% block title %}Personnel - {{ ecole.nom }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3><i class="bi bi-person-badge"></i> Gestion du Personnel</h3>
+    <a href="{{ url_for('personnel_ajouter') }}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Ajouter</a>
+</div>
+<div style="max-height:65vh;overflow-y:auto;overflow-x:hidden;">
+    <table class="table table-sm table-bordered align-middle bg-white shadow-sm">
+        <thead class="table-warning"><tr><th>Code</th><th>Prenom</th><th>Nom</th><th>Fonction</th><th>Tel</th><th>Salaire fixe</th><th>Taux impot</th><th>Actions</th></tr></thead>
+        <tbody>
+            {% for p in personnels %}
+            <tr>
+                <td><code>{{ p.code }}</code></td>
+                <td>{{ p.prenom }}</td>
+                <td class="fw-bold">{{ p.nom }}</td>
+                <td>{{ p.fonction or '-' }}</td>
+                <td>{{ p.tel or '-' }}</td>
+                <td>{{ p.salaire_fixe }} FCFA</td>
+                <td>{{ p.taux_impot }}%</td>
+                <td>
+                    <a href="{{ url_for('personnel_salaire', id=p.id) }}" class="btn btn-sm btn-outline-success"><i class="bi bi-cash"></i> Salaire</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

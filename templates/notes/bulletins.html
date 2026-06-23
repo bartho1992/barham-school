@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Bulletins - {{ ecole.nom }}{% endblock %}
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12 text-center">
+        <h2 class="fw-bold mb-0"><i class="bi bi-file-text text-danger"></i> Impression des Bulletins</h2>
+        <p class="text-muted">Générez et imprimez les bulletins scolaires par classe.</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    {% for c in classes %}
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm border-0 border-top border-4 border-danger">
+            <div class="card-body p-4">
+                <h5 class="card-title fw-bold">{{ c.nom }}</h5>
+                <p class="small text-muted mb-4">{{ c.niveau }}</p>
+                
+                <div class="list-group list-group-flush mb-3">
+                    <a href="{{ url_for('bulletin_classe', classe_id=c.id, trimestre=1) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3">
+                        <span>1er Trimestre</span>
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                    <a href="{{ url_for('bulletin_classe', classe_id=c.id, trimestre=2) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3">
+                        <span>2ème Trimestre</span>
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                    <a href="{{ url_for('bulletin_classe', classe_id=c.id, trimestre=3) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3">
+                        <span>3ème Trimestre</span>
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

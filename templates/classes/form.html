@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Modifier' if classe else 'Ajouter' }} classe{% endblock %}
+{% block content %}
+<h3 class="mb-2"><i class="bi bi-building"></i> {{ 'Modifier' if classe else 'Ajouter' }} une classe</h3>
+
+{% if classe %}
+<div class="card shadow-sm"><div class="card-body">
+<form method="POST">
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label class="form-label fw-bold">Nom de la classe *</label>
+            <input type="text" name="nom" class="form-control" value="{{ classe.nom if classe }}" placeholder="Ex: 6E_A, CE1B, TLE_S2" required>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label fw-bold">Niveau</label>
+            <select name="niveau" class="form-select">
+                <option value="">Sans niveau</option>
+                <option value="Prescolaire" {% if classe.niveau=='Prescolaire' %}selected{% endif %}>Prescolaire</option>
+                <option value="Elementaire" {% if classe.niveau=='Elementaire' %}selected{% endif %}>Elementaire</option>
+                <option value="Moyen Secondaire" {% if classe.niveau=='Moyen Secondaire' %}selected{% endif %}>Moyen Secondaire</option>
+                <option value="Secondaire" {% if classe.niveau=='Secondaire' %}selected{% endif %}>Secondaire</option>
+            </select>
+        </div>
+    </div>
+    <hr>
+    <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Enregistrer</button>
+    <a href="{{ url_for('classes') }}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Retour</a>
+</form>
+</div></div>
+
+{% else %}
+<div class="row g-2">
+    <div class="col-md-6">
+        <form method="POST">
+            <div class="input-group input-group-sm mb-2">
+                <span class="input-group-text" style="width:100px;">Nom *</span>
+                <input type="text" name="nom" class="form-control" placeholder="6eme_A" required>
+            </div>
+            <div class="input-group input-group-sm mb-2">
+                <span class="input-group-text" style="width:100px;">Niveau</span>
+                <select name="niveau" class="form-select">
+                    <option value="">Sans niveau</option>
+                    <option value="Prescolaire">Prescolaire</option>
+                    <option value="Elementaire">Elementaire</option>
+                    <option value="Moyen Secondaire">Moyen Secondaire</option>
+                    <option value="Secondaire">Secondaire</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm w-100"><i class="bi bi-check-lg"></i> Ajouter</button>
+        </form>
+    </div>
+
+    <div class="col-md-6">
+        <form method="POST" action="{{ url_for('classe_ajouter') }}">
+            <input type="hidden" name="mode" value="multiple">
+            <div class="input-group input-group-sm mb-2">
+                <span class="input-group-text" style="width:100px;">Niveau</span>
+                <select name="niveau" class="form-select">
+                    <option value="">Sans niveau</option>
+                    <option value="Prescolaire">Prescolaire</option>
+                    <option value="Elementaire">Elementaire</option>
+                    <option value="Moyen Secondaire">Moyen Secondaire</option>
+                    <option value="Secondaire">Secondaire</option>
+                </select>
+            </div>
+            <div class="mb-2">
+                <textarea name="noms" class="form-control form-control-sm" rows="3" placeholder="Noms (un par ligne ou separes par des virgules)" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-success btn-sm w-100"><i class="bi bi-plus-lg"></i> Ajouter toutes les classes</button>
+        </form>
+    </div>
+</div>
+
+<div class="mt-2">
+    <a href="{{ url_for('classes') }}" class="btn btn-secondary btn-sm"><i class="bi bi-arrow-left"></i> Retour a la liste</a>
+</div>
+{% endif %}
+{% endblock %}

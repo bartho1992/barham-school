@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+
+{% block title %}Maintenance & Migrations - Développeur{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- En-tête réservé développeur -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-danger border-2">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0"><i class="bi bi-tools"></i> ESPACE DÉVELOPPEUR - MAINTENANCE & MIGRATIONS</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger mb-0">
+                        <i class="bi bi-exclamation-octagon-fill"></i>
+                        <strong>ZONE CRITIQUE :</strong> L'utilisation incorrecte de ces outils peut corrompre ou détruire définitivement la base de données.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Explorateur de tables et Export -->
+        <div class="col-md-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="bi bi-table"></i> Explorateur de tables</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for table in tables %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <code>{{ table }}</code>
+                            <a href="{{ url_for('admin_export_json', table_name=table) }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                <i class="bi bi-filetype-json"></i> Export JSON
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <form method="POST">
+                        <input type="hidden" name="action" value="integrity_check">
+                        <button type="submit" class="btn btn-info btn-sm w-100">
+                            <i class="bi bi-check-circle"></i> Vérifier l'intégrité DB
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Terminal SQL -->
+        <div class="col-md-8">
+            <div class="card shadow-sm mb-4 border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="bi bi-terminal"></i> Terminal SQL (Raw Query)</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <input type="hidden" name="action" value="execute_sql">
+                        <div class="mb-3">
+                            <label class="form-label">Requête SQL</label>
+                            <textarea name="sql_query" class="form-control font-monospace" rows="5" placeholder="SELECT * FROM eleve LIMIT 10;"></textarea>
+                            <div class="form-text text-danger">
+                                <i class="bi bi-info-circle"></i> Supporte SELECT, INSERT, UPDATE, DELETE et ALTER TABLE.
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir exécuter cette requête ?')">
+                            <i class="bi bi-play-fill"></i> EXÉCUTER LA REQUÊTE
+                        </button>
+                    </form>
+
+                    {% if sql_error %}
+                    <div class="alert alert-danger mt-4">
+                        <h6><i class="bi bi-bug"></i> Erreur SQL :</h6>
+                        <pre class="mb-0 small">{{ sql_error }}</pre>
+                    </div>
+                    {% endif %}
+
+                    {% if sql_result %}
+                    <div class="mt-4">
+                        <h6><i class="bi bi-table"></i> Résultats ({{ sql_result.rows|length }} lignes) :</h6>
+                        <div style="max-height:400px;overflow-y:auto;overflow-x:hidden;">
+                            <table class="table table-sm table-bordered table-striped small">
+                                <thead class="table-light sticky-top">
+                                    <tr>
+                                        {% for col in sql_result.columns %}
+                                        <th>{{ col }}</th>
+                                        {% endfor %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for row in sql_result.rows %}
+                                    <tr>
+                                        {% for cell in row %}
+                                        <td>{{ cell }}</td>
+                                        {% endfor %}
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="card shadow-sm bg-light">
+                <div class="card-body">
+                    <h6><i class="bi bi-info-circle"></i> Guide rapide de migration :</h6>
+                    <ul class="small mb-0">
+                        <li><strong>Ajouter une colonne :</strong> <code>ALTER TABLE table_name ADD COLUMN column_name TYPE DEFAULT value;</code></li>
+                        <li><strong>Supprimer des doublons :</strong> <code>DELETE FROM table WHERE id NOT IN (SELECT MIN(id) FROM table GROUP BY code);</code></li>
+                        <li><strong>Mise à jour massive :</strong> <code>UPDATE eleve SET situation = 'Inscrit' WHERE annee_scolaire = '2024-2025';</code></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

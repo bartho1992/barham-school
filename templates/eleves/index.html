@@ -1,0 +1,131 @@
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿{% extends "base.html" %}
+{% block title %}Eleves - {{ ecole.nom }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-1">
+    <h6 class="mb-0"><i class="bi bi-people-fill"></i> Gestion des Eleves</h6>
+    <div>
+        <button id="btnSupprimerBulk" class="btn btn-danger d-none" onclick="supprimerSelection()">
+            <i class="bi bi-trash"></i> Supprimer la selection
+        </button><br>
+        <a href="{{ url_for('eleve_ajouter') }}" class="btn btn-sm btn-primary ms-1"><i class="bi bi-person-plus"></i> Inscrire</a>
+        <button class="btn btn-sm btn-outline-success ms-1" onclick="document.getElementById('importModal').classList.remove('d-none')"><i class="bi bi-file-earmark-excel"></i> Importer Excel</button>
+        <a href="{{ url_for('eleves_modele') }}" class="btn btn-sm btn-outline-secondary ms-1"><i class="bi bi-download"></i> Modele</a>
+    </div>
+</div>
+
+<!-- MODAL IMPORT EXCEL -->
+<div id="importModal" class="d-none position-fixed top-0 start-0 w-100 h-100" style="background:rgba(0,0,0,0.5);z-index:9999;display:flex;justify-content:center;align-items:center;">
+    <div class="bg-white rounded shadow-lg p-3" style="max-width:500px;width:90%;">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="mb-0"><i class="bi bi-file-earmark-excel text-success"></i> Importer des eleves</h6>
+            <button class="btn btn-sm btn-outline-danger py-0 px-1" onclick="document.getElementById('importModal').classList.add('d-none')">&times;</button>
+        </div>
+        <form action="{{ url_for('eleves_importer') }}" method="POST" enctype="multipart/form-data">
+            <div class="mb-2">
+                <label class="form-label small fw-bold">Fichier Excel (.xlsx)</label>
+                <input type="file" name="fichier_excel" class="form-control form-control-sm" accept=".xlsx,.xls" required>
+            </div>
+            <small class="text-muted d-block mb-2" style="font-size:0.65rem;">
+                Colonnes : Prenom, Nom, Sexe, Classe, Tel, Date Naissance, Lieu Naissance, Tuteur, Adresse<br>
+                <a href="{{ url_for('eleves_modele') }}">Telecharger le modele</a>
+            </small>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-success btn-sm flex-grow-1"><i class="bi bi-upload"></i> Importer</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="document.getElementById('importModal').classList.add('d-none')">Annuler</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-3">
+    <div class="card-body">
+        <form method="GET" class="row g-2">
+            <div class="col-md-4">
+                <input type="text" name="search" class="form-control" placeholder="Rechercher (prenom, nom, code)..." value="{{ filter_search }}">
+            </div>
+            <div class="col-md-3">
+                <select name="classe" class="form-select">
+                    <option value="">Toutes les classes</option>
+                    {% for c in classes %}
+                    <option value="{{ c.id }}" {% if filter_classe==c.id|string %}selected{% endif %}>{{ c.nom }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2"><button type="submit" class="btn btn-outline-primary w-100"><i class="bi bi-search"></i> Filtrer</button></div>
+            <div class="col-md-3 text-end"><span class="badge bg-primary fs-6">{{ eleves|length }} eleves</span></div>
+        </form>
+    </div>
+</div>
+
+<form id="formBulk" method="POST" action="{{ url_for('eleves_supprimer_bulk') }}">
+<div style="max-height:65vh;overflow-y:auto;overflow-x:hidden;">
+    <table class="table table-sm table-bordered align-middle bg-white shadow-sm">
+        <thead class="table-primary">
+            <tr>
+                <th style="width:36px;"><input class="form-check-input" type="checkbox" id="selectAll" onchange="toggleAll(this)"></th>
+                <th>Code</th><th>Prenom</th><th>Nom</th><th>Sexe</th><th>Classe</th><th>Tel</th><th>Date Naiss.</th><th>Situation</th><th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for e in eleves %}
+            <tr>
+                <td class="text-center">
+                    <input class="form-check-input eleve-check" type="checkbox" name="eleve_ids[]" value="{{ e.id }}" onchange="updateBouton()">
+                </td>
+                <td><code>{{ e.code }}</code></td>
+                <td>{{ e.prenom }}</td>
+                <td class="fw-bold">{{ e.nom }}</td>
+                <td>
+                    {% if e.sexe == 'M' %}<span class="badge bg-info">M</span>
+                    {% else %}<span class="badge bg-danger">F</span>{% endif %}
+                </td>
+                <td><span class="badge bg-secondary">{{ e.classe.nom if e.classe else '-' }}</span></td>
+                <td>{{ e.tel or '-' }}</td>
+                <td>{{ e.date_naissance or '-' }}</td>
+                <td>
+                    {% if e.situation == 'Inscrit' %}<span class="badge bg-success">{{ e.situation }}</span>
+                    {% else %}<span class="badge bg-warning">{{ e.situation }}</span>{% endif %}
+                </td>
+                <td>
+                    <div class="btn-group btn-group-sm">
+                        <a href="{{ url_for('eleve_fiche', id=e.id) }}" class="btn btn-outline-info" title="Fiche"><i class="bi bi-eye"></i></a>
+                        <a href="{{ url_for('eleve_modifier', id=e.id) }}" class="btn btn-outline-warning" title="Modifier"><i class="bi bi-pencil"></i></a>
+                        <form method="POST" action="{{ url_for('eleve_supprimer', id=e.id) }}" onsubmit="return confirm('Supprimer cet eleve ? Toutes ses donnees (notes, paiements) seront supprimees.')">
+                            <button class="btn btn-outline-danger" title="Supprimer"><i class="bi bi-trash"></i></button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+</form>
+
+<script>
+function toggleAll(source) {
+    document.querySelectorAll('.eleve-check').forEach(function(cb) {
+        cb.checked = source.checked;
+    });
+    updateBouton();
+}
+
+function updateBouton() {
+    var checked = document.querySelectorAll('.eleve-check:checked').length;
+    var btn = document.getElementById('btnSupprimerBulk');
+    if (checked > 0) {
+        btn.classList.remove('d-none');
+        btn.innerHTML = '<i class="bi bi-trash"></i> Supprimer (' + checked + ')';
+    } else {
+        btn.classList.add('d-none');
+    }
+}
+
+function supprimerSelection() {
+    var checked = document.querySelectorAll('.eleve-check:checked').length;
+    if (checked === 0) return;
+    if (!confirm('Supprimer ' + checked + ' eleve(s) ?\n\nATTENTION : Toutes leurs donnees (notes, paiements, abonnements, documents, bulletins) seront definitivement supprimees.')) return;
+    document.getElementById('formBulk').submit();
+}
+</script>
+{% endblock %}

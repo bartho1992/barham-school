@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Saisie Notes - {{ classe.nom }} - {{ ecole.nom }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <h5 class="mb-0"><i class="bi bi-pencil-square"></i> {{ classe.nom }} <small class="text-muted">| T{{ trimestre }}</small></h5>
+    <a href="{{ url_for('notes') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Retour</a>
+</div>
+
+<div class="card shadow-sm mb-2">
+    <div class="card-body py-2 bg-light">
+        <form method="GET" class="row g-2 align-items-center">
+            <div class="col-auto">
+                <label class="fw-bold small mb-0">Matiere :</label>
+            </div>
+            <div class="col-md-4">
+                <select name="matiere_id" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="">-- Choisir --</option>
+                    {% for m in matieres %}
+                    <option value="{{ m.id }}" {{ 'selected' if m.id == selected_matiere_id }}>{{ m.nom }} (Coeff {{ m.coefficient }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% if eleves %}
+            <div class="col-auto">
+                <span class="badge bg-secondary">{{ eleves|length }} eleve(s)</span>
+            </div>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+{% if not eleves %}
+<div class="alert alert-info text-center py-4">
+    <i class="bi bi-exclamation-circle fs-3 d-block mb-2"></i>
+    <strong>Aucun eleve dans cette classe</strong>
+    <p class="mb-0 small text-muted">Ajoutez des eleves a la classe <strong>{{ classe.nom }}</strong> pour pouvoir saisir leurs notes.</p>
+    <a href="{{ url_for('eleve_ajouter') }}" class="btn btn-primary btn-sm mt-3"><i class="bi bi-person-plus"></i> Inscrire un eleve</a>
+</div>
+
+{% elif not selected_matiere_id %}
+<div class="alert alert-warning text-center py-4">
+    <i class="bi bi-book fs-3 d-block mb-2"></i>
+    <strong>Selectionnez une matiere</strong>
+    <p class="mb-0 small text-muted">Choisissez une matiere dans le menu deroulant ci-dessus pour commencer la saisie.</p>
+</div>
+
+{% else %}
+<form method="POST">
+    <input type="hidden" name="matiere_id" value="{{ selected_matiere_id }}">
+    <div style="max-height:60vh;overflow-y:auto;overflow-x:hidden;">
+        <table class="table table-sm align-middle bg-white mb-0 w-100">
+            <thead class="table-dark" style="position:sticky;top:0;z-index:2;">
+                <tr>
+                    <th style="width:100px;">Code</th>
+                    <th>Nom Complet</th>
+                    <th class="text-center" style="width:90px;">Ctrl /20</th>
+                    <th class="text-center" style="width:90px;">Comp /20</th>
+                    <th class="text-center" style="width:80px;">Moyenne</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for el in eleves %}
+                {% set note = notes_dict.get(el.id) %}
+                <tr>
+                    <td><code class="small">{{ el.code }}</code></td>
+                    <td class="small fw-bold">{{ el.prenom }} {{ el.nom }}</td>
+                    <td>
+                        <input type="number" step="0.25" min="0" max="20" name="ctrl_{{ el.id }}"
+                               class="form-control form-control-sm text-center" value="{{ note.controle if note and note.controle is not none }}">
+                    </td>
+                    <td>
+                        <input type="number" step="0.25" min="0" max="20" name="comp_{{ el.id }}"
+                               class="form-control form-control-sm text-center" value="{{ note.composition if note and note.composition is not none }}">
+                    </td>
+                    <td class="text-center">
+                        <span class="badge {{ 'bg-success' if note and note.moyenne >= 10 else 'bg-danger' if note else 'bg-light text-dark' }}">
+                            {{ "%.2f"|format(note.moyenne) if note and note.moyenne is not none else '-' }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="mt-2">
+        <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-save"></i> Enregistrer les notes</button>
+    </div>
+</form>
+{% endif %}
+{% endblock %}

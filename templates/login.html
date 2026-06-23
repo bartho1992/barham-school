@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Connexion - Barham School{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5">
+        <div class="card shadow-lg border-0">
+            <div class="card-header bg-primary text-white text-center py-3">
+                <h4 class="mb-0"><i class="bi bi-mortarboard-fill"></i> Barham School</h4>
+                <small>Abdou Diatta - Barham Informatique</small>
+            </div>
+            <div class="card-body p-4">
+                <div class="text-center mb-3">
+                    <a href="{{ url_for('pricing') }}" class="btn btn-outline-primary btn-sm rounded-pill px-4">
+                        <i class="bi bi-tag-fill me-1"></i> Voir les tarifs
+                    </a>
+                </div>
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Identifiant</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-person"></i></span>
+                            <input type="text" name="username" class="form-control" placeholder="Identifiant" required autofocus>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Mot de passe</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                            <input type="password" name="password" id="passwordInput" class="form-control" placeholder="Mot de passe" required>
+                            <button type="button" class="btn btn-outline-secondary" id="togglePasswordBtn">👁️</button>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 py-2"><i class="bi bi-box-arrow-in-right"></i> Se connecter</button>
+                </form>
+                <hr class="my-3">
+                <div class="text-center">
+                    <small class="text-muted">Pas encore de compte ?</small><br>
+                    <a href="{{ url_for('register') }}" class="btn btn-success btn-sm mt-1">
+                        <i class="bi bi-person-plus"></i> Creer un compte gratuit
+                    </a>
+                </div>
+            </div>
+            <div class="card-footer text-center text-muted">
+                <small>Barham Informatique &copy; {{ current_annee }}</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const toggleBtn = document.getElementById('togglePasswordBtn');
+    const passwordInput = document.getElementById('passwordInput');
+    
+    toggleBtn.addEventListener('click', function() {
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            toggleBtn.textContent = '🙈';
+        } else {
+            passwordInput.type = 'password';
+            toggleBtn.textContent = '👁️';
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Facture {{ facture.numero }}{% endblock %}
+{% block extra_css %}
+<style>
+.invoice-box { max-width:700px; margin:0 auto; background:white; border-radius:16px; box-shadow:0 2px 20px rgba(0,0,0,0.06); }
+.invoice-header { border-bottom:2px solid #e2e8f0; padding:2rem; }
+.invoice-body { padding:2rem; }
+.invoice-footer { border-top:2px solid #e2e8f0; padding:1.5rem 2rem; background:#f8fafc; border-radius:0 0 16px 16px; }
+@media print { .app-sidebar,.btn,.no-print { display:none!important; } .invoice-box { box-shadow:none; border:1px solid #ddd; } }
+</style>
+{% endblock %}
+{% block content %}
+<div class="container py-4 no-print">
+    <div class="d-flex justify-content-between mb-3">
+        <a href="{{ url_for('abonnement') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Retour</a>
+        <button onclick="window.print()" class="btn btn-primary btn-sm"><i class="bi bi-printer"></i> Imprimer</button>
+    </div>
+</div>
+
+<div class="invoice-box">
+    <div class="invoice-header">
+        <div class="row align-items-center">
+            <div class="col-6">
+                <h4 class="fw-bold text-primary mb-1"><i class="bi bi-key-fill"></i> FACTURE</h4>
+                <p class="text-muted small mb-0">{{ ecole.nom }} — Licence SaaS</p>
+            </div>
+            <div class="col-6 text-end">
+                <p class="fw-bold mb-0">N° {{ facture.numero }}</p>
+                <span class="badge {{ 'bg-success' if facture.statut == 'payee' else 'bg-warning text-dark' if facture.statut == 'en_attente' else 'bg-secondary' }}">
+                    {{ 'Payée' if facture.statut == 'payee' else 'En attente' if facture.statut == 'en_attente' else facture.statut }}
+                </span>
+            </div>
+        </div>
+    </div>
+    <div class="invoice-body">
+        <div class="row mb-3">
+            <div class="col-6">
+                <p class="small text-muted text-uppercase fw-bold mb-1">Facturé à</p>
+                <p class="fw-bold mb-0">{{ ecole.nom }}</p>
+                <p class="small text-muted mb-0">{{ ecole.adresse or '' }}</p>
+                <p class="small text-muted">{{ ecole.tel or '' }}</p>
+            </div>
+            <div class="col-6 text-end">
+                <p class="small mb-0"><strong>Date :</strong> {{ facture.created_at.strftime('%d/%m/%Y') }}</p>
+                <p class="small mb-0"><strong>Mode :</strong> {{ facture.mode_paiement or '—' }}</p>
+                {% if facture.date_paiement %}
+                <p class="small mb-0"><strong>Payée :</strong> {{ facture.date_paiement.strftime('%d/%m/%Y') }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <table class="table table-bordered">
+            <thead class="table-light"><tr><th>Description</th><th class="text-end">Durée</th><th class="text-end">Montant</th></tr></thead>
+            <tbody>
+                <tr>
+                    <td>Licence {{ plans[facture.plan].nom if facture.plan in plans else facture.plan }}</td>
+                    <td class="text-end">{{ facture.duree_mois }} mois</td>
+                    <td class="text-end fw-bold">{{ "{:,.0f}".format(facture.montant) }} FCFA</td>
+                </tr>
+            </tbody>
+            <tfoot class="table-group-divider">
+                <tr><td colspan="2" class="text-end fw-bold">Total</td><td class="text-end fw-bold fs-5 text-primary">{{ "{:,.0f}".format(facture.montant) }} FCFA</td></tr>
+            </tfoot>
+        </table>
+    </div>
+    <div class="invoice-footer text-center small text-muted">
+        <strong>{{ ecole.nom }}</strong> — Logiciel de gestion scolaire<br>
+        Merci de votre confiance !
+    </div>
+</div>
+
+{% if facture.statut == 'en_attente' %}
+<div class="text-center mt-3 no-print">
+    <a href="{{ url_for('abonnement_callback', facture_id=facture.id) }}" class="btn btn-success">
+        <i class="bi bi-check-circle"></i> Simuler le paiement
+    </a>
+    <p class="text-muted mt-1" style="font-size:0.65rem;">Simulation — en production le paiement sera automatique</p>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Certificat de Scolarité - {{ eleve.prenom }} {{ eleve.nom }}{% endblock %}
+{% block content %}
+<div class="row no-print mb-3">
+    <div class="col-12 text-end">
+        <button onclick="window.print()" class="btn btn-primary"><i class="bi bi-printer"></i> Imprimer</button>
+        <a href="{{ url_for('documents') }}" class="btn btn-secondary">Retour</a>
+    </div>
+</div>
+
+<div class="card p-5 mx-auto shadow-sm" style="max-width: 800px; min-height: 1000px; border: 2px solid #333; position: relative;">
+    {% if qr_code_url %}
+    <div style="position: absolute; top: 15px; right: 15px; text-align: center;">
+        <img src="{{ qr_code_url }}" alt="QR Code" style="width: 100px;">
+        <p style="font-size: 0.5rem; color: #999; margin-top: 2px;">{{ verification_token[:16] }}...</p>
+    </div>
+    {% endif %}
+    <div class="row border-bottom pb-3 mb-4">
+        <div class="col-8">
+            <h4 class="text-uppercase fw-bold">{{ ecole.nom }}</h4>
+            <p class="mb-0 small text-muted">{{ ecole.adresse }}</p>
+            <p class="mb-0 small text-muted">Tél: {{ ecole.tel }}</p>
+            <p class="mb-0 small text-muted">{{ ecole.zone }}</p>
+        </div>
+        <div class="col-4 text-end">
+            <p class="mb-0 fw-bold small">Année Scolaire : {{ current_annee }}</p>
+        </div>
+    </div>
+
+    <div class="text-center my-5 py-4">
+        <h1 class="text-uppercase text-decoration-underline fw-bold">Certificat de Scolarité</h1>
+    </div>
+
+    <div class="fs-5 lh-lg px-4">
+        <p>Je soussigné, le Responsable de l'établissement <strong>{{ ecole.nom }}</strong>,</p>
+        <p>Certifie que l'élève : <strong>{{ eleve.prenom }} {{ eleve.nom }}</strong></p>
+        <p>Né(e) le : <strong>{{ eleve.date_naissance or '..................' }}</strong> à <strong>{{ eleve.lieu_naissance or '..................' }}</strong></p>
+        <p>Inscrit(e) sous le numéro : <strong>{{ eleve.code }}</strong></p>
+        <p>Fréquente régulièrement la classe de : <strong>{{ eleve.classe.nom if eleve.classe else '..................' }}</strong></p>
+        <p>Au titre de l'année scolaire : <strong>{{ current_annee }}</strong></p>
+        
+        <p class="mt-4">En foi de quoi, le présent certificat lui est délivré pour servir et valoir ce que de droit.</p>
+    </div>
+
+    <div class="row mt-auto pt-5">
+        <div class="col-7"></div>
+        <div class="col-5 text-center">
+            <p class="mb-0">Fait à {{ ecole.zone }}, le {{ today }}</p>
+            <p class="fw-bold mt-2">Le Directeur / Le Responsable</p>
+            <div style="height: 100px;"></div>
+            <p class="border-top pt-2">Cachet et Signature</p>
+        </div>
+    </div>
+</div>
+
+<style>
+@media print {
+    body { background-color: white !important; }
+    .card { box-shadow: none !important; border: 2px solid #333 !important; }
+}
+</style>
+{% endblock %}

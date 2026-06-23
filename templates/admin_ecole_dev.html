@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block title %}Configuration Développeur - {{ ecole.nom }}{% endblock %}
+{% block content %}
+<style>
+.dev-section { border-left: 3px solid #dc3545; padding-left: 15px; margin-bottom: 25px; }
+.dev-section h5 { color: #dc3545; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 1px; }
+.dev-badge { font-size: 0.65rem; background: #dc3545; color: #fff; padding: 2px 6px; border-radius: 3px; vertical-align: middle; margin-left: 5px; }
+.field-hint { font-size: 0.7rem; color: #6c757d; margin-top: 2px; }
+</style>
+<div class="row justify-content-center">
+    <div class="col-md-9">
+        <div class="alert alert-danger d-flex align-items-center mb-3 py-2" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <small><strong>ESPACE DEVELOPPEUR</strong> — Ces paramètres sont réservés au développeur. Ne pas partager.</small>
+        </div>
+
+        <div class="card shadow mb-4">
+            <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                <h4 class="mb-0"><i class="bi bi-sliders2"></i> Configuration Avancée : {{ ecole.nom }}</h4>
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        Changer d'école
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow">
+                        {% for ec in all_ecoles %}
+                        <li><a class="dropdown-item {{ 'active' if ec.id == ecole.id }}" href="{{ url_for('admin_dev', id=ec.id) }}">{{ ec.nom }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <input type="hidden" name="action" value="update_ecole_dev">
+
+                    <div class="dev-section">
+                        <h5><i class="bi bi-buildings"></i> Informations Générales</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nom de l'école</label>
+                                <input type="text" name="nom" class="form-control" value="{{ ecole.nom }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Slogan / Devise</label>
+                                <input type="text" name="slogan" class="form-control" value="{{ ecole.slogan }}">
+                                <div class="field-hint">Ex: "Excellence - Discipline - Réussite"</div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Type d'école</label>
+                                <select name="type_ecole" class="form-select">
+                                    <option value="">-- Non défini --</option>
+                                    {% set types = ['Public','Privé Laïc','Privé Confessionnel','Franco-Arabe','Communautaire'] %}
+                                    {% for t in types %}
+                                    <option value="{{ t }}" {{ 'selected' if ecole.type_ecole == t }}>{{ t }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Code établissement</label>
+                                <input type="text" name="code_etablissement" class="form-control" value="{{ ecole.code_etablissement }}">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">N° Autorisation</label>
+                                <input type="text" name="autorisation" class="form-control" value="{{ ecole.autorisation }}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dev-section">
+                        <h5><i class="bi bi-geo-alt"></i> Localisation</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Adresse</label>
+                                <input type="text" name="adresse" class="form-control" value="{{ ecole.adresse }}">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Zone / Ville</label>
+                                <input type="text" name="zone" class="form-control" value="{{ ecole.zone }}">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">IA (Académie)</label>
+                                <input type="text" name="ia" class="form-control" value="{{ ecole.ia }}">
+                                <div class="field-hint">Ex: IA Rufisque</div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">IEF (Inspection)</label>
+                            <input type="text" name="ief" class="form-control" value="{{ ecole.ief }}">
+                            <div class="field-hint">Ex: IEF Rufisque Commune</div>
+                        </div>
+                    </div>
+
+                    <div class="dev-section">
+                        <h5><i class="bi bi-person-lines-fill"></i> Responsables</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Directeur / Fondateur</label>
+                                <input type="text" name="directeur" class="form-control" value="{{ ecole.directeur }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Chef d'établissement</label>
+                                <input type="text" name="chef_etablissement" class="form-control" value="{{ ecole.chef_etablissement }}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dev-section">
+                        <h5><i class="bi bi-envelope"></i> Contacts</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Téléphone(s)</label>
+                                <input type="text" name="tel" class="form-control" value="{{ ecole.tel }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Email</label>
+                                <input type="email" name="email" class="form-control" value="{{ ecole.email }}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dev-section">
+                        <h5><i class="bi bi-calendar3"></i> Année scolaire</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Année scolaire active</label>
+                                <input type="text" name="annee_scolaire" class="form-control" value="{{ ecole.annee_scolaire }}" readonly>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Développeur</label>
+                                <input type="text" name="dev" class="form-control" value="{{ ecole.dev }}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{{ url_for('admin') }}" class="btn btn-secondary">Annuler</a>
+                        <button type="submit" class="btn btn-danger"><i class="bi bi-save"></i> Enregistrer la configuration développeur</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

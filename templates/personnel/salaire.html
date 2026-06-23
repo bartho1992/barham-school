@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Salaire - {{ personnel.prenom }} {{ personnel.nom }}{% endblock %}
+{% block content %}
+<h3 class="mb-3"><i class="bi bi-cash"></i> Fiche de paie - {{ personnel.prenom }} {{ personnel.nom }}</h3>
+<div class="row g-3">
+    <div class="col-md-5">
+        <div class="card shadow-sm"><div class="card-header bg-success text-white">Enregistrer un salaire</div><div class="card-body">
+        <form method="POST">
+            <div class="mb-3"><label class="form-label fw-bold">Mois</label>
+                <select name="mois" class="form-select">
+                    {% for m in ['AOUT','SEPTEMBRE','OCTOBRE','NOVEMBRE','DECEMBRE','JANVIER','FEVRIER','MARS','AVRIL','MAI','JUIN','JUILLET'] %}
+                    <option value="{{ m }}">{{ m }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3"><label class="form-label">Salaire brut (FCFA)</label><input type="number" name="salaire_brut" class="form-control" value="{{ personnel.salaire_fixe }}" step="1000"></div>
+            <div class="mb-3"><label class="form-label">Primes (FCFA)</label><input type="number" name="primes" class="form-control" value="0" step="1000"></div>
+            <div class="mb-3"><label class="form-label">Impot ({{ personnel.taux_impot }}%)</label><input type="text" class="form-control" disabled value="Calcul automatique"></div>
+            <button type="submit" class="btn btn-success w-100"><i class="bi bi-check-lg"></i> Enregistrer</button>
+        </form>
+        </div></div>
+    </div>
+    <div class="col-md-7">
+        <div class="card shadow-sm"><div class="card-header bg-info text-white">Historique des salaires</div><div class="card-body">
+        {% if salaires %}
+        <table class="table table-sm table-bordered">
+            <thead><tr><th>Mois</th><th>Brut</th><th>Impot</th><th>Primes</th><th>Net</th></tr></thead>
+            <tbody>
+                {% for s in salaires %}
+                <tr><td>{{ s.mois }}</td><td>{{ s.salaire_brut }}</td><td>{{ s.impot }}</td><td>{{ s.primes }}</td><td class="fw-bold text-success">{{ s.salaire_net }} FCFA</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}<p class="text-muted">Aucun salaire enregistre</p>{% endif %}
+        </div></div>
+    </div>
+</div>
+<a href="{{ url_for('personnel') }}" class="btn btn-secondary mt-3"><i class="bi bi-arrow-left"></i> Retour</a>
+{% endblock %}

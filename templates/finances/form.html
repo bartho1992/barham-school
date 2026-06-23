@@ -1,0 +1,451 @@
+{% extends "base.html" %}
+{% block title %}Nouveau Paiement - {{ ecole.nom }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    html, body { overflow: hidden; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card shadow border-0 rounded-3" style="margin-top:4px;">
+            <div class="card-header bg-success text-white py-1">
+                <h6 class="mb-0 text-center fw-bold" style="font-size:0.85rem;"><i class="bi bi-cash-coin"></i> Enregistrer un Paiement</h6>
+            </div>
+            <div class="card-body py-2 px-3">
+                <form method="POST" id="paiementForm">
+                    <!-- Étape 1: Recherche élève -->
+                    <div class="mb-2">
+                        <label class="form-label fw-bold text-primary mb-1" style="font-size:0.72rem;"><i class="bi bi-search"></i> 1. Rechercher l'élève</label>
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+                            <input type="text" id="eleve-search" class="form-control form-control-sm" placeholder="Nom, Prénom ou Code..." autocomplete="off">
+                        </div>
+                        <div id="search-results" class="list-group shadow-sm mt-1" style="position: absolute; z-index: 1000; width: calc(100% - 1.5rem); max-height: 150px; overflow-y: auto;"></div>
+                        <input type="hidden" name="eleve_id" id="eleve_id_hidden" required>
+                        <div id="selected-eleve-box" class="mt-1 p-1 border rounded bg-light d-none">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-person-circle text-primary me-1" style="font-size:1.2rem;"></i>
+                                    <div>
+                                        <span class="fw-bold" id="display-name" style="font-size:0.75rem;"></span>
+                                        <small class="text-muted ms-2" id="display-code"></small>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-danger py-0 px-1" id="remove-eleve" style="font-size:0.65rem;">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Étape 2: Choix du mois -->
+                    <div class="mb-1">
+                        <label class="form-label fw-bold text-primary mb-1" style="font-size:0.72rem;"><i class="bi bi-calendar-event"></i> 2. Mois <small class="text-muted fw-normal">(séquence scolaire)</small></label>
+                        <select name="mois" id="select-mois" class="form-select form-select-sm" required disabled style="font-size:0.72rem;">
+                            <option value="">-- Sélectionner --</option>
+                        </select>
+                        <div id="mois-status" class="mt-1 d-none">
+                            <div class="d-flex flex-wrap gap-1" id="mois-badges"></div>
+                        </div>
+                    </div>
+
+                    <!-- Étape 3 + 4: Services et Récap en ligne -->
+                    <div class="row g-1 mb-2">
+                        <div class="col-md-6" id="services-section" style="display: none;">
+                            <label class="form-label fw-bold text-primary mb-1" style="font-size:0.72rem;"><i class="bi bi-grid-3x3-gap"></i> 3. Services</label>
+                            <div id="services-list" class="row g-1">
+                                <div class="col-12 text-muted" style="font-size:0.65rem;">Sélectionnez un élève et un mois</div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6" id="recap-section">
+                            <div class="card bg-light border-0 h-100">
+                                <div class="card-body py-1 px-2">
+                                    <h6 class="fw-bold text-primary mb-1" style="font-size:0.75rem;"><i class="bi bi-calculator"></i> Récapitulatif</h6>
+                                    <div class="row g-1" style="font-size:0.65rem;">
+                                        <div class="col-6">
+                                            <div class="d-flex justify-content-between">
+                                                <span>Scolarité:</span>
+                                                <span class="fw-bold" id="recap-scolarite">0</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="d-flex justify-content-between">
+                                                <span>Services:</span>
+                                                <span class="fw-bold" id="recap-services">0</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <hr class="my-1">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="fw-bold" style="font-size:0.72rem;">TOTAL DÛ:</span>
+                                        <span class="fw-bold text-success" id="recap-total" style="font-size:1rem;">0 FCFA</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="fw-bold text-danger" style="font-size:0.72rem;">RESTE À PAYER:</span>
+                                        <span class="fw-bold text-danger" id="recap-reste" style="font-size:1rem;">0 FCFA</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Étape 5: Montant + Infos -->
+                    <div class="row g-1 mb-1">
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold mb-1" style="font-size:0.68rem;">Montant versé (FCFA)</label>
+                            <input type="number" name="montant" id="montant-verse" class="form-control form-control-sm text-center fw-bold" required placeholder="0" min="0" style="font-size:0.85rem;">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label fw-bold text-primary mb-1" style="font-size:0.68rem;">Restant scolarité</label>
+                            <input type="text" class="form-control form-control-sm text-center fw-bold text-primary bg-light" id="restant-scolarite" disabled readonly value="0 FCFA" style="font-size:0.8rem;">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label fw-bold text-danger mb-1" style="font-size:0.68rem;">Reste à payer</label>
+                            <input type="text" class="form-control form-control-sm text-center fw-bold text-danger bg-light" id="reste-a-payer" disabled readonly value="0 FCFA" style="font-size:0.8rem;">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold mb-1" style="font-size:0.68rem;">Mode</label>
+                            <select name="mode_paiement" class="form-select form-select-sm" style="font-size:0.7rem;">
+                                <option value="Especes">Especes</option>
+                                <option value="Cheque">Cheque</option>
+                                <option value="Virement">Virement</option>
+                                <option value="Mobile Money">Mobile Money</option>
+                                <option value="Wave">Wave</option>
+                                <option value="Carte bancaire">Carte bancaire</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label text-muted mb-1" style="font-size:0.65rem;">Caissier</label>
+                            <input type="text" class="form-control form-control-sm" value="{{ current_user.username }}" disabled readonly style="font-size:0.7rem;">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label text-muted mb-1" style="font-size:0.65rem;">Date</label>
+                            <input type="text" class="form-control form-control-sm" id="datetime-display" disabled readonly style="font-size:0.7rem;">
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success btn-sm shadow-sm flex-grow-1" id="submit-btn" disabled>
+                            <i class="bi bi-check-circle"></i> Confirmer le Paiement
+                        </button>
+                        <a href="{{ url_for('finances') }}" class="btn btn-outline-secondary btn-sm" style="font-size:0.7rem;width:80px;">Annuler</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentTarifs = null;
+// Séquence scolaire : Inscription puis Octobre → Juin
+const MOIS_SCOLAIRES = ['Inscription','Octobre','Novembre','Decembre','Janvier','Fevrier','Mars','Avril','Mai','Juin'];
+const MOIS_DISPLAY = {Janvier: 'JAN', Fevrier: 'FEV', Mars: 'MAR', Avril: 'AVR', Mai: 'MAI', Juin: 'JUI', Juillet: 'JUL', Aout: 'AOU', Septembre: 'SEP', Octobre: 'OCT', Novembre: 'NOV', Decembre: 'DEC', Inscription: 'INS'};
+
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('eleve-search');
+    const resultsDiv = document.getElementById('search-results');
+    const idInput = document.getElementById('eleve_id_hidden');
+    const selectedBox = document.getElementById('selected-eleve-box');
+    const displayName = document.getElementById('display-name');
+    const displayCode = document.getElementById('display-code');
+    const submitBtn = document.getElementById('submit-btn');
+    const removeBtn = document.getElementById('remove-eleve');
+    const selectMois = document.getElementById('select-mois');
+    const servicesSection = document.getElementById('services-section');
+    const servicesList = document.getElementById('services-list');
+    const montantVerse = document.getElementById('montant-verse');
+    const datetimeDisplay = document.getElementById('datetime-display');
+    const moisStatus = document.getElementById('mois-status');
+    const moisBadges = document.getElementById('mois-badges');
+
+    // Afficher date/heure actuelle
+    const now = new Date();
+    datetimeDisplay.value = now.toLocaleDateString('fr-FR') + ' ' + now.toLocaleTimeString('fr-FR');
+
+    // Activer le bouton Enregistrer apres avoir tape Entree dans le champ montant
+    montantVerse.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            if (this.value && parseFloat(this.value) > 0 && idInput.value) {
+                submitBtn.disabled = false;
+            }
+        }
+    });
+    
+    // Mettre a jour le reste a payer en temps reel (scolarite prioritaire)
+    montantVerse.addEventListener('input', function() {
+        var resteEl = document.getElementById('reste-a-payer');
+        var totalDuText = document.getElementById('recap-total').textContent.trim();
+        var verse = parseFloat(this.value) || 0;
+        
+        // Recuperer les montants depuis currentTarifs
+        var scolarite = currentTarifs ? currentTarifs.total_scolarite : 0;
+        var services = currentTarifs ? currentTarifs.total_services : 0;
+        
+        // Scolarite prioritaire
+        var resteScolarite = Math.max(scolarite - verse, 0);
+        var resteApresScolarite = 0;
+        if (verse > scolarite) {
+            resteApresScolarite = Math.max(services - (verse - scolarite), 0);
+        } else {
+            resteApresScolarite = services;
+        }
+        
+        var resteTotal = resteScolarite + resteApresScolarite;
+        resteEl.value = resteTotal.toLocaleString('fr-FR') + ' FCFA';
+        
+        // Mettre a jour l'indicateur de repartition
+        var recapScolarite = document.getElementById('recap-scolarite');
+        var recapServices = document.getElementById('recap-services');
+        if (verse > 0 && currentTarifs) {
+            var payeScolarite = Math.min(verse, scolarite);
+            var payeServices = Math.max(verse - scolarite, 0);
+            var resteS = Math.max(scolarite - payeScolarite, 0);
+            var resteSv = Math.max(services - payeServices, 0);
+            recapScolarite.textContent = (scolarite - resteS).toLocaleString('fr-FR') + '/' + scolarite.toLocaleString('fr-FR') + ' FCFA';
+            recapServices.textContent = (services - resteSv).toLocaleString('fr-FR') + '/' + services.toLocaleString('fr-FR') + ' FCFA';
+        }
+    });
+
+    searchInput.addEventListener('input', function() {
+        const q = this.value;
+        if (q.length < 2) {
+            resultsDiv.innerHTML = '';
+            return;
+        }
+
+        fetch(`/api/eleves/search?q=${encodeURIComponent(q)}`)
+            .then(res => res.json())
+            .then(data => {
+                resultsDiv.innerHTML = '';
+                data.forEach(el => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'list-group-item list-group-item-action py-1 px-2';
+                    btn.style.fontSize = '0.7rem';
+                    btn.innerHTML = `
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="fw-bold text-primary">${el.prenom} ${el.nom}</span>
+                                <small class="text-muted ms-2">${el.code} | ${el.classe}</small>
+                            </div>
+                            <i class="bi bi-plus-circle text-success"></i>
+                        </div>
+                    `;
+                    btn.onclick = function() {
+                        idInput.value = el.id;
+                        displayName.textContent = `${el.prenom} ${el.nom}`;
+                        displayCode.textContent = `${el.code} - ${el.classe}`;
+                        selectedBox.classList.remove('d-none');
+                        searchInput.value = '';
+                        resultsDiv.innerHTML = '';
+                        searchInput.disabled = true;
+                        selectMois.disabled = false;
+                        resetRecap();
+                        chargerStatutPaiement(el.id);
+                    };
+                    resultsDiv.appendChild(btn);
+                });
+            });
+    });
+
+    removeBtn.onclick = function() {
+        idInput.value = '';
+        selectedBox.classList.add('d-none');
+        selectMois.disabled = true;
+        selectMois.innerHTML = '<option value="">-- Sélectionner un mois --</option>';
+        selectMois.value = '';
+        servicesSection.style.display = 'none';
+        servicesList.innerHTML = '';
+        submitBtn.disabled = true;
+        resetRecap();
+        moisStatus.classList.add('d-none');
+        searchInput.disabled = false;
+        searchInput.focus();
+    };
+
+    function chargerStatutPaiement(eleveId) {
+        fetch(`/api/eleve/${eleveId}/statut-paiements`)
+            .then(r => r.json())
+            .then(data => {
+                // Remplir le select avec la séquence scolaire
+                selectMois.innerHTML = '<option value="">-- Sélectionner un mois --</option>';
+                MOIS_SCOLAIRES.forEach(function(mois) {
+                    var opt = document.createElement('option');
+                    opt.value = mois;
+                    var statut = data.paiements[mois] || {};
+                    var badge = '';
+                    if (statut.paye) badge = ' V' + String.fromCharCode(0x2713);
+                    else if (statut.tarif > 0) badge = ' !IMPAYE';
+                    opt.textContent = mois + badge;
+                    opt.className = statut.paye ? 'text-success fw-bold' : (statut.tarif > 0 ? 'text-danger fw-bold' : '');
+                    selectMois.appendChild(opt);
+                });
+
+                // Afficher les badges de statut
+                var html = '';
+                MOIS_SCOLAIRES.forEach(function(mois) {
+                    var statut = data.paiements[mois] || {};
+                    var cls = 'badge bg-secondary';
+                    var label = MOIS_DISPLAY[mois] || mois.substring(0,3).toUpperCase();
+                    var title = mois;
+                    if (statut.paye) {
+                        cls = 'badge bg-success';
+                        title += ' - Paye';
+                    } else if (statut.tarif > 0) {
+                        cls = 'badge bg-danger';
+                        title += ' - IMPAYE';
+                    } else {
+                        title += ' - Pas de tarif defini';
+                    }
+                    html += '<span class="' + cls + '" title="' + title + '" style="font-size:0.65rem;">' + label + '</span>';
+                });
+                moisBadges.innerHTML = html;
+                moisStatus.classList.remove('d-none');
+            });
+    }
+
+    selectMois.addEventListener('change', function() {
+        const mois = this.value;
+        const eleveId = idInput.value;
+        if (!eleveId || !mois) {
+            servicesSection.style.display = 'none';
+            return;
+        }
+
+        fetch(`/api/tarifs-cumules/${eleveId}/${mois}`)
+            .then(res => res.json())
+            .then(data => {
+                currentTarifs = data;
+                renderServicesCumules(data);
+                updateRecapCumul();
+                servicesSection.style.display = 'block';
+            });
+    });
+
+    function renderServicesCumules(data) {
+        servicesList.innerHTML = '';
+        
+        if (!data.mois_a_payer || data.mois_a_payer.length === 0) {
+            servicesList.innerHTML = '<div class="col-12 text-muted small">Aucun montant du</div>';
+            return;
+        }
+
+        // Détail des mois en haut
+        var detail = document.createElement('div');
+        detail.className = 'col-12 mb-1';
+        detail.style.cssText = 'font-size:0.6rem;color:#666;line-height:1.3;';
+        var moisNoms = data.mois_a_payer.map(function(m) { return m.mois; }).join(' + ');
+        detail.textContent = 'Mois dus : ' + moisNoms;
+        servicesList.appendChild(detail);
+
+        // Agréger les services par nom (cumuler les montants identiques)
+        var servicesAgreges = {};
+        var isInscription = false;
+        data.mois_a_payer.forEach(function(item) {
+            if (item.mois === 'Inscription') isInscription = true;
+            if (item.services) {
+                item.services.forEach(function(srv) {
+                    if (!servicesAgreges[srv.nom]) {
+                        servicesAgreges[srv.nom] = { nom: srv.nom, montant: 0, mois: [] };
+                    }
+                    servicesAgreges[srv.nom].montant += srv.montant;
+                });
+            }
+        });
+
+        var noms = Object.keys(servicesAgreges);
+        if (noms.length === 0) {
+            var empty = document.createElement('div');
+            empty.className = 'col-12 text-muted';
+            empty.style.cssText = 'font-size:0.6rem;';
+            empty.textContent = 'Aucun service pour ces mois';
+            servicesList.appendChild(empty);
+        } else {
+            noms.forEach(function(nom) {
+                var srv = servicesAgreges[nom];
+                var div = document.createElement('div');
+                div.className = 'col-md-6';
+                
+                if (isInscription) {
+                        div.innerHTML = '<div class="border rounded p-1 bg-white d-flex justify-content-between align-items-center">' +
+                            '<span class="fw-bold" style="font-size:0.6rem;">' + srv.nom + '</span>' +
+                            '<input type="number" name="service_montant[]" data-service="' + srv.nom + '" class="form-control form-control-sm text-end fw-bold text-primary service-montant"' +
+                            ' style="width:70px;font-size:0.6rem;height:20px;" value="" min="0">' +
+                            '</div>';
+                } else {
+                    div.innerHTML = '<div class="border rounded p-1 bg-white d-flex justify-content-between align-items-center">' +
+                        '<span class="fw-bold" style="font-size:0.6rem;">' + srv.nom + '</span>' +
+                        '<span class="fw-bold text-primary" style="font-size:0.6rem;">' + srv.montant.toLocaleString('fr-FR') + ' FCFA</span>' +
+                        '</div>';
+                }
+                servicesList.appendChild(div);
+            });
+        }
+
+        // Recalculer quand on modifie un montant
+        document.querySelectorAll('.service-montant').forEach(function(inp) {
+            inp.addEventListener('input', updateRecapCumul);
+        });
+    }
+
+    function updateRecapCumul() {
+        if (!currentTarifs) return;
+        
+        var totalScolarite = currentTarifs.total_scolarite || 0;
+        var totalServices = currentTarifs.total_services || 0;
+        
+        // Si inscription est dans la liste, prendre en compte les inputs modifies
+        var isInscription = false;
+        if (currentTarifs.mois_a_payer) {
+            currentTarifs.mois_a_payer.forEach(function(item) {
+                if (item.mois === 'Inscription') isInscription = true;
+            });
+        }
+        if (isInscription) {
+            totalServices = 0;
+            document.querySelectorAll('.service-montant').forEach(function(inp) {
+                totalServices += parseFloat(inp.value) || 0;
+            });
+        }
+        
+        var totalDu = totalScolarite + totalServices;
+        
+        // Restant scolarite : le tarif du mois selectionne
+        var selectMois = document.getElementById('select-mois').value;
+        var restantScol = 0;
+        if (currentTarifs.mois_a_payer) {
+            currentTarifs.mois_a_payer.forEach(function(item) {
+                if (item.mois === selectMois && item.reste !== undefined) {
+                    restantScol = item.reste;
+                } else if (item.mois === selectMois) {
+                    restantScol = item.tarif - item.deja_paye;
+                }
+            });
+        }
+        document.getElementById('restant-scolarite').value = Math.max(restantScol, 0).toLocaleString('fr-FR') + ' FCFA';
+        
+        document.getElementById('recap-scolarite').textContent = totalScolarite.toLocaleString('fr-FR') + ' FCFA';
+        document.getElementById('recap-services').textContent = totalServices.toLocaleString('fr-FR') + ' FCFA';
+        document.getElementById('recap-total').textContent = totalDu.toLocaleString('fr-FR') + ' FCFA';
+        document.getElementById('recap-reste').textContent = totalDu.toLocaleString('fr-FR') + ' FCFA';
+        document.getElementById('reste-a-payer').value = totalDu.toLocaleString('fr-FR') + ' FCFA';
+    }
+
+    function resetRecap() {
+        currentTarifs = null;
+        document.getElementById('recap-scolarite').textContent = '0';
+        document.getElementById('recap-services').textContent = '0';
+        document.getElementById('recap-total').textContent = '0 FCFA';
+        document.getElementById('recap-reste').textContent = '0 FCFA';
+        document.getElementById('restant-scolarite').value = '0 FCFA';
+        document.getElementById('reste-a-payer').value = '0 FCFA';
+    }
+});
+</script>
+{% endblock %}

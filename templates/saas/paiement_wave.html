@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Paiement Wave — {{ "{:,.0f}".format(montant) }} FCFA{% endblock %}
+{% block extra_css %}
+<style>
+.phone-display { font-size: 2.2rem; font-weight: 800; letter-spacing: 2px; color: #1e3a8a; }
+.payment-steps li { padding: 8px 0; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width:500px;">
+    <div class="text-center mb-4">
+        <div class="rounded-circle bg-primary bg-opacity-10 d-inline-flex align-items-center justify-content-center mb-2" style="width:80px; height:80px;">
+            <i class="bi bi-phone-fill text-primary fs-1"></i>
+        </div>
+        <h4 class="fw-bold">Paiement Wave</h4>
+        <p class="text-muted mb-0">Facture {{ facture.numero }}</p>
+    </div>
+
+    <!-- Numéro Wave -->
+    <div class="card shadow-sm border-0 text-center mb-3" style="background: linear-gradient(135deg, #1e3a8a, #2563eb);">
+        <div class="card-body text-white p-4">
+            <p class="small opacity-75 mb-1">Envoyez le montant au numero Wave</p>
+            <p class="phone-display mb-0">77 692 91 88</p>
+            <small class="opacity-75">ABDOU DIATTA</small>
+        </div>
+    </div>
+
+    <!-- Instructions -->
+    <div class="card shadow-sm border-0 mb-3">
+        <div class="card-body p-4">
+            <h6 class="fw-bold mb-3"><i class="bi bi-info-circle text-primary me-1"></i> Instructions</h6>
+            <ol class="small payment-steps mb-0">
+                <li>Ouvrez l'application <strong>Wave</strong> sur votre telephone</li>
+                <li>Appuyez sur <strong>Envoyer de l'argent</strong></li>
+                <li>Entrez le numero : <strong>77 692 91 88</strong></li>
+                <li>Saisissez le montant exact : <strong class="text-danger">{{ "{:,.0f}".format(montant) }} FCFA</strong></li>
+                <li>Confirmez avec votre code PIN</li>
+                <li>Cliquez sur <strong>"J'ai effectue le paiement"</strong> ci-dessous</li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- Résumé -->
+    <div class="card bg-light border-0 rounded-3 p-3 mb-3">
+        <table class="table table-sm table-borderless mb-0 small">
+            <tr><td class="text-muted">Facture</td><td class="text-end fw-semibold">{{ facture.numero }}</td></tr>
+            <tr><td class="text-muted">Plan</td><td class="text-end">{{ facture.description }}</td></tr>
+            <tr class="table-group-divider"><td class="fw-bold">Montant</td><td class="text-end fw-bold text-danger">{{ "{:,.0f}".format(montant) }} FCFA</td></tr>
+        </table>
+    </div>
+
+    <!-- Bouton confirmation -->
+    <form method="GET" action="{{ url_for('abonnement_callback', facture_id=facture.id) }}">
+        <button type="submit" class="btn btn-success btn-lg w-100 rounded-pill mb-2">
+            <i class="bi bi-check-circle me-2"></i> J'ai effectue le paiement
+        </button>
+    </form>
+    <p class="text-center text-muted" style="font-size:0.7rem;">
+        <i class="bi bi-info-circle"></i> Apres validation, vous recevrez votre acces dans les plus brefs delais.<br>
+        Pour toute question : <strong>77 692 91 88</strong>
+    </p>
+</div>
+{% endblock %}

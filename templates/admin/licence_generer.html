@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Générer une Clé de Licence{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-key-fill"></i> Générer une Clé de Licence</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Établissement concerné</label>
+                        <select name="ecole_id" class="form-select" required>
+                            <option value="">-- Sélectionner un établissement --</option>
+                            {% for ec in all_ecoles %}
+                            <option value="{{ ec.id }}" {{ 'selected' if ecole and ec.id == ecole.id }}>{{ ec.nom }}</option>
+                            {% endfor %}
+                        </select>
+                        <small class="text-muted">Chaque licence est liée à un seul établissement.</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Nom de l'école (affichage)</label>
+                        <input type="text" class="form-control" name="ecole_nom" placeholder="Ex: ECOLE PAPE BENOIT 16" value="{{ ecole.nom if ecole }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Date d'expiration</label>
+                        <input type="date" class="form-control" name="date_expiration" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-gear-fill me-1"></i> Générer la clé
+                    </button>
+                </form>
+
+                {% if cle_generee %}
+                <div class="mt-4 alert alert-success">
+                    <h6 class="fw-bold"><i class="bi bi-check-circle-fill"></i> Clé générée avec succès</h6>
+                    <div class="input-group mt-2">
+                        <input type="text" class="form-control text-center fw-bold" value="{{ cle_generee }}" id="cleInput"
+                               style="font-size: 1.3rem; letter-spacing: 3px;" readonly>
+                        <button class="btn btn-outline-success" onclick="copierCle()">
+                            <i class="bi bi-clipboard"></i> Copier
+                        </button>
+                    </div>
+                    <small class="text-muted mt-2 d-block">
+                        <i class="bi bi-info-circle"></i> Transmettez cette clé au client avec la date d'expiration correspondante
+                    </small>
+                </div>
+                {% endif %}
+            </div>
+            <div class="card-footer text-center">
+                <a href="{{ url_for('admin_licences') }}" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Retour à la liste
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copierCle() {
+    const input = document.getElementById('cleInput');
+    input.select();
+    navigator.clipboard.writeText(input.value);
+    alert('Clé copiée !');
+}
+</script>
+{% endblock %}

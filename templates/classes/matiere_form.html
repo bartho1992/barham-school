@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Modifier' if matiere else 'Ajouter' }} matiere{% endblock %}
+{% block content %}
+<h3 class="mb-3"><i class="bi bi-book"></i> {{ 'Modifier' if matiere else 'Ajouter' }} une matiere</h3>
+<div class="card shadow-sm"><div class="card-body">
+<form method="POST" action="{{ url_for('matiere_modifier', id=matiere.id) if matiere else url_for('matiere_ajouter') }}">
+    <div class="row g-3">
+        <div class="col-md-4">
+            <label class="form-label fw-bold">Nom *</label>
+            <input type="text" name="nom" class="form-control" value="{{ matiere.nom if matiere }}" required>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label fw-bold">Domaine</label>
+            <select name="domaine" class="form-select">
+                <option value="LANGUES ET COMMUNICATIONS" {% if matiere and matiere.domaine=='LANGUES ET COMMUNICATIONS' %}selected{% endif %}>Langues et Communications</option>
+                <option value="MATHEMATIQUES" {% if matiere and matiere.domaine=='MATHEMATIQUES' %}selected{% endif %}>Mathematiques</option>
+                <option value="DECOUVERTE DU MONDE" {% if matiere and matiere.domaine=='DECOUVERTE DU MONDE' %}selected{% endif %}>Decouverte du Monde</option>
+                <option value="EDD" {% if matiere and matiere.domaine=='EDD' %}selected{% endif %}>EDD</option>
+                <option value="SCIENCES" {% if matiere and matiere.domaine=='SCIENCES' %}selected{% endif %}>Sciences</option>
+                <option value="HISTOIRE-GEO" {% if matiere and matiere.domaine=='HISTOIRE-GEO' %}selected{% endif %}>Histoire-Geo</option>
+                <option value="AUTRES" {% if matiere and matiere.domaine=='AUTRES' %}selected{% endif %}>Autres</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label fw-bold">Coefficient</label>
+            <input type="number" name="coefficient" class="form-control" value="{{ matiere.coefficient if matiere else 1 }}" min="1" max="10">
+        </div>
+    </div>
+    <hr>
+    <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> {{ 'Enregistrer' if matiere else 'Ajouter' }}</button>
+    <a href="{{ url_for('matieres') }}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Retour</a>
+</form>
+</div></div>
+{% endblock %}

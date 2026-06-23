@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Synthèse {{ classe.nom }} - {{ ecole.nom }}{% endblock %}
+{% block content %}
+<div class="row mb-4 no-print">
+    <div class="col-md-8">
+        <h3><i class="bi bi-award"></i> Synthèse des Résultats : {{ classe.nom }}</h3>
+        <p class="text-muted">{{ trimestre }}{{ 'er' if trimestre == 1 else 'ème' }} Trimestre | {{ current_annee }}</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <button onclick="window.print()" class="btn btn-primary"><i class="bi bi-printer"></i> Imprimer la liste</button>
+        <a href="{{ url_for('bulletins') }}" class="btn btn-outline-secondary ms-2">Retour</a>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-white py-3">
+        <h5 class="mb-0 fw-bold">Classement et Moyennes</h5>
+    </div>
+    <div style="max-height:65vh;overflow-y:auto;overflow-x:hidden;">
+        {% if not bulletins %}
+        <div class="text-center py-4 text-muted">
+            <i class="bi bi-exclamation-circle fs-3 d-block mb-2"></i>
+            <strong>Aucun eleve dans cette classe</strong>
+            <p class="small">Ajoutez des eleves pour voir les bulletins.</p>
+        </div>
+        {% else %}
+        <table class="table table-striped table-sm align-middle mb-0 w-100">
+            <thead class="table-dark">
+                <tr>
+                    <th class="text-center" style="width: 80px;">Rang</th>
+                    <th>Élève</th>
+                    <th class="text-center">Moyenne Générale</th>
+                    <th class="text-center">Appréciation</th>
+                    <th class="text-end no-print px-4">Bulletin Individuel</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for b in bulletins %}
+                <tr>
+                    <td class="text-center fw-bold fs-5">
+                        <span class="badge {{ 'bg-warning text-dark' if b.rang == 1 else 'bg-secondary' if b.rang <= 3 else 'bg-light text-dark' }}">
+                            {{ b.rang }}{{ 'er' if b.rang == 1 else 'e' }}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="fw-bold">{{ b.eleve.prenom }} {{ b.eleve.nom }}</div>
+                        <small class="text-muted">{{ b.eleve.code }}</small>
+                    </td>
+                    <td class="text-center">
+                        <span class="fw-bold fs-5 {{ 'text-success' if b.moyenne >= 10 else 'text-danger' }}">
+                            {{ "%.2f"|format(b.moyenne) }}
+                        </span>
+                    </td>
+                    <td class="text-center">
+                        {% if b.moyenne >= 16 %} <span class="badge bg-success">Excellent</span>
+                        {% elif b.moyenne >= 14 %} <span class="badge bg-primary">Très Bien</span>
+                        {% elif b.moyenne >= 12 %} <span class="badge bg-info text-dark">Assez Bien</span>
+                        {% elif b.moyenne >= 10 %} <span class="badge bg-success">Passable</span>
+                        {% else %} <span class="badge bg-danger">Insuffisant</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end no-print px-4">
+                        <a href="#" class="btn btn-sm btn-outline-danger" title="Voir le bulletin complet"><i class="bi bi-file-earmark-pdf"></i> Générer PDF</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+@media print {
+    .no-print { display: none !important; }
+    .card { border: none !important; box-shadow: none !important; }
+    .table-dark { background-color: #eee !important; color: black !important; }
+}
+</style>
+{% endblock %}

@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Impayés - {{ ecole.nom }}{% endblock %}
+{% block content %}
+<div class="row mb-2">
+    <div class="col-md-6">
+        <h6 class="mb-0"><i class="bi bi-exclamation-triangle text-danger"></i> Suivi des Impayés</h6>
+        <small class="text-muted">Sequence scolaire : Inscription → Octobre → Novembre → ... → Juin</small>
+    </div>
+    <div class="col-md-6 text-end">
+        <a href="{{ url_for('finances') }}" class="btn btn-outline-secondary btn-sm">Retour</a>
+    </div>
+</div>
+
+<!-- Résumé -->
+<div class="row mb-2 g-1">
+    <div class="col-4">
+        <div class="card bg-danger text-white border-0 shadow-sm">
+            <div class="card-body text-center py-1">
+                <h4 class="mb-0 fw-bold">{{ "{:,.0f}".format(total_impayes_global).replace(',', ' ') }}</h4>
+                <small>FCFA Impayés</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-4">
+        <div class="card bg-warning text-dark border-0 shadow-sm">
+            <div class="card-body text-center py-1">
+                <h4 class="mb-0 fw-bold">{{ nb_eleves }}</h4>
+                <small>Élèves concernés</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-4">
+        <div class="card bg-info text-white border-0 shadow-sm">
+            <div class="card-body text-center py-1">
+                <h4 class="mb-0 fw-bold">{{ mois_scolaires|length }}</h4>
+                <small>Mois scolaires</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div style="max-height:68vh;overflow-y:auto;overflow-x:hidden;">
+    {% if impayes %}
+        {% for item in impayes %}
+        <div class="card shadow-sm border-0 mb-2">
+            <div class="card-header bg-light py-1 px-2 d-flex justify-content-between align-items-center">
+                <div>
+                    <strong>{{ item.eleve.prenom }} {{ item.eleve.nom }}</strong>
+                    <span class="badge bg-secondary ms-1">{{ item.eleve.classe.nom }}</span>
+                    <small class="text-muted ms-1">{{ item.eleve.code }}</small>
+                </div>
+                <div>
+                    <span class="badge bg-danger">{{ item.nb_mois }} mois impayé(s)</span>
+                    <span class="badge bg-dark ms-1">{{ "{:,.0f}".format(item.total_impaye).replace(',', ' ') }} FCFA</span>
+                </div>
+            </div>
+            <div class="card-body py-1 px-2">
+                <div class="row g-1">
+                    {% for mois_manquant in item.mois %}
+                    <div class="col-md-4">
+                        <div class="border rounded p-2 d-flex justify-content-between align-items-center bg-white">
+                            <div>
+                                <span class="badge bg-danger me-1" style="font-size:0.65rem;">
+                                    {% if mois_manquant.mois == 'Inscription' %}INS
+                                    {% elif mois_manquant.mois == 'Octobre' %}OCT
+                                    {% elif mois_manquant.mois == 'Novembre' %}NOV
+                                    {% elif mois_manquant.mois == 'Decembre' %}DEC
+                                    {% elif mois_manquant.mois == 'Janvier' %}JAN
+                                    {% elif mois_manquant.mois == 'Fevrier' %}FEV
+                                    {% elif mois_manquant.mois == 'Mars' %}MAR
+                                    {% elif mois_manquant.mois == 'Avril' %}AVR
+                                    {% elif mois_manquant.mois == 'Mai' %}MAI
+                                    {% elif mois_manquant.mois == 'Juin' %}JUI
+                                    {% else %}{{ mois_manquant.mois[:3].upper() }}{% endif %}
+                                </span>
+                                <small>{{ mois_manquant.mois }}</small>
+                            </div>
+                            <div class="text-end">
+                                <small class="text-muted">Tarif: {{ "{:,.0f}".format(mois_manquant.tarif).replace(',', ' ') }}</small><br>
+                                <small class="text-danger fw-bold">Reste: {{ "{:,.0f}".format(mois_manquant.reste).replace(',', ' ') }} FCFA</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="text-end mt-1">
+                    <a href="{{ url_for('paiement_ajouter') }}" class="btn btn-success btn-xs py-0 px-1" style="font-size:0.6rem;">
+                        <i class="bi bi-cash-coin"></i> Paiement
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="text-center py-5 text-muted">
+        <i class="bi bi-emoji-smile fs-1"></i>
+        <p class="mt-2">Aucun impayé détecté ! Tous les mois sont à jour.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

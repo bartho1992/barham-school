@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Modifier' if user else 'Nouvel' }} Utilisateur - {{ ecole.nom }}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0 fw-bold">{{ 'Modifier l\'utilisateur' if user else 'Ajouter un utilisateur' }}</h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Nom d'utilisateur</label>
+                        <input type="text" name="username" class="form-control" value="{{ user.username if user }}" required>
+                    </div>
+                    {% if user %}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Clé d'identification</label>
+                        <input type="text" class="form-control bg-light" value="{{ user.identifiant }}" readonly>
+                    </div>
+                    {% endif %}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Rôle</label>
+                        <select name="role" class="form-select">
+                            <option value="user" {{ 'selected' if user and user.role == 'user' }}>Utilisateur standard</option>
+                            <option value="super_users" {{ 'selected' if user and user.role == 'super_users' }}>Super Utilisateur</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Établissement (Optionnel)</label>
+                        <select name="ecole_id" class="form-select">
+                            <option value="">-- Aucun (Accès global) --</option>
+                            {% for ec in all_ecoles %}
+                            <option value="{{ ec.id }}" {{ 'selected' if user and user.ecole_id == ec.id }}>{{ ec.nom }}</option>
+                            {% endfor %}
+                        </select>
+                        <small class="text-muted">Si sélectionné, l'utilisateur ne verra que les données de cet établissement.</small>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">{{ 'Nouveau mot de passe (laisser vide pour ne pas changer)' if user else 'Mot de passe' }}</label>
+                        <input type="password" name="password" class="form-control" {{ 'required' if not user }}>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">Enregistrer</button>
+                        <a href="{{ url_for('admin_users') }}" class="btn btn-outline-secondary">Annuler</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

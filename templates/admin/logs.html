@@ -1,0 +1,256 @@
+﻿{% extends 'base.html' %}
+
+{% block title %}Logs Système - Développeur{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- En-tête réservé développeur -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-danger border-2">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0"><i class="bi bi-journal-code"></i> ESPACE DÉVELOPPEUR - LOGS SYSTÈME</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info mb-0">
+                        <i class="bi bi-info-circle"></i>
+                        Cette page permet de visualiser et analyser tous les événements du système : connexions, erreurs, actions utilisateurs, etc.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques rapides -->
+    <div class="row mb-4">
+        <div class="col-md-2">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">{{ stats.total_actions }}</h3>
+                    <small>Actions</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">{{ stats.logins_success }}</h3>
+                    <small>Connexions OK</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-warning text-dark">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">{{ stats.logins_failed }}</h3>
+                    <small>Échecs</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-danger text-white">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">{{ stats.total_errors }}</h3>
+                    <small>Erreurs</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">{{ logs|length }}</h3>
+                    <small>Logs affichés</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-funnel"></i> Filtres</h5>
+                </div>
+                <div class="card-body">
+                    <form method="GET" action="{{ url_for('admin_logs') }}" class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Période (jours)</label>
+                            <select name="days" class="form-select">
+                                <option value="1" {{ 'selected' if selected_days == 1 else '' }}>Dernier jour</option>
+                                <option value="7" {{ 'selected' if selected_days == 7 else '' }}>7 derniers jours</option>
+                                <option value="30" {{ 'selected' if selected_days == 30 else '' }}>30 derniers jours</option>
+                                <option value="90" {{ 'selected' if selected_days == 90 else '' }}>3 derniers mois</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Catégorie</label>
+                            <select name="category" class="form-select">
+                                <option value="">Toutes</option>
+                                {% for cat in categories %}
+                                <option value="{{ cat }}" {{ 'selected' if selected_category == cat else '' }}>{{ cat }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Niveau</label>
+                            <select name="level" class="form-select">
+                                <option value="">Tous</option>
+                                {% for lvl in levels %}
+                                <option value="{{ lvl }}" {{ 'selected' if selected_level == lvl else '' }}>{{ lvl }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-search"></i> Filtrer
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table des logs -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-table"></i> Journal des événements</h5>
+                    <div>
+                        <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#clearLogsModal">
+                            <i class="bi bi-trash"></i> Vider les anciens logs
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    {% if logs %}
+                    <div style="max-height:65vh;overflow-y:auto;overflow-x:hidden;">
+                        <table class="table table-sm table-striped mb-0">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th style="width: 150px;"><i class="bi bi-clock"></i> Timestamp</th>
+                                    <th style="width: 80px;">Niveau</th>
+                                    <th style="width: 100px;">Catégorie</th>
+                                    <th style="width: 120px;">Utilisateur</th>
+                                    <th>Action</th>
+                                    <th style="width: 150px;">Endpoint</th>
+                                    <th style="width: 100px;">IP</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in logs %}
+                                <tr>
+                                    <td class="small">{{ log.timestamp[:19]|replace('T',' ') if log.timestamp else '-' }}</td>
+                                    <td>
+                                        {% if log.level == 'DEBUG' %}
+                                            <span class="badge bg-secondary">DEBUG</span>
+                                        {% elif log.level == 'INFO' %}
+                                            <span class="badge bg-info">INFO</span>
+                                        {% elif log.level == 'WARNING' %}
+                                            <span class="badge bg-warning text-dark">WARN</span>
+                                        {% elif log.level == 'ERROR' %}
+                                            <span class="badge bg-danger">ERROR</span>
+                                        {% elif log.level == 'CRITICAL' %}
+                                            <span class="badge bg-dark">CRIT</span>
+                                        {% else %}
+                                            <span class="badge bg-light text-dark">{{ log.level }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td><span class="badge bg-light text-dark border">{{ log.category or '-' }}</span></td>
+                                    <td class="small">{{ log.username or 'Anonyme' }}</td>
+                                    <td class="small">
+                                        <strong>{{ log.action or '-' }}</strong>
+                                        {% if log.description %}
+                                            <br><span class="text-muted">{{ log.description[:80] }}{% if log.description|length > 80 %}...{% endif %}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="small"><code>{{ log.endpoint or '-' }}</code></td>
+                                    <td class="small text-muted">{{ log.ip_address or '-' }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-inbox display-1 text-muted"></i>
+                        <p class="mt-3 text-muted">Aucun log ne correspond aux critères sélectionnés.</p>
+                    </div>
+                    {% endif %}
+                </div>
+                {% if logs %}
+                <div class="card-footer text-muted">
+                    Affichage de {{ logs|length }} entrée(s) de log
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour vider les logs -->
+<div class="modal fade" id="clearLogsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-danger">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle"></i> Vider les anciens logs</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Sélectionnez la période des logs à supprimer définitivement :</p>
+                <form id="clearLogsForm" method="POST" action="{{ url_for('admin_logs_clear') }}">
+                    <div class="mb-3">
+                        <select name="days" class="form-select">
+                            <option value="7">Plus vieux que 7 jours</option>
+                            <option value="30" selected>Plus vieux que 30 jours</option>
+                            <option value="90">Plus vieux que 90 jours</option>
+                            <option value="365">Plus vieux que 1 an</option>
+                        </select>
+                    </div>
+                </form>
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-circle"></i>
+                    Cette action est irréversible. Les logs supprimés ne pourront pas être récupérés.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="submit" form="clearLogsForm" class="btn btn-danger">
+                    <i class="bi bi-trash"></i> Confirmer la suppression
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-refresh option pour le monitoring en temps réel
+let autoRefresh = false;
+let refreshInterval;
+
+function toggleAutoRefresh() {
+    autoRefresh = !autoRefresh;
+    if (autoRefresh) {
+        refreshInterval = setInterval(function() {
+            location.reload();
+        }, 30000); // Refresh every 30 seconds
+        alert('Rafraîchissement automatique activé (30s)');
+    } else {
+        clearInterval(refreshInterval);
+        alert('Rafraîchissement automatique désactivé');
+    }
+}
+
+// Ajouter un bouton de rafraîchissement automatique dans la navbar
+$(document).ready(function() {
+    const nav = $('.navbar-nav');
+    if (nav.length) {
+        nav.append('<li class="nav-item"><a class="nav-link" href="#" onclick="toggleAutoRefresh(); return false;"><i class="bi bi-arrow-clockwise"></i> Auto-refresh</a></li>');
+    }
+});
+</script>
+{% endblock %}
