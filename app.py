@@ -56,12 +56,8 @@ def get_current_annee():
     except:
         pass
         
-    # Annee scolaire dynamique si rien en base
-    now = datetime.now()
-    if now.month >= 9:
-        return f'{now.year}-{now.year + 1}'
-    else:
-        return f'{now.year - 1}-{now.year}'
+    # Si rien en base, laisser vide — l'admin doit le definir
+    return ''
 
 @app.route('/favicon.ico')
 @app.route('/favicon.svg')

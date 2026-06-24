@@ -25,7 +25,7 @@ class Ecole(db.Model):
     identifiant = db.Column(db.String(50), unique=True, nullable=True)
     adresse = db.Column(db.String(300), default='ZAC MBAO CITE CAPEC')
     tel = db.Column(db.String(100), default='338369035-772601310-777385032')
-    annee_scolaire = db.Column(db.String(20), default='2024-2025')
+    annee_scolaire = db.Column(db.String(20))  # defini manuellement par l'admin
     zone = db.Column(db.String(100), default='RUFISQUE')
     dev = db.Column(db.String(200), default='Abdou Diatta - Barham Informatique')
     email = db.Column(db.String(150), default='')
@@ -392,9 +392,13 @@ def init_data():
         if first_ecole:
             baye.ecole_id = first_ecole.id
     if not Ecole.query.first():
-        db.session.add(Ecole(identifiant=gen_key("ECL")))
+        from datetime import datetime
+        now = datetime.now()
+        annee = f'{now.year}-{now.year + 1}' if now.month >= 9 else f'{now.year - 1}-{now.year}'
+        ecole = Ecole(identifiant=gen_key("ECL"), nom='BARHAMSCOOL APP', annee_scolaire=annee)
+        db.session.add(ecole)
     if not AnneeScolaire.query.first():
-        db.session.add(AnneeScolaire(annee='2024-2025', active=True))
+        db.session.add(AnneeScolaire(annee=annee, active=True))
     if not Classe.query.first():
         niveaux = [
             ('PS','Prescolaire'),('GS','Prescolaire'),

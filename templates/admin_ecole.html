@@ -1,4 +1,4 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 {% block title %}Gestion des Établissements{% endblock %}
 {% block content %}
 <div class="row">
@@ -60,7 +60,7 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Année Scolaire active</label>
-                            <input type="text" name="annee_scolaire" class="form-control" value="{{ ecole.annee_scolaire }}" readonly>
+                            <input type="text" name="annee_scolaire" class="form-control" value="{{ ecole.annee_scolaire if ecole.annee_scolaire else '' }}" placeholder="Ex: 2025-2026" required>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Zone / Ville</label>

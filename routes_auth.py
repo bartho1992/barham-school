@@ -99,13 +99,10 @@ def register():
             flash('Cet identifiant existe deja.', 'danger')
             return render_template('auth/register.html')
         
-        # Creer l'ecole
-        now = datetime.now(timezone.utc)
-        annee = f'{now.year}-{now.year + 1}' if now.month >= 9 else f'{now.year - 1}-{now.year}'
+        # Creer l'ecole (annee scolaire laissee vide, l'admin la definira)
         ecole = Ecole(
             nom=nom_ecole.upper(),
-            identifiant=f"EC-{nom_ecole[:4].upper()}-{Ecole.query.count() + 1}",
-            annee_scolaire=annee
+            identifiant=f"EC-{nom_ecole[:4].upper()}-{Ecole.query.count() + 1}"
         )
         db.session.add(ecole)
         db.session.flush()
@@ -117,6 +114,8 @@ def register():
         db.session.flush()
         
         # Creer une annee scolaire par defaut
+        now = datetime.now(timezone.utc)
+        annee = f'{now.year}-{now.year + 1}' if now.month >= 9 else f'{now.year - 1}-{now.year}'
         try:
             if not AnneeScolaire.query.filter_by(ecole_id=ecole.id, annee=annee).first():
                 an = AnneeScolaire(ecole_id=ecole.id, annee=annee, active=True)
