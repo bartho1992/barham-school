@@ -391,10 +391,10 @@ def init_data():
         first_ecole = Ecole.query.first()
         if first_ecole:
             baye.ecole_id = first_ecole.id
+    from datetime import datetime
+    now = datetime.now()
+    annee = f'{now.year}-{now.year + 1}' if now.month >= 9 else f'{now.year - 1}-{now.year}'
     if not Ecole.query.first():
-        from datetime import datetime
-        now = datetime.now()
-        annee = f'{now.year}-{now.year + 1}' if now.month >= 9 else f'{now.year - 1}-{now.year}'
         ecole = Ecole(identifiant=gen_key("ECL"), nom='BARHAMSCOOL APP', annee_scolaire=annee)
         db.session.add(ecole)
     if not AnneeScolaire.query.first():
