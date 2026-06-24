@@ -116,21 +116,20 @@ def register():
         db.session.add(user)
         db.session.flush()
         
-        # Creer une annee scolaire par defaut si aucune n'existe pour cette ecole
-        if not AnneeScolaire.query.filter_by(ecole_id=ecole.id, annee=annee).first():
-            try:
+        # Creer une annee scolaire par defaut
+        try:
+            if not AnneeScolaire.query.filter_by(ecole_id=ecole.id, annee=annee).first():
                 an = AnneeScolaire(ecole_id=ecole.id, annee=annee, active=True)
                 db.session.add(an)
                 db.session.flush()
+        except:
+            # Si l'annee existe deja (unicite), utiliser un suffixe unique
+            try:
+                an = AnneeScolaire(ecole_id=ecole.id, annee=f"{annee}-{ecole.id}", active=True)
+                db.session.add(an)
+                db.session.flush()
             except:
-                db.session.rollback()
-                # Essayer avec un suffixe
-                try:
-                    an = AnneeScolaire(ecole_id=ecole.id, annee=f"{annee}-{ecole.id}", active=True)
-                    db.session.add(an)
-                    db.session.flush()
-                except:
-                    db.session.rollback()
+                pass  # L'annee scolaire n'est pas critique pour la licence d'essai
         
         # Licence d'essai 30 jours automatique
         import random, string
