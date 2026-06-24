@@ -24,14 +24,14 @@
                 {% for p in paiements %}
                 <tr>
                     <td><code>{{ p.numero }}</code></td>
-                    <td class="fw-bold">{{ p.ecole.nom }}</td>
+                    <td class="fw-bold">{{ p.ecole.nom if p.ecole else 'École supprimée' }}</td>
                     <td>{{ plans[p.plan].nom if p.plan in plans else p.plan }} ({{ p.duree_mois }}m)</td>
                     <td class="fw-bold text-danger">{{ "{:,.0f}".format(p.montant) }} F</td>
                     <td><span class="badge bg-light text-dark">{{ p.mode_paiement or '—' }}</span></td>
                     <td>{{ p.created_at.strftime('%d/%m/%y %H:%M') }}</td>
                     <td class="text-end">
                         <form method="POST" action="{{ url_for('admin_valider_paiement', facture_id=p.id) }}" class="d-inline">
-                            <button class="btn btn-success btn-sm py-0" onclick="return confirm('Valider le paiement de {{ p.ecole.nom }} ?')"><i class="bi bi-check-lg"></i></button>
+                            <button class="btn btn-success btn-sm py-0" onclick="return confirm('Valider le paiement de {{ p.ecole.nom if p.ecole else '—' }} ?')"><i class="bi bi-check-lg"></i></button>
                         </form>
                         <form method="POST" action="{{ url_for('admin_refuser_paiement', facture_id=p.id) }}" class="d-inline ms-1">
                             <button class="btn btn-outline-danger btn-sm py-0" onclick="return confirm('Refuser ?')"><i class="bi bi-x-lg"></i></button>
@@ -59,7 +59,7 @@
                 {% for p in paiements_valides %}
                 <tr>
                     <td><code>{{ p.numero }}</code></td>
-                    <td>{{ p.ecole.nom }}</td>
+                    <td>{{ p.ecole.nom if p.ecole else '—' }}</td>
                     <td>{{ plans[p.plan].nom if p.plan in plans else p.plan }}</td>
                     <td class="fw-bold text-success">{{ "{:,.0f}".format(p.montant) }} F</td>
                     <td>{{ p.mode_paiement or '—' }}</td>
@@ -88,7 +88,7 @@
                 {% for p in paiements_annules %}
                 <tr>
                     <td><code>{{ p.numero }}</code></td>
-                    <td>{{ p.ecole.nom }}</td>
+                    <td>{{ p.ecole.nom if p.ecole else '—' }}</td>
                     <td>{{ plans[p.plan].nom if p.plan in plans else p.plan }}</td>
                     <td>{{ "{:,.0f}".format(p.montant) }} F</td>
                     <td>{{ p.created_at.strftime('%d/%m/%y %H:%M') }}</td>

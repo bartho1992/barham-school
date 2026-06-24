@@ -407,7 +407,7 @@ def admin_valider_paiement(facture_id):
             except:
                 pass
         
-        flash(f'Paiement de {ecole.nom} validé — Licence activée !', 'success')
+        flash(f'Paiement de {ecole.nom if ecole else "ecole inconnue"} validé — Licence activée !', 'success')
     else:
         flash('Ce paiement n\'est plus en attente.', 'warning')
     
