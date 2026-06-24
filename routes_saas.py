@@ -414,6 +414,23 @@ def admin_valider_paiement(facture_id):
     return redirect(url_for('admin_paiements'))
 
 
+@app.route('/admin/paiements/refuser/<int:facture_id>', methods=['POST'])
+@login_required
+def admin_refuser_paiement(facture_id):
+    if current_user.role != 'super_users':
+        flash('Accès réservé au développeur.', 'danger')
+        return redirect(url_for('dashboard'))
+    
+    facture = FactureLicence.query.get_or_404(facture_id)
+    facture.statut = 'annulee'
+    tr = TransactionLicence.query.filter_by(facture_id=facture.id).first()
+    if tr:
+        tr.statut = 'annulee'
+    db.session.commit()
+    flash('Paiement refusé.', 'warning')
+    return redirect(url_for('admin_paiements'))
+
+
 @app.route('/admin/paiements/supprimer/<int:facture_id>', methods=['POST'])
 @login_required
 def admin_supprimer_paiement(facture_id):
