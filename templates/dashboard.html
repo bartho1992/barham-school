@@ -128,7 +128,7 @@
     bottom: 60px;
     right: 15px;
     width: 380px;
-    max-width: 90vw;
+    max-width: 94vw;
     z-index: 1050;
     box-shadow: 0 10px 30px rgba(0,0,0,0.3);
     transition: all 0.3s ease;
@@ -155,6 +155,18 @@
 .widget-body {
     max-height: 250px;
     overflow-y: auto;
+}
+@media (max-width: 480px) {
+    .widget-paiements {
+        bottom: 8px;
+        right: 4px;
+        left: 4px;
+        width: auto;
+        max-width: none;
+    }
+    .widget-body {
+        max-height: 180px;
+    }
 }
 </style>
 
