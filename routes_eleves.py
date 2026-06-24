@@ -7,7 +7,7 @@ from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 
 def _annee_courante(e):
-    return session.get('annee_scolaire', e.annee_scolaire if e else '2024-2025')
+    return session.get('annee_scolaire', e.annee_scolaire if e else '')
 
 @app.route('/eleves')
 @login_required

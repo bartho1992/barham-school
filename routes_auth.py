@@ -10,7 +10,7 @@ login_manager.init_app(app)
 login_manager.login_view = 'login'
 
 def _annee_courante(e):
-    return session.get('annee_scolaire', e.annee_scolaire if e else '2024-2025')
+    return session.get('annee_scolaire', e.annee_scolaire if e else '')
 
 @login_manager.user_loader
 def load_user(id): return User.query.get(int(id))

@@ -4,7 +4,7 @@ from models import db, Ecole, Personnel, Salaire
 from app import app, get_current_ecole_id
 
 def _annee_courante(e):
-    return session.get('annee_scolaire', e.annee_scolaire if e else '2024-2025')
+    return session.get('annee_scolaire', e.annee_scolaire if e else '')
 
 @app.route('/personnel')
 @login_required

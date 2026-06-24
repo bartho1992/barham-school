@@ -11,7 +11,7 @@ except ImportError:
     requests = None
 
 def _annee_courante(e):
-    return session.get('annee_scolaire', e.annee_scolaire if e else '2024-2025')
+    return session.get('annee_scolaire', e.annee_scolaire if e else '')
 
 @app.route('/finances')
 @login_required

@@ -36,15 +36,19 @@ def get_current_ecole_id():
     return 1
 
 def get_current_annee():
-    annee_session = session.get('annee_scolaire')
-    if annee_session and str(annee_session).strip().lower() != 'none':
-        return annee_session
-    
     ecole_id = get_current_ecole_id()
     ecole = Ecole.query.get(ecole_id)
-    if ecole and ecole.annee_scolaire and str(ecole.annee_scolaire).strip().lower() != 'none':
-        return ecole.annee_scolaire
     
+    # 1. L'admin a defini manuellement l'annee scolaire → priorite absolue
+    if ecole and ecole.annee_scolaire and str(ecole.annee_scolaire).strip():
+        return str(ecole.annee_scolaire).strip()
+    
+    # 2. Session (choix temporaire via le dropdown dashboard)
+    annee_session = session.get('annee_scolaire')
+    if annee_session and str(annee_session).strip().lower() != 'none' and str(annee_session).strip():
+        return str(annee_session).strip()
+    
+    # 3. AnneeScolaire active en base
     try:
         annee_active = AnneeScolaire.query.filter_by(ecole_id=ecole_id, active=True).first()
         if annee_active and annee_active.annee:
@@ -55,8 +59,8 @@ def get_current_annee():
             return annee_recent.annee
     except:
         pass
-        
-    # Si rien en base, laisser vide — l'admin doit le definir
+    
+    # 4. Rien de defini → l'admin doit le faire
     return ''
 
 @app.route('/favicon.ico')

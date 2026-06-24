@@ -151,7 +151,7 @@ def admin_import():
         
         ecole_id = get_current_ecole_id()
         e = Ecole.query.get(ecole_id)
-        annee = session.get('annee_scolaire', e.annee_scolaire if e else '2024-2025')
+        annee = session.get('annee_scolaire', e.annee_scolaire if e else '')
         
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
