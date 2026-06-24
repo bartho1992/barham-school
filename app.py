@@ -129,6 +129,7 @@ with app.app_context():
     init_data()
 
 # Injecte has_licence dans tous les templates (pour la sidebar)
+# + info essai (jours restants, est un essai)
 @app.context_processor
 def inject_licence_status():
     from flask_login import current_user
@@ -137,10 +138,16 @@ def inject_licence_status():
         if current_user.is_authenticated and current_user.role != 'super_users':
             ecole_id = get_current_ecole_id()
             licence = Licence.licence_active_for_ecole(ecole_id)
-            return {'has_licence': licence is not None}
+            if licence:
+                return {
+                    'has_licence': True,
+                    'est_essai': licence.essai,
+                    'jours_restants': licence.jours_restants
+                }
+            return {'has_licence': False, 'est_essai': False, 'jours_restants': 0}
     except:
         pass
-    return {'has_licence': True}  # super_users = toujours true
+    return {'has_licence': True, 'est_essai': False, 'jours_restants': 0}  # super_users = toujours true
 
 @app.before_request
 def verifier_licence_et_session():
@@ -177,11 +184,22 @@ def verifier_licence_et_session():
             ecole_id = get_current_ecole_id()
             licence = Licence.licence_active_for_ecole(ecole_id)
             if not licence:
-                return redirect(url_for('licence_page'))
+                # Verifier si une licence expiree (essai termine)
+                old = Licence.query.filter_by(active=True, ecole_id=ecole_id).first()
+                if old and old.essai and old.jours_restants == 0:
+                    flash('Votre essai gratuit est termine. Souscrivez a un abonnement pour continuer.', 'warning')
+                return redirect(url_for('abonnement'))
+            # Notifier si essai arrive a expiration
+            if licence.essai and licence.jours_restants <= 7 and licence.jours_restants > 0:
+                # Stocker en session pour ne pas flasher a chaque requete
+                last_warning = session.get('last_trial_warning')
+                from datetime import date
+                today = date.today().isoformat()
+                if last_warning != today:
+                    flash(f'Votre essai gratuit expire dans {licence.jours_restants} jour(s). Souscrivez des maintenant !', 'warning')
+                    session['last_trial_warning'] = today
     except:
-        licence = Licence.licence_active_for_ecole(1)
-        if not licence:
-            return redirect(url_for('licence_page'))
+        pass
 
 if __name__ == '__main__':
     app.run(debug=False, port=5001)

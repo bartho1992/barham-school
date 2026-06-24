@@ -65,6 +65,20 @@
                         </a>
                     </li>
 
+                    <!-- Essai actif : badge avec jours restants -->
+                    {% if est_essai %}
+                    <li class="nav-item mt-1 px-2">
+                        <span class="badge bg-warning text-dark w-100 py-1" style="font-size:0.58rem;">
+                            <i class="bi bi-clock-history me-1"></i> Essai — {{ jours_restants }} jour{{ 's' if jours_restants != 1 }} restant{{ 's' if jours_restants != 1 }}
+                        </span>
+                        {% if jours_restants <= 7 and jours_restants > 0 %}
+                        <span class="badge bg-danger w-100 py-1 mt-1" style="font-size:0.55rem;">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i> Expire bientot ! Souscrivez
+                        </span>
+                        {% endif %}
+                    </li>
+                    {% endif %}
+
                     <li class="nav-item">
                         <a class="nav-link d-flex align-items-center gap-2 py-1 px-2 {{ 'active' if request.endpoint == 'abonnement' }}" href="{{ url_for('abonnement') }}">
                             <i class="bi bi-key-fill" style="font-size: 0.9rem;"></i>

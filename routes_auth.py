@@ -76,6 +76,9 @@ def login():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    from models import AnneeScolaire, Licence
+    from datetime import timedelta
+    
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
 
@@ -97,10 +100,12 @@ def register():
             return render_template('auth/register.html')
         
         # Creer l'ecole
+        now = datetime.now(timezone.utc)
+        annee = f'{now.year}-{now.year + 1}' if now.month >= 9 else f'{now.year - 1}-{now.year}'
         ecole = Ecole(
             nom=nom_ecole.upper(),
-            identifiant=f"EC-{nom_ecole[:4].upper()}-{db.session.query(Ecole).count() + 1}",
-            annee_scolaire='2024-2025'
+            identifiant=f"EC-{nom_ecole[:4].upper()}-{Ecole.query.count() + 1}",
+            annee_scolaire=annee
         )
         db.session.add(ecole)
         db.session.flush()
@@ -109,11 +114,54 @@ def register():
         user = User(username=username, role='user', ecole_id=ecole.id)
         user.set_password(password)
         db.session.add(user)
+        db.session.flush()
+        
+        # Creer une annee scolaire par defaut si aucune n'existe pour cette ecole
+        if not AnneeScolaire.query.filter_by(ecole_id=ecole.id, annee=annee).first():
+            try:
+                an = AnneeScolaire(ecole_id=ecole.id, annee=annee, active=True)
+                db.session.add(an)
+                db.session.flush()
+            except:
+                db.session.rollback()
+                # Essayer avec un suffixe
+                try:
+                    an = AnneeScolaire(ecole_id=ecole.id, annee=f"{annee}-{ecole.id}", active=True)
+                    db.session.add(an)
+                    db.session.flush()
+                except:
+                    db.session.rollback()
+        
+        # Licence d'essai 30 jours automatique
+        import random, string
+        def gen_cle(prefix):
+            return f"{prefix}-{''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(12))}"
+        
+        cle = gen_cle("BS-ESSAI")
+        while Licence.query.filter_by(cle=cle).first():
+            cle = gen_cle("BS-ESSAI")
+        
+        licence = Licence(
+            cle=cle,
+            date_expiration=now + timedelta(days=30),
+            active=True,
+            date_activation=now,
+            ecole_id=ecole.id,
+            ecole_nom=ecole.nom,
+            plan='starter',
+            eleves_max=150,
+            personnel_max=10,
+            essai=True,
+            modules='["eleves","classes","matieres","notes","bulletins","finances","personnel","documents"]',
+            prix_paye=0,
+            devise='XOF'
+        )
+        db.session.add(licence)
         db.session.commit()
         
         login_user(user)
-        flash(f'Bienvenue {nom_ecole.upper()} ! Votre compte est cree. Choisissez un abonnement pour commencer.', 'success')
-        return redirect(url_for('abonnement'))
+        flash(f'Bienvenue {nom_ecole.upper()} ! Vous beneficiez d\'un essai gratuit de 30 jours.', 'success')
+        return redirect(url_for('dashboard'))
     
     return render_template('auth/register.html')
 

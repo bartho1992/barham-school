@@ -1,6 +1,19 @@
 {% extends "base.html" %}
 {% block title %}Tableau de bord - {{ ecole.nom }}{% endblock %}
 {% block content %}
+{% if est_essai and jours_restants <= 7 and jours_restants > 0 %}
+<div class="alert alert-warning border-0 shadow-sm mb-2 py-2 small d-flex justify-content-between align-items-center">
+    <span><i class="bi bi-exclamation-triangle-fill me-1"></i> <strong>Votre essai gratuit expire dans {{ jours_restants }} jour{{ 's' if jours_restants != 1 }} !</strong></span>
+    <a href="{{ url_for('abonnement') }}" class="btn btn-warning btn-sm py-0 px-2 fw-bold">Souscrire</a>
+</div>
+{% endif %}
+{% if est_essai and jours_restants > 7 %}
+<div class="alert alert-info border-0 shadow-sm mb-2 py-2 small d-flex justify-content-between align-items-center">
+    <span><i class="bi bi-clock-history me-1"></i> <strong>Essai gratuit</strong> — {{ jours_restants }} jours restants</span>
+    <a href="{{ url_for('abonnement') }}" class="btn btn-outline-primary btn-sm py-0 px-2">Voir les plans</a>
+</div>
+{% endif %}
+
 <div class="row mb-2">
     <div class="col-12">
         <div class="bg-primary text-white p-2 rounded shadow-sm d-flex justify-content-between align-items-center flex-wrap">
