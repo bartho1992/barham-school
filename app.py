@@ -6,7 +6,7 @@ from datetime import timedelta, datetime
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'barham-informatique-2024')
 # En production, le repertoire /app/data est necessaire pour SQLite (Render)
-if os.environ.get('RENDER') or os.environ.get('PRODUCTION'):
+if os.environ.get('RENDER') or os.environ.get('PRODUCTION') or os.environ.get('PYTHONANYWHERE_SITE'):
     data_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'data')
     os.makedirs(data_dir, exist_ok=True)
     db_path = os.path.join(data_dir, 'school.db')
