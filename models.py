@@ -385,6 +385,12 @@ def init_data():
         baye = User(username='baye', role='super_users', identifiant=gen_key("USR"))
         baye.set_password('admin123')
         db.session.add(baye)
+    # S'assurer que baye a toujours une ecole
+    baye = User.query.filter_by(username='baye').first()
+    if baye and baye.ecole_id is None:
+        first_ecole = Ecole.query.first()
+        if first_ecole:
+            baye.ecole_id = first_ecole.id
     if not Ecole.query.first():
         db.session.add(Ecole(identifiant=gen_key("ECL")))
     if not AnneeScolaire.query.first():

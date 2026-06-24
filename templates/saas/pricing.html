@@ -27,6 +27,22 @@
         .price { font-size: 2.2rem; font-weight: 800; color: var(--primary); }
         .feature-check::before { content: '\F26B'; font-family: 'bootstrap-icons'; color: #10b981; margin-right: 8px; }
         .footer { background: #0f172a; color: #94a3b8; }
+        
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .hero { padding: 50px 0 30px; }
+            .hero h1 { font-size: 1.5rem; }
+            .hero .lead { font-size: 0.9rem; }
+            .price { font-size: 1.6rem; }
+            .plan-card { margin-bottom: 16px; }
+            .plan-card:hover { transform: none; }
+            .navbar .container { padding: 0 10px; }
+        }
+        @media (max-width: 400px) {
+            .hero h1 { font-size: 1.25rem; }
+            .hero { padding: 35px 0 20px; }
+            .btn-lg { font-size: 0.9rem; padding: 0.5rem 1rem; }
+        }
     </style>
 </head>
 <body>
