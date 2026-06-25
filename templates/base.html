@@ -94,6 +94,14 @@
                     </li>
                     {% endif %}
                     
+                    <!-- Tutoriel : visible pour tous -->
+                    <li class="nav-item">
+                        <a class="nav-link d-flex align-items-center gap-2 py-1 px-2 {{ 'active' if request.endpoint == 'tutoriel' }}" href="{{ url_for('tutoriel') }}">
+                            <i class="bi bi-question-circle-fill" style="font-size: 0.9rem;"></i>
+                            <span style="font-size: 0.65rem; text-transform: uppercase; font-weight: 600;">Aide</span>
+                        </a>
+                    </li>
+                    
                     {% if current_user.role == 'super_users' %}
                     <li class="nav-item">
                         <a class="nav-link d-flex align-items-center gap-2 py-1 px-2 {{ 'active' if request.endpoint == 'admin' }}" href="{{ url_for('admin') }}">

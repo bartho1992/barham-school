@@ -485,3 +485,11 @@ def admin_supprimer_transaction(tr_id):
     db.session.commit()
     flash('Transaction supprimée.', 'info')
     return redirect(url_for('admin_paiements'))
+
+
+# ============================================================
+# TUTORIEL / GUIDE D'UTILISATION
+# ============================================================
+@app.route('/tutoriel')
+def tutoriel():
+    return render_template('saas/tutoriel.html')

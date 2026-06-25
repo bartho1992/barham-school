@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+{% block title %}Tutoriel — Barham School{% endblock %}
+{% block extra_css %}
+<style>
+.tuto-hero {
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0d9488 100%);
+    color: white;
+    border-radius: 16px;
+    padding: 2.5rem 2rem;
+    margin-bottom: 1.5rem;
+}
+.tuto-hero h2 { font-weight: 800; }
+.tuto-step {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    padding: 1rem 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+.tuto-step:last-child { border-bottom: none; }
+.tuto-num {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: var(--primary-gradient);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+.tuto-content { flex: 1; }
+.tuto-content h6 { font-weight: 700; margin-bottom: 0.2rem; }
+.module-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.75rem;
+}
+.module-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 1rem;
+    text-align: center;
+    transition: all 0.2s;
+}
+.module-card:hover { background: #eef2ff; border-color: #6366f1; }
+.module-card i { font-size: 1.5rem; color: #4f46e5; }
+.module-card span { display: block; font-size: 0.78rem; font-weight: 600; margin-top: 0.4rem; }
+.price-table { font-size: 0.85rem; }
+.price-table th { background: #1e3a5f; color: white; font-size: 0.75rem; }
+@media (max-width: 768px) {
+    .tuto-hero { padding: 1.5rem 1rem; }
+    .tuto-hero h2 { font-size: 1.2rem; }
+    .module-grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+{% endblock %}
+{% block content %}
+<div class="container-fluid px-1 px-md-3" style="max-width:1000px;">
+
+<!-- HERO -->
+<div class="tuto-hero">
+    <h2 class="mb-2"><i class="bi bi-mortarboard-fill me-2"></i>Barham School</h2>
+    <p class="mb-1" style="font-size:1rem;">Plateforme SaaS de gestion scolaire complète — Sénégal</p>
+    <p class="opacity-75 small mb-0">Élèves • Classes • Notes • Bulletins • Finances • Personnel • Documents</p>
+</div>
+
+<!-- PRESENTATION -->
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-header bg-white border-bottom-0 pt-3 pb-0">
+        <h5 class="fw-bold"><i class="bi bi-info-circle-fill text-primary me-1"></i> Présentation</h5>
+    </div>
+    <div class="card-body pt-2">
+        <p class="mb-1"><strong>Barham School</strong> est une application web de gestion scolaire 100 % en ligne. Elle permet à tout établissement (maternelle, primaire, collège, lycée) de :</p>
+        <ul class="small mb-2">
+            <li>Gérer les <strong>inscriptions</strong> et le suivi des élèves</li>
+            <li>Organiser les <strong>classes</strong> et les <strong>matieres</strong></li>
+            <li>Saisir les <strong>notes</strong> et generer les <strong>bulletins</strong> automatiquement</li>
+            <li>Suivre les <strong>paiements</strong> (inscription, scolarite, cantine, transport)</li>
+            <li>Gerer le <strong>personnel</strong> et les <strong>documents administratifs</strong></li>
+            <li>Exporter les donnees en <strong>Excel</strong></li>
+        </ul>
+        <p class="small text-muted mb-0"><strong>Accessible</strong> sur ordinateur, tablette et telephone — <strong>{{ ecole.nom if ecole else 'BARHAMSCOOL APP' }}</strong></p>
+    </div>
+</div>
+
+<!-- TARIFS RAPIDES -->
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-header bg-white border-bottom-0 pt-3 pb-0">
+        <h5 class="fw-bold"><i class="bi bi-tags-fill text-success me-1"></i> Plans et tarifs</h5>
+    </div>
+    <div class="card-body pt-2 table-responsive">
+        <table class="table table-sm price-table align-middle mb-0">
+            <thead><tr><th>Plan</th><th>Élèves</th><th>1 mois</th><th>3 mois</th><th>6 mois</th><th>12 mois</th></tr></thead>
+            <tbody>
+                <tr><td class="fw-bold">Starter</td><td>150</td><td>5 000 F</td><td>13 500 F</td><td>21 000 F</td><td class="fw-bold text-primary">42 000 F</td></tr>
+                <tr><td class="fw-bold">Standard</td><td>500</td><td>9 000 F</td><td>24 300 F</td><td>39 000 F</td><td class="fw-bold text-primary">78 000 F</td></tr>
+                <tr><td class="fw-bold">Premium</td><td>Illimité</td><td>16 000 F</td><td>45 000 F</td><td>75 000 F</td><td class="fw-bold text-primary">150 000 F</td></tr>
+            </tbody>
+        </table>
+        <p class="small text-muted mt-2 mb-0"><i class="bi bi-gift-fill text-warning"></i> <strong>Essai gratuit de 30 jours</strong> inclus a l'inscription.</p>
+    </div>
+</div>
+
+<!-- MODULES -->
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-header bg-white border-bottom-0 pt-3 pb-0">
+        <h5 class="fw-bold"><i class="bi bi-grid-fill text-warning me-1"></i> Modules disponibles</h5>
+    </div>
+    <div class="card-body pt-2">
+        <div class="module-grid">
+            <div class="module-card"><i class="bi bi-people-fill"></i><span>Élèves</span><small class="text-muted d-block">Inscription, suivi</small></div>
+            <div class="module-card"><i class="bi bi-building"></i><span>Classes</span><small class="text-muted d-block">Organisation</small></div>
+            <div class="module-card"><i class="bi bi-book"></i><span>Matieres</span><small class="text-muted d-block">Programme</small></div>
+            <div class="module-card"><i class="bi bi-pencil-square"></i><span>Notes</span><small class="text-muted d-block">Saisie, calcul</small></div>
+            <div class="module-card"><i class="bi bi-file-text"></i><span>Bulletins</span><small class="text-muted d-block">Generation auto</small></div>
+            <div class="module-card"><i class="bi bi-cash-stack"></i><span>Finances</span><small class="text-muted d-block">Paiements, solde</small></div>
+            <div class="module-card"><i class="bi bi-person-badge"></i><span>Personnel</span><small class="text-muted d-block">Enseignants</small></div>
+            <div class="module-card"><i class="bi bi-printer"></i><span>Documents</span><small class="text-muted d-block">Export, impressions</small></div>
+        </div>
+    </div>
+</div>
+
+<!-- TUTORIEL ETAPE PAR ETAPE -->
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-header bg-white border-bottom-0 pt-3 pb-0">
+        <h5 class="fw-bold"><i class="bi bi-play-circle-fill text-danger me-1"></i> Tutoriel — Démarrage rapide</h5>
+    </div>
+    <div class="card-body pt-2">
+
+        <div class="tuto-step">
+            <div class="tuto-num">1</div>
+            <div class="tuto-content">
+                <h6>Créer un compte</h6>
+                <p class="small text-muted mb-0">Allez sur <a href="/register">/register</a>, remplissez le nom de l'etablissement, un identifiant et un mot de passe. Vous obtenez <strong>30 jours d'essai gratuit</strong> avec acces complet.</p>
+            </div>
+        </div>
+
+        <div class="tuto-step">
+            <div class="tuto-num">2</div>
+            <div class="tuto-content">
+                <h6>Configurer l'ecole (Admin uniquement)</h6>
+                <p class="small text-muted mb-0">Depuis l'onglet <strong>Admin</strong> (developpeur : <code>baye / admin123</code>), cliquez sur le <i class="bi bi-pencil"></i> a cote de l'etablissement. Definissez le <strong>nom</strong>, l'<strong>annee scolaire</strong> (ex: 2025-2026), la <strong>zone IA</strong> et les <strong>frais fixes</strong>. Ces parametres s'appliquent a tous les comptes.</p>
+            </div>
+        </div>
+
+        <div class="tuto-step">
+            <div class="tuto-num">3</div>
+            <div class="tuto-content">
+                <h6>Ajouter des eleves</h6>
+                <p class="small text-muted mb-0">Onglet <strong>Élèves</strong> > <strong>Ajouter</strong>. Remplissez nom, prenom, date de naissance, classe. Vous pouvez aussi <strong>importer un fichier Excel</strong> avec la liste complete.</p>
+            </div>
+        </div>
+
+        <div class="tuto-step">
+            <div class="tuto-num">4</div>
+            <div class="tuto-content">
+                <h6>Creer les classes et matieres</h6>
+                <p class="small text-muted mb-0">Onglet <strong>Classes</strong> : creez vos niveaux (CI, CP, 6eme, 2nde...). Onglet <strong>Matieres</strong> : ajoutez les matieres avec leurs coefficients. C'est indispensable pour les bulletins.</p>
+            </div>
+        </div>
+
+        <div class="tuto-step">
+            <div class="tuto-num">5</div>
+            <div class="tuto-content">
+                <h6>Saisir les notes</h6>
+                <p class="small text-muted mb-0">Onglet <strong>Notes</strong> : choisissez la classe, la matiere, le trimestre. Saisissez les notes par eleve. La moyenne se calcule automatiquement.</p>
+            </div>
+        </div>
+
+        <div class="tuto-step">
+            <div class="tuto-num">6</div>
+            <div class="tuto-content">
+                <h6>Generer les bulletins</h6>
+                <p class="small text-muted mb-0">Onglet <strong>Bulletins</strong> : selectionnez la classe et le trimestre. Le bulletin est genere automatiquement avec moyennes, appreciations et rang. Vous pouvez l'imprimer ou l'exporter en PDF.</p>
+            </div>
+        </div>
+
+        <div class="tuto-step">
+            <div class="tuto-num">7</div>
+            <div class="tuto-content">
+                <h6>Gerer les finances</h6>
+                <p class="small text-muted mb-0">Onglet <strong>Finances</strong> : suivez les paiements par eleve (inscription, scolarite, cantine, transport). Visualisez les soldes, les impayes. Exportez en Excel pour la comptabilite.</p>
+            </div>
+        </div>
+
+        <div class="tuto-step">
+            <div class="tuto-num">8</div>
+            <div class="tuto-content">
+                <h6>Choisir un abonnement (apres l'essai)</h6>
+                <p class="small text-muted mb-0">Onglet <strong>Abonnement</strong> : choisissez votre plan (Starter, Standard, Premium), la duree (1/3/6/12 mois), puis le mode de paiement (Wave, Orange Money, Carte). Apres confirmation, une notification WhatsApp est envoyee automatiquement au developpeur qui active votre licence.</p>
+            </div>
+        </div>
+
+        <div class="tuto-step">
+            <div class="tuto-num">9</div>
+            <div class="tuto-content">
+                <h6>Gerer le personnel</h6>
+                <p class="small text-muted mb-0">Onglet <strong>Personnel</strong> : enregistrez les enseignants et le personnel administratif. Associez-les aux classes et matieres.</p>
+            </div>
+        </div>
+
+        <div class="tuto-step">
+            <div class="tuto-num">10</div>
+            <div class="tuto-content">
+                <h6>Documents administratifs</h6>
+                <p class="small text-muted mb-0">Onglet <strong>Documents</strong> : imprimez les certificats de scolarite, releves de notes, liste d'eleves, bordereaux de paiement.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CONTACT -->
+<div class="card border-0 shadow-sm mb-3" style="background:#f0fdf4;">
+    <div class="card-body p-3 text-center">
+        <p class="fw-bold mb-1"><i class="bi bi-whatsapp text-success me-1"></i> Besoin d'aide ?</p>
+        <p class="small text-muted mb-0">Contactez le developpeur au <strong>+221 77 058 98 00</strong></p>
+        <p class="small text-muted mb-0">Site : <a href="https://barhamschool.pythonanywhere.com" target="_blank">barhamschool.pythonanywhere.com</a></p>
+    </div>
+</div>
+
+</div>
+{% endblock %}
