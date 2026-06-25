@@ -13,6 +13,16 @@ except ImportError:
 def _annee_courante(e):
     return session.get('annee_scolaire', e.annee_scolaire if e else '')
 
+def _check_parametres_access(ecole_id):
+    """Verifie l'acces aux parametres : super_users toujours ok, user = licence active requise"""
+    if current_user.role != 'super_users':
+        from models import Licence
+        lic = Licence.licence_active_for_ecole(ecole_id)
+        if not lic:
+            flash('Vous devez avoir un abonnement actif pour modifier les parametres.', 'danger')
+            return redirect(url_for('abonnement'))
+    return None
+
 @app.route('/finances')
 @login_required
 def finances():
@@ -328,9 +338,8 @@ def paiement_recu(id):
 @login_required
 def paiement_annuler(id):
     """Annule un paiement (reserve aux super_users)"""
-    if current_user.role != 'super_users':
-        flash('Acces non autorise', 'danger')
-        return redirect(url_for('finances'))
+    check = _check_parametres_access(ecole_id)
+    if check: return check
     p = Paiement.query.get_or_404(id)
     db.session.delete(p)
     db.session.commit()
@@ -453,10 +462,14 @@ def impayes():
 @app.route('/finances/parametres')
 @login_required
 def parametres_financiers():
-    if current_user.role != 'super_users':
-        flash('Acces non autorise', 'danger')
-        return redirect(url_for('finances'))
+    # Accessible a tous les utilisateurs avec une licence
+    from models import Licence
     ecole_id = get_current_ecole_id()
+    if current_user.role != 'super_users':
+        lic = Licence.licence_active_for_ecole(ecole_id)
+        if not lic:
+            flash('Vous devez avoir un abonnement actif pour acceder aux paramètres.', 'danger')
+            return redirect(url_for('abonnement'))
     e = Ecole.query.get(ecole_id); annee = _annee_courante(e)
     categories = CategorieTarif.query.order_by(CategorieTarif.type_categorie, CategorieTarif.nom).all()
     categories_mensuel = CategorieTarif.query.filter_by(type_categorie='mensuel').all()
@@ -473,8 +486,12 @@ def parametres_financiers():
 @app.route('/finances/parametres/categorie/ajouter', methods=['POST'])
 @login_required
 def categorie_ajouter():
+    # Alow all users with active licence
     if current_user.role != 'super_users':
-        return jsonify({'success': False, 'message': 'Acces non autorise'}), 403
+        from models import Licence
+        lic = Licence.licence_active_for_ecole(ecole_id)
+        if not lic:
+            return jsonify({'success': False, 'message': 'Abonnement requis'}), 403
     nom = request.form.get('nom')
     type_categorie = request.form.get('type_categorie')
     if not nom or not type_categorie:
@@ -488,8 +505,12 @@ def categorie_ajouter():
 @app.route('/finances/parametres/categorie/supprimer/<int:id>', methods=['POST'])
 @login_required
 def categorie_supprimer(id):
+    # Alow all users with active licence
     if current_user.role != 'super_users':
-        return jsonify({'success': False, 'message': 'Acces non autorise'}), 403
+        from models import Licence
+        lic = Licence.licence_active_for_ecole(ecole_id)
+        if not lic:
+            return jsonify({'success': False, 'message': 'Abonnement requis'}), 403
     categorie = CategorieTarif.query.get_or_404(id)
     TarifService.query.filter_by(categorie_id=id).delete()
     AbonnementService.query.filter_by(categorie_id=id).delete()
@@ -501,9 +522,8 @@ def categorie_supprimer(id):
 @app.route('/finances/parametres/abonnement/ajouter', methods=['POST'])
 @login_required
 def abonnement_ajouter():
-    if current_user.role != 'super_users':
-        flash('Acces non autorise', 'danger')
-        return redirect(url_for('finances'))
+    check = _check_parametres_access(ecole_id)
+    if check: return check
     eleve_id = request.form.get('eleve_id')
     categorie_id = request.form.get('categorie_id')
     mois_debut = request.form.get('mois_debut')
@@ -523,9 +543,8 @@ def abonnement_ajouter():
 @app.route('/finances/parametres/abonnement/supprimer/<int:id>', methods=['POST'])
 @login_required
 def abonnement_supprimer(id):
-    if current_user.role != 'super_users':
-        flash('Acces non autorise', 'danger')
-        return redirect(url_for('finances'))
+    check = _check_parametres_access(ecole_id)
+    if check: return check
     abo = AbonnementService.query.get_or_404(id)
     db.session.delete(abo)
     db.session.commit()
@@ -571,8 +590,12 @@ def api_tarif_service(classe_id, categorie_id):
 @login_required
 def scolarite_sauvegarder():
     """Sauvegarde les scolarites pour toutes les classes"""
+    # Alow all users with active licence
     if current_user.role != 'super_users':
-        return jsonify({'success': False, 'message': 'Acces non autorise'}), 403
+        from models import Licence
+        lic = Licence.licence_active_for_ecole(ecole_id)
+        if not lic:
+            return jsonify({'success': False, 'message': 'Abonnement requis'}), 403
     mois_list = ['inscription', 'janvier', 'fevrier', 'mars', 'avril', 'mai', 'juin',
                  'juillet', 'aout', 'septembre', 'octobre', 'novembre', 'decembre']
     ecole_id = get_current_ecole_id()
@@ -645,8 +668,12 @@ def scolarite_ajouter_ligne():
 @login_required
 def api_scolarite_sauvegarder(classe_id):
     """Sauvegarde les montants de scolarite pour une classe (AJAX)"""
+    # Alow all users with active licence
     if current_user.role != 'super_users':
-        return jsonify({'success': False, 'message': 'Acces non autorise'}), 403
+        from models import Licence
+        lic = Licence.licence_active_for_ecole(ecole_id)
+        if not lic:
+            return jsonify({'success': False, 'message': 'Abonnement requis'}), 403
     ecole_id = get_current_ecole_id()
     annee = _annee_courante(Ecole.query.get(ecole_id))
     data = request.get_json()
@@ -669,8 +696,12 @@ def api_scolarite_sauvegarder(classe_id):
 @login_required
 def api_scolarite_reinitialiser(classe_id):
     """Remet a zero les montants de scolarite pour une classe (AJAX)"""
+    # Alow all users with active licence
     if current_user.role != 'super_users':
-        return jsonify({'success': False, 'message': 'Acces non autorise'}), 403
+        from models import Licence
+        lic = Licence.licence_active_for_ecole(ecole_id)
+        if not lic:
+            return jsonify({'success': False, 'message': 'Abonnement requis'}), 403
     ecole_id = get_current_ecole_id()
     annee = _annee_courante(Ecole.query.get(ecole_id))
     scolarite = Scolarite.query.filter_by(classe_id=classe_id, annee_scolaire=annee).first()
@@ -686,8 +717,12 @@ def api_scolarite_reinitialiser(classe_id):
 @login_required
 def api_scolarite_supprimer(classe_id):
     """Supprime une ligne de scolarite (AJAX)"""
+    # Alow all users with active licence
     if current_user.role != 'super_users':
-        return jsonify({'success': False, 'message': 'Acces non autorise'}), 403
+        from models import Licence
+        lic = Licence.licence_active_for_ecole(ecole_id)
+        if not lic:
+            return jsonify({'success': False, 'message': 'Abonnement requis'}), 403
     ecole_id = get_current_ecole_id()
     annee = _annee_courante(Ecole.query.get(ecole_id))
     scolarite = Scolarite.query.filter_by(classe_id=classe_id, annee_scolaire=annee).first()
@@ -700,8 +735,12 @@ def api_scolarite_supprimer(classe_id):
 @login_required
 def api_scolarite_reinitialiser_tout():
     """Remet a zero toutes les scolarites (AJAX)"""
+    # Alow all users with active licence
     if current_user.role != 'super_users':
-        return jsonify({'success': False, 'message': 'Acces non autorise'}), 403
+        from models import Licence
+        lic = Licence.licence_active_for_ecole(ecole_id)
+        if not lic:
+            return jsonify({'success': False, 'message': 'Abonnement requis'}), 403
     ecole_id = get_current_ecole_id()
     annee = _annee_courante(Ecole.query.get(ecole_id))
     scolarites = Scolarite.query.filter_by(annee_scolaire=annee).all()
@@ -717,8 +756,12 @@ def api_scolarite_reinitialiser_tout():
 @login_required
 def api_scolarite_reorder():
     """Reordonne les lignes de scolarite (AJAX)"""
+    # Alow all users with active licence
     if current_user.role != 'super_users':
-        return jsonify({'success': False, 'message': 'Acces non autorise'}), 403
+        from models import Licence
+        lic = Licence.licence_active_for_ecole(ecole_id)
+        if not lic:
+            return jsonify({'success': False, 'message': 'Abonnement requis'}), 403
     data = request.get_json()
     if not data or 'ids' not in data:
         return jsonify({'success': False, 'message': 'Donnees invalides'}), 400

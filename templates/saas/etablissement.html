@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Mon etablissement — {{ ecole.nom }}{% endblock %}
+{% block content %}
+<div class="container-fluid px-2 px-md-4 py-2" style="max-width:600px;">
+    <h5 class="fw-bold mb-3"><i class="bi bi-building"></i> Parametres de l'etablissement</h5>
+
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body p-4">
+            <form method="POST">
+                <input type="hidden" name="action" value="update_ecole">
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Nom de l'etablissement</label>
+                    <input type="text" name="nom" class="form-control" value="{{ ecole.nom }}">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Annee scolaire active</label>
+                    <input type="text" name="annee_scolaire" class="form-control" value="{{ ecole.annee_scolaire or '' }}" placeholder="Ex: 2025-2026">
+                    <small class="text-muted">L'annee affichee dans les bulletins et documents.</small>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Zone / Commune</label>
+                    <input type="text" name="zone" class="form-control" value="{{ ecole.zone or '' }}">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Adresse</label>
+                    <input type="text" name="adresse" class="form-control" value="{{ ecole.adresse or '' }}">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Telephone</label>
+                    <input type="text" name="tel" class="form-control" value="{{ ecole.tel or '' }}">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">IA / IEF</label>
+                    <input type="text" name="ia" class="form-control" value="{{ ecole.ia or '' }}">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Type d'etablissement</label>
+                    <input type="text" name="type_ecole" class="form-control" value="{{ ecole.type_ecole or '' }}" placeholder="Ex: Elementaire, Moyen, Secondaire">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Slogan</label>
+                    <input type="text" name="slogan" class="form-control" value="{{ ecole.slogan or '' }}">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Code etablissement</label>
+                    <input type="text" name="code_etablissement" class="form-control" value="{{ ecole.code_etablissement or '' }}">
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 rounded-pill py-2">
+                    <i class="bi bi-check-circle me-1"></i> Enregistrer les modifications
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Annees scolaires -->
+    <h6 class="fw-bold mt-4 mb-2"><i class="bi bi-calendar3"></i> Annees scolaires</h6>
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body p-3">
+            <form method="POST" class="input-group mb-2">
+                <input type="hidden" name="action" value="add_annee">
+                <input type="text" name="nouvelle_annee" class="form-control" placeholder="Ex: 2025-2026" required>
+                <button type="submit" class="btn btn-success"><i class="bi bi-plus"></i> Ajouter</button>
+            </form>
+            <div class="d-flex flex-wrap gap-1">
+                {% for a in annees %}
+                <span class="badge bg-light text-dark border d-flex align-items-center gap-1">
+                    {{ a.annee }}
+                    {% if a.active %}<span class="badge bg-success" style="font-size:0.55rem;">Active</span>{% endif %}
+                    <form method="POST" class="d-inline ms-1" onsubmit="return confirm('Supprimer {{ a.annee }} ?')">
+                        <input type="hidden" name="action" value="delete_annee">
+                        <input type="hidden" name="annee_id" value="{{ a.id }}">
+                        <button type="submit" class="btn btn-sm p-0 text-danger" title="Supprimer"><i class="bi bi-x-circle-fill" style="font-size:0.7rem;"></i></button>
+                    </form>
+                    {% if not a.active %}
+                    <form method="POST" class="d-inline ms-1">
+                        <input type="hidden" name="action" value="set_active">
+                        <input type="hidden" name="annee_id" value="{{ a.id }}">
+                        <button type="submit" class="btn btn-sm p-0 text-primary" title="Activer"><i class="bi bi-check2-circle" style="font-size:0.7rem;"></i></button>
+                    </form>
+                    {% endif %}
+                </span>
+                {% endfor %}
+                {% if not annees %}
+                <span class="text-muted small">Aucune annee scolaire ajoutee.</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

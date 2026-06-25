@@ -68,7 +68,21 @@
                     <li class="nav-item">
                         <a class="nav-link d-flex align-items-center gap-2 py-1 px-2 {{ 'active' if request.endpoint == 'parametres_financiers' }}" href="{{ url_for('parametres_financiers') }}">
                             <i class="bi bi-sliders" style="font-size: 0.9rem;"></i>
-                            <span style="font-size: 0.65rem; text-transform: uppercase; font-weight: 600;">Parametres</span>
+                            <span style="font-size: 0.65rem; text-transform: uppercase; font-weight: 600;">Paramètres</span>
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link d-flex align-items-center gap-2 py-1 px-2 {{ 'active' if request.endpoint == 'etablissement' }}" href="{{ url_for('etablissement') }}">
+                            <i class="bi bi-building" style="font-size: 0.9rem;"></i>
+                            <span style="font-size: 0.65rem; text-transform: uppercase; font-weight: 600;">Etablissement</span>
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link d-flex align-items-center gap-2 py-1 px-2 {{ 'active' if request.endpoint == 'utilisateurs' }}" href="{{ url_for('utilisateurs') }}">
+                            <i class="bi bi-person-badge" style="font-size: 0.9rem;"></i>
+                            <span style="font-size: 0.65rem; text-transform: uppercase; font-weight: 600;">Utilisateurs</span>
                         </a>
                     </li>
 

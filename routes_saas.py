@@ -7,7 +7,7 @@ import json, uuid
 from datetime import datetime, timezone, timedelta
 from flask import render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
-from models import db, Ecole, Licence, FactureLicence, TransactionLicence, User
+from models import db, Ecole, Licence, FactureLicence, TransactionLicence, User, AnneeScolaire
 from app import app, get_current_ecole_id
 
 # ============================================================
@@ -496,3 +496,105 @@ def tutoriel():
     from flask_login import current_user
     ecole = current_user.ecole if current_user.is_authenticated else None
     return render_template('saas/tutoriel.html', ecole=ecole)
+
+
+# ============================================================
+# ETABLISSEMENT (tous les utilisateurs avec licence)
+# ============================================================
+@app.route('/etablissement', methods=['GET','POST'])
+@login_required
+def etablissement():
+    ecole_id = get_current_ecole_id()
+    e = Ecole.query.get_or_404(ecole_id)
+    annees = AnneeScolaire.query.filter_by(ecole_id=e.id).order_by(AnneeScolaire.annee.desc()).all()
+    
+    if request.method == 'POST':
+        action = request.form.get('action')
+        
+        if action == 'update_ecole':
+            for champ in ['nom','adresse','tel','annee_scolaire','zone','ia','type_ecole','slogan','code_etablissement']:
+                val = request.form.get(champ)
+                if val is not None:
+                    setattr(e, champ, val.strip() if isinstance(val, str) else val)
+            # Mettre a jour la session
+            session['annee_scolaire'] = e.annee_scolaire if e.annee_scolaire else ''
+            db.session.commit()
+            flash('Etablissement mis a jour.', 'success')
+            
+        elif action == 'add_annee':
+            nouvelle = request.form.get('nouvelle_annee', '').strip()
+            if nouvelle:
+                existing = AnneeScolaire.query.filter_by(annee=nouvelle, ecole_id=e.id).first()
+                if not existing:
+                    db.session.add(AnneeScolaire(annee=nouvelle, ecole_id=e.id))
+                    db.session.commit()
+                    flash(f'Annee {nouvelle} ajoutee.', 'success')
+                else:
+                    flash('Cette annee existe deja.', 'warning')
+                    
+        elif action == 'delete_annee':
+            aid = request.form.get('annee_id')
+            a = AnneeScolaire.query.get(aid)
+            if a and a.ecole_id == e.id:
+                db.session.delete(a)
+                db.session.commit()
+                flash('Annee supprimee.', 'info')
+                
+        elif action == 'set_active':
+            aid = request.form.get('annee_id')
+            AnneeScolaire.query.filter_by(ecole_id=e.id).update({AnneeScolaire.active: False})
+            a = AnneeScolaire.query.get(aid)
+            if a and a.ecole_id == e.id:
+                a.active = True
+                e.annee_scolaire = a.annee
+                session['annee_scolaire'] = a.annee
+                db.session.commit()
+                flash(f'Annee {a.annee} activee.', 'success')
+        
+        return redirect(url_for('etablissement'))
+    
+    return render_template('saas/etablissement.html', ecole=e, annees=annees)
+
+
+# ============================================================
+# UTILISATEURS (tous les utilisateurs avec licence)
+# ============================================================
+@app.route('/utilisateurs', methods=['GET','POST'])
+@login_required
+def utilisateurs():
+    ecole_id = get_current_ecole_id()
+    e = Ecole.query.get_or_404(ecole_id)
+    
+    if request.method == 'POST':
+        action = request.form.get('action')
+        
+        if action == 'add_user':
+            username = request.form.get('username', '').strip()
+            password = request.form.get('password', '')
+            role = request.form.get('role', 'user')
+            
+            if not username or len(password) < 3:
+                flash('Identifiant requis et mot de passe >= 3 caracteres.', 'danger')
+            elif User.query.filter_by(username=username).first():
+                flash(f"L'identifiant '{username}' existe deja.", 'danger')
+            else:
+                user = User(username=username, role=role, ecole_id=ecole_id)
+                user.set_password(password)
+                db.session.add(user)
+                db.session.commit()
+                flash(f'Utilisateur {username} cree avec le role {role}.', 'success')
+                
+        elif action == 'delete_user':
+            uid = request.form.get('user_id')
+            u = User.query.get(uid)
+            if u and u.ecole_id == ecole_id and u.id != current_user.id:
+                db.session.delete(u)
+                db.session.commit()
+                flash(f'Utilisateur {u.username} supprime.', 'info')
+            else:
+                flash('Action non autorisee.', 'danger')
+        
+        return redirect(url_for('utilisateurs'))
+    
+    users = User.query.filter_by(ecole_id=ecole_id).all()
+    return render_template('saas/utilisateurs.html', ecole=e, users=users)
