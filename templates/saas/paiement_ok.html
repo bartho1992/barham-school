@@ -41,11 +41,11 @@
             </div>
         </div>
 
-        <p class="fw-bold small mb-2">Pour accélérer la validation :</p>
-        <a href="{{ whatsapp_link }}" target="_blank" class="whatsapp-btn mb-3">
-            <i class="bi bi-whatsapp fs-5"></i> Notifier le développeur via WhatsApp
-        </a>
-        <p class="text-muted small mb-0">Un message pré-rempli sera envoyé au développeur avec les détails du paiement.</p>
+        <p class="fw-bold small mb-2">Notification envoyee automatiquement au developpeur...</p>
+        <div class="spinner-border text-success mb-3" role="status">
+            <span class="visually-hidden">Envoi...</span>
+        </div>
+        <p class="text-muted small mb-0">Vous allez etre redirige vers WhatsApp...</p>
 
         <hr class="my-3">
         <a href="{{ url_for('abonnement') }}" class="btn btn-outline-primary btn-sm rounded-pill">
@@ -53,4 +53,9 @@
         </a>
     </div>
 </div>
+<script>
+setTimeout(function() {
+    window.open("{{ whatsapp_link }}", "_blank");
+}, 2000);
+</script>
 {% endblock %}

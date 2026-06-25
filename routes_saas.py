@@ -35,7 +35,7 @@ PLANS = {
 }
 
 # WhatsApp du développeur pour notifications de paiement
-DEV_WHATSAPP = '+221771234567'  # A modifier par ton vrai numéro
+DEV_WHATSAPP = '+221770589800'
 
 PASSERELLES = {
     'manual':    {'nom': 'Espèces / Manuel',  'icone': 'bi-cash',        'actif': True},
@@ -251,7 +251,10 @@ def abonnement_callback(facture_id):
         
         flash('Paiement declare. Le developpeur va verifier et activer votre licence.', 'info')
 
-    return redirect(url_for('abonnement'))
+    # Rediriger vers WhatsApp automatiquement
+    msg = f"*Paiement*%20Barham%20School%0A%0AFacture%20:%20{facture.numero}%0AEcole%20:%20{ecole.nom}%0AMontant%20:%20{facture.montant:,.0f}%20FCFA%0APlan%20:%20{PLANS.get(facture.plan, {}).get('nom', facture.plan)}%0AMode%20:%20{facture.mode_paiement}"
+    whatsapp_url = f"https://wa.me/{DEV_WHATSAPP.replace('+', '')}?text={msg}"
+    return redirect(whatsapp_url)
 
 
 # ============================================================
