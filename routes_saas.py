@@ -16,23 +16,26 @@ from app import app, get_current_ecole_id
 PLANS = {
     'starter': {
         'nom': 'Starter', 'eleves_max': 150, 'personnel_max': 10,
-        'prix_6mois': 21000, 'prix_12mois': 42000,
+        'prix_1mois': 5000, 'prix_3mois': 13500, 'prix_6mois': 21000, 'prix_12mois': 42000,
         'description': 'Petits établissements (maternelle, primaire)',
         'features': ['Jusqu\'à 150 élèves','10 personnels','Élèves & Classes','Notes & Bulletins','Finances & Paiements','Documents administratifs']
     },
     'standard': {
         'nom': 'Standard', 'eleves_max': 500, 'personnel_max': 50,
-        'prix_6mois': 39000, 'prix_12mois': 78000,
+        'prix_1mois': 9000, 'prix_3mois': 24300, 'prix_6mois': 39000, 'prix_12mois': 78000,
         'description': 'Établissements moyens (collège, lycée)',
         'features': ['Jusqu\'à 500 élèves','50 personnels','Tout Starter +','Multi-classes avancé','Personnalisation bulletins','Export Excel/PDF','Support prioritaire']
     },
     'premium': {
         'nom': 'Premium', 'eleves_max': -1, 'personnel_max': -1,
-        'prix_6mois': 75000, 'prix_12mois': 150000,
+        'prix_1mois': 16000, 'prix_3mois': 45000, 'prix_6mois': 75000, 'prix_12mois': 150000,
         'description': 'Grands établissements et groupes scolaires',
         'features': ['Élèves illimités','Personnel illimité','Tout Standard +','Multi-établissements','Gestion avancée','API intégration','Support 24/7']
     },
 }
+
+# WhatsApp du développeur pour notifications de paiement
+DEV_WHATSAPP = '+221771234567'  # A modifier par ton vrai numéro
 
 PASSERELLES = {
     'manual':    {'nom': 'Espèces / Manuel',  'icone': 'bi-cash',        'actif': True},
@@ -110,14 +113,25 @@ def abonnement_checkout():
     ecole = Ecole.query.get(ecole_id)
 
     plan_key = request.args.get('plan', 'starter')
-    duree = int(request.args.get('duree', 12))  # 6 ou 12 mois
+    duree = int(request.args.get('duree', 12))  # 1, 3, 6 ou 12 mois
 
     if plan_key not in PLANS:
         flash('Plan invalide.', 'danger')
         return redirect(url_for('abonnement'))
 
     plan = PLANS[plan_key]
-    montant = plan['prix_12mois'] if duree >= 12 else plan['prix_6mois']
+    if duree <= 1:
+        montant = plan['prix_1mois']
+        duree = 1
+    elif duree <= 3:
+        montant = plan['prix_3mois']
+        duree = 3
+    elif duree <= 6:
+        montant = plan['prix_6mois']
+        duree = 6
+    else:
+        montant = plan['prix_12mois']
+        duree = 12
 
     return render_template('saas/checkout.html',
         ecole=ecole, plan_key=plan_key, duree=duree,
@@ -185,15 +199,21 @@ def abonnement_payer():
     
     flash(f'Votre demande de licence {plan["nom"]} est en attente de validation. Vous recevrez l\'accès après confirmation du paiement.', 'info')
     
+    # Générer lien WhatsApp pour notifier le développeur
+    msg = f"*Nouveau Paiement*%0A%0AFacture%20:%20{numero}%0AEcole%20:%20{ecole.nom}%0APlan%20:%20{plan['nom']}%20-%20{duree}%20mois%0AMontant%20:%20{montant:,.0f}%20FCFA%0AMode%20:%20{passerelle}"
+    whatsapp_link = f"https://wa.me/{DEV_WHATSAPP.replace('+', '')}?text={msg}"
+    
     if passerelle == 'wave':
-        return render_template('saas/paiement_wave.html', facture=facture, montant=montant, ecole=ecole)
+        return render_template('saas/paiement_wave.html', facture=facture, montant=montant, ecole=ecole, whatsapp_link=whatsapp_link)
     elif passerelle == 'orange_money':
-        return render_template('saas/paiement_orange.html', facture=facture, montant=montant, ecole=ecole)
+        return render_template('saas/paiement_orange.html', facture=facture, montant=montant, ecole=ecole, whatsapp_link=whatsapp_link)
     elif passerelle == 'stripe':
-        return render_template('saas/paiement_stripe.html', facture=facture, montant=montant, ecole=ecole)
+        return render_template('saas/paiement_stripe.html', facture=facture, montant=montant, ecole=ecole, whatsapp_link=whatsapp_link)
     else:
-        flash('Votre demande est enregistrée. Le developpeur va valider votre acces.', 'info')
-        return redirect(url_for('abonnement'))
+        flash('Votre demande est enregistrée. Le developpeur va valider votre accès.', 'info')
+        return render_template('saas/paiement_ok.html', 
+            facture=facture, montant=montant, ecole=ecole, plan=plan, duree=duree,
+            passerelle=passerelle, whatsapp_link=whatsapp_link)
 
 
 # ============================================================

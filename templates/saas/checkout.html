@@ -20,14 +20,14 @@
 {% block content %}
 <div class="container py-4" style="max-width:600px;">
     <h4 class="mb-1"><i class="bi bi-shield-check text-success"></i> Valider votre abonnement</h4>
-    <p class="text-muted small mb-3">Plan {{ plan.nom }} — {{ duree }} mois</p>
+    <p class="text-muted small mb-3">Plan {{ plan.nom }}</p>
 
     <!-- Montant -->
     <div class="card shadow-sm border-0 mb-3">
         <div class="card-body p-4 text-center">
             <p class="text-muted small text-uppercase mb-0">Montant a payer</p>
             <p class="amount-display mb-0">{{ "{:,.0f}".format(montant) }} FCFA</p>
-            <p class="small text-muted mt-1">Soit {{ "{:,.0f}".format(montant // duree) }} FCFA/mois</p>
+            <p class="small text-muted mt-1">Soit {{ "{:,.0f}".format(montant // duree) }} FCFA/mois pendant {{ duree }} mois</p>
         </div>
     </div>
 

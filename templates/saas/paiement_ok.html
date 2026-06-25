@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Paiement enregistré — {{ ecole.nom }}{% endblock %}
+{% block extra_css %}
+<style>
+.success-icon { font-size: 4rem; color: #10b981; }
+.whatsapp-btn {
+    background: #25D366;
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 12px 28px;
+    font-size: 1rem;
+    font-weight: 700;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+.whatsapp-btn:hover { background: #1da851; color: white; transform: scale(1.03); }
+</style>
+{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width:500px;">
+    <div class="card border-0 shadow-sm text-center p-4">
+        <div class="success-icon mb-2">
+            <i class="bi bi-check-circle-fill"></i>
+        </div>
+        <h5 class="fw-bold mb-1">Paiement enregistré !</h5>
+        <p class="text-muted small mb-3">
+            Votre demande de licence <strong>{{ plan.nom }}</strong> ({{ duree }} mois) est en attente de validation.<br>
+            Le développeur vérifiera votre paiement et activera votre accès.
+        </p>
+
+        <div class="card bg-light border-0 mb-3 p-3 text-start small">
+            <div class="row g-1">
+                <div class="col-5 text-muted">Facture :</div><div class="col-7 fw-bold">{{ facture.numero }}</div>
+                <div class="col-5 text-muted">Plan :</div><div class="col-7">{{ plan.nom }} — {{ duree }} mois</div>
+                <div class="col-5 text-muted">Montant :</div><div class="col-7 fw-bold text-primary">{{ "{:,.0f}".format(montant) }} FCFA</div>
+                <div class="col-5 text-muted">Paiement :</div><div class="col-7">{{ passerelle }}</div>
+            </div>
+        </div>
+
+        <p class="fw-bold small mb-2">Pour accélérer la validation :</p>
+        <a href="{{ whatsapp_link }}" target="_blank" class="whatsapp-btn mb-3">
+            <i class="bi bi-whatsapp fs-5"></i> Notifier le développeur via WhatsApp
+        </a>
+        <p class="text-muted small mb-0">Un message pré-rempli sera envoyé au développeur avec les détails du paiement.</p>
+
+        <hr class="my-3">
+        <a href="{{ url_for('abonnement') }}" class="btn btn-outline-primary btn-sm rounded-pill">
+            <i class="bi bi-arrow-left"></i> Retour a l'abonnement
+        </a>
+    </div>
+</div>
+{% endblock %}

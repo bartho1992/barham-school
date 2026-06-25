@@ -76,11 +76,12 @@
                         <h5 class="fw-bold mb-1">{{ plan.nom }}</h5>
                         <p class="small text-muted mb-3">{{ plan.description }}</p>
                         <div class="mb-1">
-                            <span class="price">{{ "{:,.0f}".format(plan.prix_12mois // 12) }}</span>
+                            <span class="price">{{ "{:,.0f}".format(plan.prix_1mois) }}</span>
                             <span class="text-muted">FCFA/mois</span>
                         </div>
-                        <small class="text-muted mb-3">
-                            6 mois : {{ "{:,.0f}".format(plan.prix_6mois) }} F | 12 mois : {{ "{:,.0f}".format(plan.prix_12mois) }} F
+                        <small class="text-muted mb-2 d-block">
+                            1 mois: {{ "{:,.0f}".format(plan.prix_1mois) }} F • 3 mois: {{ "{:,.0f}".format(plan.prix_3mois) }} F<br>
+                            6 mois: {{ "{:,.0f}".format(plan.prix_6mois) }} F • 12 mois: {{ "{:,.0f}".format(plan.prix_12mois) }} F
                         </small>
                         <ul class="list-unstyled small flex-grow-1 mb-3">
                             {% for f in plan.features %}

@@ -130,13 +130,21 @@
                 <h6 class="fw-bold mb-1">{{ plan.nom }}</h6>
                 <p class="small text-muted mb-2 flex-grow-1">{{ plan.description }}</p>
                 <div class="mb-1">
-                    <span class="fs-5 fw-bold text-primary">{{ "{:,.0f}".format(plan.prix_12mois // 12) }}</span>
+                    <span class="fs-5 fw-bold text-primary">{{ "{:,.0f}".format(plan.prix_1mois) }}</span>
                     <small class="text-muted">F/mois</small>
                 </div>
-                <small class="text-muted mb-2">12 mois : {{ "{:,.0f}".format(plan.prix_12mois) }} F</small>
-                <a href="{{ url_for('abonnement_checkout', plan=key, duree=12) }}" class="btn btn-primary btn-sm w-100">
-                    <i class="bi bi-cart-plus me-1"></i> {% if licence and licence.plan == key %}Renouveler{% else %}Choisir{% endif %}
-                </a>
+                <small class="text-muted mb-1 d-block">
+                    1 mois : {{ "{:,.0f}".format(plan.prix_1mois) }} F | 3 mois : {{ "{:,.0f}".format(plan.prix_3mois) }} F
+                </small>
+                <small class="text-muted mb-2 d-block">
+                    6 mois : {{ "{:,.0f}".format(plan.prix_6mois) }} F | 12 mois : {{ "{:,.0f}".format(plan.prix_12mois) }} F
+                </small>
+                <div class="d-flex gap-1 mb-2 flex-wrap">
+                    <a href="{{ url_for('abonnement_checkout', plan=key, duree=1) }}" class="btn btn-outline-primary btn-sm flex-fill">1 mois</a>
+                    <a href="{{ url_for('abonnement_checkout', plan=key, duree=3) }}" class="btn btn-outline-primary btn-sm flex-fill">3 mois</a>
+                    <a href="{{ url_for('abonnement_checkout', plan=key, duree=6) }}" class="btn btn-outline-primary btn-sm flex-fill">6 mois</a>
+                    <a href="{{ url_for('abonnement_checkout', plan=key, duree=12) }}" class="btn btn-primary btn-sm flex-fill">12 mois</a>
+                </div>
             </div>
         </div>
     </div>
