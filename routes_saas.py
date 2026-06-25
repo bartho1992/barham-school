@@ -492,4 +492,7 @@ def admin_supprimer_transaction(tr_id):
 # ============================================================
 @app.route('/tutoriel')
 def tutoriel():
-    return render_template('saas/tutoriel.html')
+    # Accessible sans connexion (public)
+    from flask_login import current_user
+    ecole = current_user.ecole if current_user.is_authenticated else None
+    return render_template('saas/tutoriel.html', ecole=ecole)
