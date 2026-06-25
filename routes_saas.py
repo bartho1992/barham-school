@@ -5,7 +5,7 @@ Construit sur le système de licence existant (clé d'activation)
 
 import json, uuid
 from datetime import datetime, timezone, timedelta
-from flask import render_template, request, redirect, url_for, flash, jsonify
+from flask import render_template, request, redirect, url_for, flash, jsonify, session
 from flask_login import login_required, current_user
 from models import db, Ecole, Licence, FactureLicence, TransactionLicence, User, AnneeScolaire
 from app import app, get_current_ecole_id
