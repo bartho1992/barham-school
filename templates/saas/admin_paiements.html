@@ -106,6 +106,41 @@
     <p class="text-muted small mb-3">Aucune facture annulee.</p>
     {% endif %}
 
+    <!-- LICENCES / ABONNEMENTS ACTIFS -->
+    <div class="section-title text-primary fw-bold mb-1"><i class="bi bi-key-fill"></i> Etat des abonnements</div>
+    {% if licences %}
+    <div class="table-responsive mb-4">
+        <table class="table table-hover align-middle small">
+            <thead class="table-primary"><tr><th>Cle</th><th>École</th><th>Plan</th><th>Duree</th><th>Actif</th><th>Expire</th><th>Jours</th></tr></thead>
+            <tbody>
+                {% for l in licences %}
+                <tr>
+                    <td><code title="{{ l.cle }}">{{ l.cle[:18] }}…</code></td>
+                    <td class="fw-bold">{{ l.ecole_nom or (l.ecole.nom if l.ecole else '—') }}</td>
+                    <td>
+                        {% if plans.get(l.plan) %}{{ plans[l.plan].nom }}{% else %}{{ l.plan }}{% endif %}
+                        {% if l.essai %}<span class="badge bg-warning text-dark ms-1">ESSAI</span>{% endif %}
+                    </td>
+                    <td>{{ l.duree_mois if l.duree_mois else '—' }}m</td>
+                    <td>{{ "✓" if l.active else "✗" }}</td>
+                    <td>{{ l.date_expiration.strftime('%d/%m/%Y') if l.date_expiration else '—' }}</td>
+                    <td>
+                        {% if l.active and l.jours_restants is not none %}
+                            {% if l.jours_restants == 0 %}<span class="badge bg-danger">Expire</span>
+                            {% elif l.jours_restants <= 7 %}<span class="badge bg-warning text-dark">{{ l.jours_restants }}j</span>
+                            {% else %}<span class="badge bg-success">{{ l.jours_restants }}j</span>
+                            {% endif %}
+                        {% else %}<span class="badge bg-secondary">Inactif</span>{% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-muted small mb-3">Aucune licence.</p>
+    {% endif %}
+
     <!-- TRANSACTIONS -->
     <div class="section-title text-info fw-bold mb-1"><i class="bi bi-arrow-left-right"></i> Transactions recentes</div>
     {% if transactions %}

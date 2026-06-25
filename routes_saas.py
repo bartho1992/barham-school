@@ -368,11 +368,13 @@ def admin_paiements():
         FactureLicence.created_at.desc()).limit(20).all()
     transactions = TransactionLicence.query.order_by(
         TransactionLicence.created_at.desc()).limit(50).all()
+    licences = Licence.query.order_by(
+        Licence.date_activation.desc()).limit(100).all()
     
     return render_template('saas/admin_paiements.html',
         paiements=paiements, paiements_valides=paiements_valides,
         paiements_annules=paiements_annules, transactions=transactions,
-        plans=PLANS, count_attente=len(paiements))
+        plans=PLANS, count_attente=len(paiements), licences=licences)
 
 
 @app.route('/admin/paiements/valider/<int:facture_id>', methods=['POST'])
