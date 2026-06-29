@@ -15,10 +15,42 @@
         <button id="btnSupprimerBulk" class="btn btn-danger d-none" onclick="supprimerSelection()">
             <i class="bi bi-trash"></i> Supprimer la selection
         </button>
-        <a href="{{ url_for('classe_ajouter') }}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Ajouter</a>
+        <button id="btnAjoutLot" class="btn btn-outline-success btn-sm me-1" onclick="toggleAjoutLot()">
+            <i class="bi bi-list-ul"></i> Ajouter en lot
+        </button>
+        <a href="{{ url_for('classe_ajouter') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Ajouter</a>
     </div>
 </div>
-<small class="text-muted d-block mb-1" style="font-size:0.65rem;"><i class="bi bi-arrows-move me-1"></i> Glisser-deposer les classes pour les réorganiser</small>
+
+<!-- Panneau Ajout en lot -->
+<div id="panelAjoutLot" class="d-none mb-2 p-3 rounded" style="background: #f8fdf8; border: 1px dashed #2E7D32;">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <strong><i class="bi bi-list-ul text-success"></i> Ajouter plusieurs classes</strong>
+        <button class="btn-close" onclick="toggleAjoutLot()"></button>
+    </div>
+    <form method="POST" action="{{ url_for('classe_ajouter') }}">
+        <input type="hidden" name="mode" value="multiple">
+        <div class="row g-2">
+            <div class="col-md-3">
+                <select name="niveau" class="form-select form-select-sm">
+                    <option value="">Sans niveau</option>
+                    <option value="Prescolaire">Prescolaire</option>
+                    <option value="Elementaire">Elementaire</option>
+                    <option value="Moyen Secondaire">Moyen Secondaire</option>
+                    <option value="Secondaire">Secondaire</option>
+                </select>
+            </div>
+            <div class="col-md-7">
+                <textarea name="noms" class="form-control form-control-sm" rows="2" placeholder="Noms (un par ligne ou separes par des virgules)" required></textarea>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-success btn-sm w-100"><i class="bi bi-check-lg"></i> Ajouter</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<small class="text-muted d-block mb-1" style="font-size:0.65rem;"><i class="bi bi-arrows-move me-1"></i> Glisser-deposer les classes pour les reorganiser (tri personnalise comme Excel)</small>
 
 <form id="formBulk" method="POST" action="{{ url_for('classes_supprimer_bulk') }}">
     <div style="max-height:65vh;overflow:auto;">
@@ -80,6 +112,10 @@ var sortable = Sortable.create(document.getElementById('sortable-tbody'), {
     }
 });
 
+function toggleAjoutLot() {
+    var p = document.getElementById('panelAjoutLot');
+    p.classList.toggle('d-none');
+}
 function toggleAll(s) { document.querySelectorAll('.classe-check').forEach(cb => cb.checked = s.checked); updateBouton(); }
 function updateBouton() {
     var n = document.querySelectorAll('.classe-check:checked').length;
