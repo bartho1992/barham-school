@@ -2,7 +2,7 @@ from flask import render_template, request, redirect, url_for, flash, jsonify, s
 from flask_login import login_required
 from models import db, Ecole, Eleve, Classe, Note, Paiement, AbonnementService, Document, Bulletin
 from app import app, get_current_ecole_id
-import os, io, openpyxl
+import os, io, openpyxl, unicodedata
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 
@@ -171,7 +171,7 @@ def eleves_importer():
     headers = {}
     for col in range(1, ws.max_column + 1):
         val = ws.cell(1, col).value
-        if val: headers[val.strip().lower()] = col
+        if val: headers[unicodedata.normalize('NFKD', val.strip().lower()).encode('ASCII', 'ignore').decode()] = col
     
     required = ['prenom', 'nom']
     missing = [c for c in required if c not in headers]
@@ -188,6 +188,9 @@ def eleves_importer():
     col_ln = headers.get('lieu naissance') or headers.get('lieu_naissance')
     col_tuteur = headers.get('tuteur')
     col_adresse = headers.get('adresse')
+    col_prec_ecole = headers.get('precedente ecole') or headers.get('ecole precedente')
+    col_date_entree = headers.get('date entree') or headers.get('date_entree')
+    col_obs = headers.get('observations')
     
     from datetime import datetime
     year = str(datetime.now().year)
@@ -199,13 +202,6 @@ def eleves_importer():
         prenom = str(ws.cell(row_idx, col_prenom).value or '').strip()
         nom = str(ws.cell(row_idx, col_nom).value or '').strip()
         if not prenom or not nom:
-            continue
-        
-        existant = Eleve.query.filter_by(
-            prenom=prenom, nom=nom, ecole_id=ecole_id, annee_scolaire=annee
-        ).first()
-        if existant:
-            ignores += 1
             continue
         
         sexe = str(ws.cell(row_idx, col_sexe).value or 'M').strip() if col_sexe else 'M'
@@ -221,6 +217,14 @@ def eleves_importer():
                 classes[classe_nom.lower()] = cl
             classe_id = cl.id
         
+        # Verification doublon : meme prenom + nom + classe (meme ecole/annee)
+        existant = Eleve.query.filter_by(
+            prenom=prenom, nom=nom, classe_id=classe_id, ecole_id=ecole_id, annee_scolaire=annee
+        ).first()
+        if existant:
+            ignores += 1
+            continue
+        
         code = f"{year}{next_id:04d}"
         next_id += 1
         
@@ -232,6 +236,9 @@ def eleves_importer():
             lieu_naissance=str(ws.cell(row_idx, col_ln).value or '').strip() if col_ln else None,
             tuteur=str(ws.cell(row_idx, col_tuteur).value or '').strip() if col_tuteur else None,
             adresse=str(ws.cell(row_idx, col_adresse).value or '').strip() if col_adresse else None,
+            precedente_ecole=str(ws.cell(row_idx, col_prec_ecole).value or '').strip() if col_prec_ecole else None,
+            date_entree=str(ws.cell(row_idx, col_date_entree).value or '').strip() if col_date_entree else None,
+            observations=str(ws.cell(row_idx, col_obs).value or '').strip() if col_obs else None,
             situation='Inscrit'
         )
         db.session.add(el)
@@ -253,7 +260,7 @@ def eleves_modele():
     ws = wb.active
     ws.title = "Eleves"
     
-    headers = ['Prenom', 'Nom', 'Sexe', 'Classe', 'Tel', 'Date Naissance', 'Lieu Naissance', 'Tuteur', 'Adresse']
+    headers = ['Prenom', 'Nom', 'Sexe', 'Classe', 'Tel', 'Date Naissance', 'Lieu Naissance', 'Tuteur', 'Adresse', 'Precedente Ecole', 'Date Entree', 'Observations']
     
     hfont = Font(bold=True, color="FFFFFF", size=10)
     hfill = PatternFill(start_color="198754", end_color="198754", fill_type="solid")
@@ -266,8 +273,8 @@ def eleves_modele():
         cell.alignment = Alignment(horizontal='center', vertical='center')
     
     exemples = [
-        ['Fatou', 'DIOP', 'F', 'CP1', '771234567', '15/05/2017', 'Dakar', 'Mamadou DIOP', 'Medina'],
-        ['Abdou', 'SOW', 'M', 'CE1', '775556677', '03/12/2016', 'Thies', 'Ibrahima SOW', 'Plateau'],
+        ['Fatou', 'DIOP', 'F', 'CP1', '771234567', '15/05/2017', 'Dakar', 'Mamadou DIOP', 'Medina', 'Ecole A', '01/10/2024', ''],
+        ['Abdou', 'SOW', 'M', 'CE1', '775556677', '03/12/2016', 'Thies', 'Ibrahima SOW', 'Plateau', 'Ecole B', '05/10/2024', 'Redoublant'],
     ]
     
     efill = PatternFill(start_color="E8F4E8", end_color="E8F4E8", fill_type="solid")
@@ -276,9 +283,9 @@ def eleves_modele():
             cell = ws.cell(row=row, column=col, value=val)
             cell.border = border
             if row == 2: cell.fill = efill
-            cell.alignment = Alignment(horizontal='center' if col != 1 else 'left')
+            cell.alignment = Alignment(horizontal='center' if col not in [1, 2, 7, 8, 10] else 'left')
     
-    for i, w in enumerate([15, 15, 6, 10, 14, 16, 16, 18, 18], 1):
+    for i, w in enumerate([15, 15, 6, 10, 14, 16, 16, 18, 18, 20, 14, 24], 1):
         ws.column_dimensions[openpyxl.utils.get_column_letter(i)].width = w
     
     output = io.BytesIO()

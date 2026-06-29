@@ -69,7 +69,7 @@ def abonnement():
     from models import Eleve, Personnel
 
     # Développeur super_users = accès illimité gratuit
-    est_dev = current_user.is_authenticated and current_user.role == 'super_users'
+    est_dev = current_user.is_authenticated and current_user.role == 'dev'
 
     eleves_count = Eleve.query.filter_by(ecole_id=ecole_id).count()
     personnel_count = Personnel.query.filter_by(ecole_id=ecole_id).count()

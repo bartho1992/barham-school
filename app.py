@@ -135,7 +135,7 @@ def inject_licence_status():
     from flask_login import current_user
     from models import Licence
     try:
-        if current_user.is_authenticated and current_user.role != 'super_users':
+        if current_user.is_authenticated and current_user.role != 'dev':
             ecole_id = get_current_ecole_id()
             licence = Licence.licence_active_for_ecole(ecole_id)
             if licence:
@@ -174,7 +174,7 @@ def verifier_licence_et_session():
         return None
     
     try:
-        if current_user.is_authenticated and current_user.role == 'super_users':
+        if current_user.is_authenticated and current_user.role == 'dev':
             return None
     except:
         pass

@@ -1,12 +1,13 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿{% extends "base.html" %}
+{% extends "base.html" %}
 {% block title %}Eleves - {{ ecole.nom }}{% endblock %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-1">
-    <h6 class="mb-0"><i class="bi bi-people-fill"></i> Gestion des Eleves</h6>
+
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <div class="section-header"><i class="bi bi-people-fill me-1"></i> Gestion des Eleves</div>
     <div>
         <button id="btnSupprimerBulk" class="btn btn-danger d-none" onclick="supprimerSelection()">
             <i class="bi bi-trash"></i> Supprimer la selection
-        </button><br>
+        </button>
         <a href="{{ url_for('eleve_ajouter') }}" class="btn btn-sm btn-primary ms-1"><i class="bi bi-person-plus"></i> Inscrire</a>
         <button class="btn btn-sm btn-outline-success ms-1" onclick="document.getElementById('importModal').classList.remove('d-none')"><i class="bi bi-file-earmark-excel"></i> Importer Excel</button>
         <a href="{{ url_for('eleves_modele') }}" class="btn btn-sm btn-outline-secondary ms-1"><i class="bi bi-download"></i> Modele</a>
@@ -26,7 +27,7 @@
                 <input type="file" name="fichier_excel" class="form-control form-control-sm" accept=".xlsx,.xls" required>
             </div>
             <small class="text-muted d-block mb-2" style="font-size:0.65rem;">
-                Colonnes : Prenom, Nom, Sexe, Classe, Tel, Date Naissance, Lieu Naissance, Tuteur, Adresse<br>
+                Colonnes : Prenom, Nom, Sexe, Classe, Tel, Date Naissance, Lieu Naissance, Tuteur, Adresse, Precedente Ecole, Date Entree, Observations<br>
                 <a href="{{ url_for('eleves_modele') }}">Telecharger le modele</a>
             </small>
             <div class="d-flex gap-2">
@@ -41,29 +42,31 @@
     <div class="card-body">
         <form method="GET" class="row g-2">
             <div class="col-md-4">
-                <input type="text" name="search" class="form-control" placeholder="Rechercher (prenom, nom, code)..." value="{{ filter_search }}">
+                <input type="text" name="search" class="form-control form-control-sm" placeholder="Rechercher (prenom, nom, code)..." value="{{ filter_search }}">
             </div>
             <div class="col-md-3">
-                <select name="classe" class="form-select">
+                <select name="classe" class="form-select form-select-sm">
                     <option value="">Toutes les classes</option>
                     {% for c in classes %}
                     <option value="{{ c.id }}" {% if filter_classe==c.id|string %}selected{% endif %}>{{ c.nom }}</option>
                     {% endfor %}
                 </select>
             </div>
-            <div class="col-md-2"><button type="submit" class="btn btn-outline-primary w-100"><i class="bi bi-search"></i> Filtrer</button></div>
-            <div class="col-md-3 text-end"><span class="badge bg-primary fs-6">{{ eleves|length }} eleves</span></div>
+            <div class="col-md-2"><button type="submit" class="btn btn-outline-primary btn-sm w-100"><i class="bi bi-search"></i> Filtrer</button></div>
+            <div class="col-md-3 text-end"><span class="badge bg-success fs-6">{{ eleves|length }} eleves</span></div>
         </form>
     </div>
 </div>
 
 <form id="formBulk" method="POST" action="{{ url_for('eleves_supprimer_bulk') }}">
-<div style="max-height:65vh;overflow-y:auto;overflow-x:hidden;">
-    <table class="table table-sm table-bordered align-middle bg-white shadow-sm">
-        <thead class="table-primary">
+<div style="max-height:65vh;overflow:auto;">
+    <table class="table table-sm table-bordered align-middle bg-white">
+        <thead>
             <tr>
-                <th style="width:36px;"><input class="form-check-input" type="checkbox" id="selectAll" onchange="toggleAll(this)"></th>
-                <th>Code</th><th>Prenom</th><th>Nom</th><th>Sexe</th><th>Classe</th><th>Tel</th><th>Date Naiss.</th><th>Situation</th><th>Actions</th>
+                <th style="width:32px;"><input class="form-check-input" type="checkbox" id="selectAll" onchange="toggleAll(this)"></th>
+                <th>CODE</th><th>PRENOM</th><th>NOM</th><th>SEXE</th><th>CLASSE</th><th>TEL</th>
+                <th>DATE NAISS.</th><th>LIEU NAISS.</th><th>TUTEUR</th><th>ADRESSE</th>
+                <th>PREC. ECOLE</th><th>DATE ENTREE</th><th>OBSERVATIONS</th><th>SITUATION</th><th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -72,25 +75,31 @@
                 <td class="text-center">
                     <input class="form-check-input eleve-check" type="checkbox" name="eleve_ids[]" value="{{ e.id }}" onchange="updateBouton()">
                 </td>
-                <td><code>{{ e.code }}</code></td>
+                <td class="text-center"><code>{{ e.code }}</code></td>
                 <td>{{ e.prenom }}</td>
                 <td class="fw-bold">{{ e.nom }}</td>
-                <td>
+                <td class="text-center">
                     {% if e.sexe == 'M' %}<span class="badge bg-info">M</span>
                     {% else %}<span class="badge bg-danger">F</span>{% endif %}
                 </td>
-                <td><span class="badge bg-secondary">{{ e.classe.nom if e.classe else '-' }}</span></td>
+                <td class="text-center"><span class="badge bg-secondary">{{ e.classe.nom if e.classe else '-' }}</span></td>
                 <td>{{ e.tel or '-' }}</td>
                 <td>{{ e.date_naissance or '-' }}</td>
-                <td>
+                <td>{{ e.lieu_naissance or '-' }}</td>
+                <td>{{ e.tuteur or '-' }}</td>
+                <td>{{ e.adresse or '-' }}</td>
+                <td>{{ e.precedente_ecole or '-' }}</td>
+                <td>{{ e.date_entree or '-' }}</td>
+                <td title="{{ e.observations }}">{{ (e.observations or '-')[:20] }}{% if e.observations and e.observations|length > 20 %}...{% endif %}</td>
+                <td class="text-center">
                     {% if e.situation == 'Inscrit' %}<span class="badge bg-success">{{ e.situation }}</span>
                     {% else %}<span class="badge bg-warning">{{ e.situation }}</span>{% endif %}
                 </td>
-                <td>
+                <td class="text-center">
                     <div class="btn-group btn-group-sm">
                         <a href="{{ url_for('eleve_fiche', id=e.id) }}" class="btn btn-outline-info" title="Fiche"><i class="bi bi-eye"></i></a>
                         <a href="{{ url_for('eleve_modifier', id=e.id) }}" class="btn btn-outline-warning" title="Modifier"><i class="bi bi-pencil"></i></a>
-                        <form method="POST" action="{{ url_for('eleve_supprimer', id=e.id) }}" onsubmit="return confirm('Supprimer cet eleve ? Toutes ses donnees (notes, paiements) seront supprimees.')">
+                        <form method="POST" action="{{ url_for('eleve_supprimer', id=e.id) }}" onsubmit="return confirm('Supprimer cet eleve ? Toutes ses donnees (notes, paiements) seront supprimees.')" class="d-inline">
                             <button class="btn btn-outline-danger" title="Supprimer"><i class="bi bi-trash"></i></button>
                         </form>
                     </div>
@@ -104,27 +113,19 @@
 
 <script>
 function toggleAll(source) {
-    document.querySelectorAll('.eleve-check').forEach(function(cb) {
-        cb.checked = source.checked;
-    });
+    document.querySelectorAll('.eleve-check').forEach(function(cb) { cb.checked = source.checked; });
     updateBouton();
 }
-
 function updateBouton() {
     var checked = document.querySelectorAll('.eleve-check:checked').length;
     var btn = document.getElementById('btnSupprimerBulk');
-    if (checked > 0) {
-        btn.classList.remove('d-none');
-        btn.innerHTML = '<i class="bi bi-trash"></i> Supprimer (' + checked + ')';
-    } else {
-        btn.classList.add('d-none');
-    }
+    if (checked > 0) { btn.classList.remove('d-none'); btn.innerHTML = '<i class="bi bi-trash"></i> Supprimer (' + checked + ')'; }
+    else { btn.classList.add('d-none'); }
 }
-
 function supprimerSelection() {
     var checked = document.querySelectorAll('.eleve-check:checked').length;
     if (checked === 0) return;
-    if (!confirm('Supprimer ' + checked + ' eleve(s) ?\n\nATTENTION : Toutes leurs donnees (notes, paiements, abonnements, documents, bulletins) seront definitivement supprimees.')) return;
+    if (!confirm('Supprimer ' + checked + ' eleve(s) ?\n\nATTENTION : Toutes leurs donnees seront definitivement supprimees.')) return;
     document.getElementById('formBulk').submit();
 }
 </script>

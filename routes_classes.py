@@ -7,7 +7,7 @@ from app import app, get_current_ecole_id
 @login_required
 def classes():
     ecole_id = get_current_ecole_id()
-    return render_template('classes/index.html', classes=Classe.query.filter_by(ecole_id=ecole_id).all(), ecole=Ecole.query.get(ecole_id))
+    return render_template('classes/index.html', classes=Classe.query.filter_by(ecole_id=ecole_id).order_by(Classe.ordre, Classe.nom).all(), ecole=Ecole.query.get(ecole_id))
 
 @app.route('/classes/ajouter', methods=['GET','POST'])
 @login_required
@@ -93,6 +93,19 @@ def classes_supprimer_bulk():
     db.session.commit()
     flash(f'{count} classe(s) supprimée(s) avec succès', 'success')
     return redirect(url_for('classes'))
+
+@app.route('/classes/reorder', methods=['POST'])
+@login_required
+def classes_reorder():
+    """Réordonner les classes par drag & drop"""
+    ecole_id = get_current_ecole_id()
+    ids = request.json.get('ids', [])
+    if not ids:
+        return jsonify({'ok': False, 'error': 'Aucun ID'}), 400
+    for idx, cid in enumerate(ids):
+        Classe.query.filter_by(id=cid, ecole_id=ecole_id).update({'ordre': idx})
+    db.session.commit()
+    return jsonify({'ok': True})
 
 @app.route('/matieres')
 @login_required

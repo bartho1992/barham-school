@@ -14,25 +14,16 @@
 </div>
 {% endif %}
 
-<div class="row mb-2">
-    <div class="col-12">
-        <div class="bg-primary text-white p-2 rounded shadow-sm d-flex justify-content-between align-items-center flex-wrap">
-            <div>
-                <h5 class="mb-0"><i class="bi bi-speedometer2"></i> Tableau de bord</h5>
-                <small class="opacity-75">{{ ecole.nom }} | Année : <strong>{{ current_annee }}</strong></small>
-            </div>
-            <div class="mt-2 mt-md-0">
-                <form method="GET" action="{{ url_for('changer_annee') }}" class="d-flex align-items-center gap-1">
-                    <label class="text-white me-1 small fw-bold"><i class="bi bi-calendar3"></i> Changer :</label>
-                    <select name="annee" class="form-select form-select-sm" style="width: auto; min-width: 150px;" onchange="this.form.submit()">
-                        {% for an in all_annees %}
-                        <option value="{{ an.annee }}" {{ 'selected' if an.annee == current_annee }}>{{ an.annee }}{{ ' (active)' if an.active }}</option>
-                        {% endfor %}
-                    </select>
-                </form>
-            </div>
-        </div>
-    </div>
+<div class="d-flex justify-content-between align-items-center mb-2 flex-wrap">
+    <div class="section-header"><i class="bi bi-speedometer2 me-1"></i> Tableau de bord — {{ ecole.nom }} | Annee : {{ current_annee }}</div>
+    <form method="GET" action="{{ url_for('changer_annee') }}" class="d-flex align-items-center gap-1">
+        <label class="small fw-bold"><i class="bi bi-calendar3"></i></label>
+        <select name="annee" class="form-select form-select-sm" style="width: auto; min-width: 140px;" onchange="this.form.submit()">
+            {% for an in all_annees %}
+            <option value="{{ an.annee }}" {{ 'selected' if an.annee == current_annee }}>{{ an.annee }}{{ ' (active)' if an.active }}</option>
+            {% endfor %}
+        </select>
+    </form>
 </div>
 
 <!-- Stats cards compactes -->
@@ -178,7 +169,7 @@
     <div class="widget-body card-body p-0">
         <div style="max-height:65vh;overflow-y:auto;overflow-x:hidden;">
             <table class="table table-sm mb-0">
-                <thead class="table-light">
+                <thead>
                     <tr>
                         <th><small>Date</small></th>
                         <th><small>Eleve</small></th>

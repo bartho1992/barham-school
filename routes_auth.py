@@ -108,7 +108,7 @@ def register():
         db.session.flush()
         
         # Creer le compte
-        user = User(username=username, role='user', ecole_id=ecole.id)
+        user = User(username=username, role='super_users', ecole_id=ecole.id)
         user.set_password(password)
         db.session.add(user)
         db.session.flush()

@@ -12,7 +12,7 @@ def generate_random_key(prefix, length=8):
 @app.route('/admin')
 @login_required
 def admin():
-    if current_user.role != 'super_users': flash('Accès réservé','danger'); return redirect(url_for('dashboard'))
+    if current_user.role != 'dev': flash('Accès réservé','danger'); return redirect(url_for('dashboard'))
     from models import User, Licence, AnneeScolaire, FactureLicence
     ecole_id = get_current_ecole_id()
     ecole = Ecole.query.get(ecole_id)
@@ -40,7 +40,7 @@ def admin():
 @app.route('/admin/ecole/<int:id>', methods=['GET','POST'])
 @login_required
 def admin_ecole(id=None):
-    if current_user.role != 'super_users': return redirect(url_for('dashboard'))
+    if current_user.role != 'dev': return redirect(url_for('dashboard'))
     
     if id:
         e = Ecole.query.get_or_404(id)
@@ -106,7 +106,7 @@ def admin_ecole(id=None):
 @app.route('/changer-ecole/<int:id>')
 @login_required
 def changer_ecole(id):
-    if current_user.role != 'super_users':
+    if current_user.role != 'dev':
         flash('Accès réservé au développeur', 'danger')
         return redirect(url_for('dashboard'))
     
@@ -122,7 +122,7 @@ champs_dev = ['nom','adresse','tel','annee_scolaire','zone','dev','email','type_
 @app.route('/admin/dev/<int:id>', methods=['GET','POST'])
 @login_required
 def admin_dev(id=None):
-    if current_user.role != 'super_users': return redirect(url_for('dashboard'))
+    if current_user.role != 'dev': return redirect(url_for('dashboard'))
     
     if id:
         e = Ecole.query.get_or_404(id)
@@ -142,7 +142,7 @@ def admin_dev(id=None):
 @app.route('/admin/import', methods=['GET','POST'])
 @login_required
 def admin_import():
-    if current_user.role != 'super_users': return redirect(url_for('dashboard'))
+    if current_user.role != 'dev': return redirect(url_for('dashboard'))
     if request.method == 'POST':
         import csv, os
         from models import Eleve, Classe
@@ -190,7 +190,7 @@ def admin_import():
 @app.route('/admin/users')
 @login_required
 def admin_users():
-    if current_user.role != 'super_users': return redirect(url_for('dashboard'))
+    if current_user.role != 'dev': return redirect(url_for('dashboard'))
     from models import User
     ecole_id = get_current_ecole_id()
     return render_template('admin/users.html', users=User.query.all(), ecole=Ecole.query.get(ecole_id))
@@ -198,7 +198,7 @@ def admin_users():
 @app.route('/admin/users/ajouter', methods=['GET','POST'])
 @login_required
 def admin_user_ajouter():
-    if current_user.role != 'super_users': return redirect(url_for('dashboard'))
+    if current_user.role != 'dev': return redirect(url_for('dashboard'))
     from models import User, Ecole
     if request.method == 'POST':
         username = request.form.get('username')
@@ -221,7 +221,7 @@ def admin_user_ajouter():
 @app.route('/admin/users/modifier/<int:id>', methods=['GET','POST'])
 @login_required
 def admin_user_modifier(id):
-    if current_user.role != 'super_users': return redirect(url_for('dashboard'))
+    if current_user.role != 'dev': return redirect(url_for('dashboard'))
     from models import User, Ecole
     u = User.query.get_or_404(id)
     if request.method == 'POST':
@@ -241,7 +241,7 @@ def admin_user_modifier(id):
 @app.route('/admin/users/supprimer/<int:id>', methods=['POST'])
 @login_required
 def admin_user_supprimer(id):
-    if current_user.role != 'super_users': return redirect(url_for('dashboard'))
+    if current_user.role != 'dev': return redirect(url_for('dashboard'))
     from models import User
     u = User.query.get_or_404(id)
     if u.id == current_user.id:
@@ -254,7 +254,7 @@ def admin_user_supprimer(id):
 @app.route('/admin/ecole/supprimer/<int:id>', methods=['POST'])
 @login_required
 def admin_ecole_supprimer(id):
-    if current_user.role != 'super_users':
+    if current_user.role != 'dev':
         flash('Accès réservé au développeur.', 'danger')
         return redirect(url_for('dashboard'))
     
@@ -321,7 +321,7 @@ import os
 @login_required
 def admin_backup():
     """Page de gestion des sauvegardes (réservée au développeur)"""
-    if current_user.role != 'super_users':
+    if current_user.role != 'dev':
         flash('Accès réservé au développeur', 'danger')
         return redirect(url_for('dashboard'))
     
@@ -337,7 +337,7 @@ def admin_backup():
 @login_required
 def backup_create():
     """Créer une nouvelle sauvegarde"""
-    if current_user.role != 'super_users':
+    if current_user.role != 'dev':
         return jsonify({'success': False, 'error': 'Accès non autorisé'}), 403
     
     try:
@@ -359,7 +359,7 @@ def backup_create():
 @login_required
 def backup_download(filename):
     """Télécharger un fichier de sauvegarde"""
-    if current_user.role != 'super_users':
+    if current_user.role != 'dev':
         flash('Accès non autorisé', 'danger')
         return redirect(url_for('dashboard'))
     
@@ -383,7 +383,7 @@ def backup_download(filename):
 @login_required
 def backup_restore(filename):
     """Restaurer une sauvegarde"""
-    if current_user.role != 'super_users':
+    if current_user.role != 'dev':
         flash('Accès non autorisé', 'danger')
         return redirect(url_for('dashboard'))
     
@@ -408,7 +408,7 @@ def backup_restore(filename):
 @login_required
 def backup_delete(filename):
     """Supprimer une sauvegarde"""
-    if current_user.role != 'super_users':
+    if current_user.role != 'dev':
         flash('Accès non autorisé', 'danger')
         return redirect(url_for('dashboard'))
     
@@ -438,7 +438,7 @@ import sqlite3
 @login_required
 def admin_logs():
     """Page de visualisation des logs système"""
-    if current_user.role != 'super_users':
+    if current_user.role != 'dev':
         flash('Accès réservé au développeur', 'danger')
         return redirect(url_for('dashboard'))
     
@@ -503,7 +503,7 @@ def admin_logs():
 @login_required
 def admin_logs_stats():
     """API pour récupérer les statistiques de logs"""
-    if current_user.role != 'super_users':
+    if current_user.role != 'dev':
         return jsonify({'error': 'Accès non autorisé'}), 403
     
     days = request.args.get('days', 7, type=int)
@@ -515,7 +515,7 @@ def admin_logs_stats():
 @login_required
 def admin_logs_clear():
     """Vider les logs anciens"""
-    if current_user.role != 'super_users':
+    if current_user.role != 'dev':
         flash('Accès non autorisé', 'danger')
         return redirect(url_for('dashboard'))
     
@@ -567,7 +567,7 @@ def admin_logs_clear():
 @login_required
 def admin_security():
     """Page de configuration de la sécurité (réservée au développeur)"""
-    if current_user.role != 'super_users':
+    if current_user.role != 'dev':
         flash('Accès réservé au développeur', 'danger')
         return redirect(url_for('dashboard'))
     
@@ -616,7 +616,7 @@ from mailer import mailer
 @login_required
 def admin_email():
     """Page de configuration SMTP (réservée au développeur)"""
-    if current_user.role != 'super_users':
+    if current_user.role != 'dev':
         flash('Accès réservé au développeur', 'danger')
         return redirect(url_for('dashboard'))
     
@@ -669,7 +669,7 @@ def admin_email():
 @login_required
 def admin_maintenance():
     """Outils de maintenance avancée (réservée au développeur)"""
-    if current_user.role != 'super_users':
+    if current_user.role != 'dev':
         flash('Accès réservé au développeur', 'danger')
         return redirect(url_for('dashboard'))
     
@@ -735,7 +735,7 @@ def admin_maintenance():
 @login_required
 def admin_export_json(table_name):
     """Exporte une table au format JSON"""
-    if current_user.role != 'super_users':
+    if current_user.role != 'dev':
         return jsonify({'error': 'Accès non autorisé'}), 403
         
     db_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'school.db')

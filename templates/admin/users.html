@@ -1,4 +1,4 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 {% block title %}Utilisateurs - {{ ecole.nom }}{% endblock %}
 {% block content %}
 <div class="row mb-4">
@@ -51,8 +51,8 @@
                         {% endif %}
                     </td>
                     <td>
-                        <span class="badge {{ 'bg-danger' if u.role == 'super_users' else 'bg-info text-dark' }}">
-                            {{ 'Développeur' if u.role == 'super_users' else 'Utilisateur' }}
+                        <span class="badge {{ 'bg-danger' if u.role == 'dev' else 'bg-info text-dark' }}">
+                            {{ 'Développeur' if u.role == 'dev' else 'Super Admin' if u.role == 'super_users' else 'Utilisateur' }}
                         </span>
                     </td>
                     <td class="small text-muted">

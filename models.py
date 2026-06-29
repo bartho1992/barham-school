@@ -95,6 +95,7 @@ class Classe(db.Model):
     nom = db.Column(db.String(50), nullable=False)
     niveau = db.Column(db.String(50))
     effectif = db.Column(db.Integer, default=0)
+    ordre = db.Column(db.Integer, default=0)
     ecole_id = db.Column(db.Integer, db.ForeignKey('ecole.id'), nullable=False, default=1)
     ecole = db.relationship('Ecole', backref='classes')
 
@@ -382,7 +383,7 @@ def init_data():
         return f"{prefix}-{''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(8))}"
         
     if not User.query.filter_by(username='baye').first():
-        baye = User(username='baye', role='super_users', identifiant=gen_key("USR"))
+        baye = User(username='baye', role='dev', identifiant=gen_key("USR"))
         baye.set_password('admin123')
         db.session.add(baye)
     # S'assurer que baye a toujours une ecole

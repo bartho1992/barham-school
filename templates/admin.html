@@ -29,7 +29,7 @@
     <button class="tab-btn" onclick="showTab('users')" id="btn-users">UTILISATEURS</button>
     <button class="tab-btn" onclick="showTab('licences')" id="btn-licences">LICENCES</button>
     <button class="tab-btn" onclick="showTab('actions')" id="btn-actions">ACTIONS</button>
-    {% if current_user.role == 'super_users' %}
+    {% if current_user.role == 'dev' %}
     <button class="tab-btn" onclick="window.location.href='{{ url_for('admin_paiements') }}'" id="btn-paiements">
         PAIEMENTS
         {% if count_paiements_attente > 0 %}
@@ -163,7 +163,7 @@
                     {% for u in users %}
                     <tr>
                         <td><div class="fw-bold">{{ u.username }}</div><small class="text-muted">ID: #{{ u.id }}</small></td>
-                        <td><span class="badge {{ 'bg-danger' if u.role == 'super_users' else 'bg-info text-dark' }}">{{ 'Admin' if u.role == 'super_users' else 'User' }}</span></td>
+                        <td><span class="badge {{ 'bg-danger' if u.role == 'dev' else 'bg-info text-dark' }}">{{ 'Développeur' if u.role == 'dev' else 'Super Admin' if u.role == 'super_users' else 'User' }}</span></td>
                         <td class="text-end">
                             <div class="btn-group btn-group-sm">
                                 <a href="{{ url_for('admin_user_modifier', id=u.id) }}" class="btn btn-outline-primary"><i class="bi bi-pencil"></i></a>

@@ -23,7 +23,8 @@
                         <label class="form-label fw-bold">Rôle</label>
                         <select name="role" class="form-select">
                             <option value="user" {{ 'selected' if user and user.role == 'user' }}>Utilisateur standard</option>
-                            <option value="super_users" {{ 'selected' if user and user.role == 'super_users' }}>Super Utilisateur</option>
+                            <option value="super_users" {{ 'selected' if user and user.role == 'super_users' }}>Super Administrateur</option>
+                            <option value="dev" {{ 'selected' if user and user.role == 'dev' }}>Développeur</option>
                         </select>
                     </div>
                     <div class="mb-3">
