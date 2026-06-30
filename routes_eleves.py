@@ -168,28 +168,50 @@ def eleves_importer():
         flash(f'Erreur lecture fichier: {str(ex)}', 'danger')
         return redirect(url_for('eleves'))
     
+    def _normaliser(texte):
+        """Normalise un texte: minuscules, sans accents, sans stop words, sans apostrophes"""
+        t = unicodedata.normalize('NFKD', texte.strip().lower()).encode('ASCII', 'ignore').decode()
+        # Supprimer les stop words et les apostrophes
+        for mot in [' de ', ' d\'', ' du ']:
+            t = t.replace(mot, ' ')
+        return t.replace('\'', '').replace(' ', '_').strip('_')
+    
     headers = {}
+    headers_bruts = {}  # cle normalisee avec underscores
     for col in range(1, ws.max_column + 1):
         val = ws.cell(1, col).value
-        if val: headers[unicodedata.normalize('NFKD', val.strip().lower()).encode('ASCII', 'ignore').decode()] = col
+        if val:
+            cle_brute = unicodedata.normalize('NFKD', val.strip().lower()).encode('ASCII', 'ignore').decode().replace('\'', '').replace(' ', '_')
+            cle_norm = _normaliser(val)
+            headers[cle_brute] = col
+            headers_bruts[cle_norm] = col
     
     required = ['prenom', 'nom']
-    missing = [c for c in required if c not in headers]
+    missing = [c for c in required if c not in headers and c not in headers_bruts]
     if missing:
         flash(f'Colonnes manquantes: {", ".join(missing)}. Trouvees: {list(headers.keys())}', 'danger')
         return redirect(url_for('eleves'))
     
-    col_prenom = headers['prenom']
-    col_nom = headers['nom']
+    def _col(*cles):
+        """Cherche une colonne par plusieurs cles possibles"""
+        for cle in cles:
+            if cle in headers:
+                return headers[cle]
+            if cle in headers_bruts:
+                return headers_bruts[cle]
+        return None
+    
+    col_prenom = headers.get('prenom')
+    col_nom = headers.get('nom')
     col_sexe = headers.get('sexe')
     col_classe = headers.get('classe')
-    col_tel = headers.get('tel') or headers.get('telephone')
-    col_dn = headers.get('date naissance') or headers.get('date_naissance')
-    col_ln = headers.get('lieu naissance') or headers.get('lieu_naissance')
+    col_tel = _col('tel', 'telephone')
+    col_dn = _col('date_naissance', 'date_de_naissance', 'date naissance')
+    col_ln = _col('lieu_naissance', 'lieu_de_naissance', 'lieu naissance')
     col_tuteur = headers.get('tuteur')
     col_adresse = headers.get('adresse')
-    col_prec_ecole = headers.get('precedente ecole') or headers.get('ecole precedente')
-    col_date_entree = headers.get('date entree') or headers.get('date_entree')
+    col_prec_ecole = _col('precedente_ecole', 'ecole_precedente', 'precedente ecole')
+    col_date_entree = _col('date_entree', 'date_d_entree', 'date_dentree', 'date entree')
     col_obs = headers.get('observations')
     
     from datetime import datetime
