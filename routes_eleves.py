@@ -171,48 +171,91 @@ def eleves_importer():
     def _normaliser(texte):
         """Normalise un texte: minuscules, sans accents, sans stop words, sans apostrophes"""
         t = unicodedata.normalize('NFKD', texte.strip().lower()).encode('ASCII', 'ignore').decode()
-        # Supprimer les stop words et les apostrophes
-        for mot in [' de ', ' d\'', ' du ']:
+        for mot in [' de ', ' d\'', ' du ', ' de l\'', ' la ', ' le ', ' a ', ' au ', '-']:
             t = t.replace(mot, ' ')
-        return t.replace('\'', '').replace(' ', '_').strip('_')
+        return t.replace('\'', '').replace('(', '').replace(')', '').replace('/', '_').replace(' ', '_').strip('_').replace('__', '_')
+
+    # --- Detection intelligente des colonnes (row 1, 2, 3) ---
+    headers = {}       # cle normalisee avec underscores: {'prenom': 1, 'nom': 2, ...}
+    headers_bruts = {}  # cle normalisee avec stop words: {'prenom': 1, ...}
+    col_names_raw = []  # noms bruts pour diagnostic
     
-    headers = {}
-    headers_bruts = {}  # cle normalisee avec underscores
-    for col in range(1, ws.max_column + 1):
-        val = ws.cell(1, col).value
-        if val:
-            cle_brute = unicodedata.normalize('NFKD', val.strip().lower()).encode('ASCII', 'ignore').decode().replace('\'', '').replace(' ', '_')
-            cle_norm = _normaliser(val)
-            headers[cle_brute] = col
-            headers_bruts[cle_norm] = col
+    for row_check in range(1, 4):  # Chercher dans les 3 premieres lignes
+        for col in range(1, ws.max_column + 1):
+            val = ws.cell(row_check, col).value
+            if val:
+                cle_brute = unicodedata.normalize('NFKD', str(val).strip().lower()).encode('ASCII', 'ignore').decode().replace('\'', '').replace(' ', '_').replace('(', '').replace(')', '')
+                cle_norm = _normaliser(str(val))
+                if cle_brute not in headers:
+                    headers[cle_brute] = col
+                    headers_bruts[cle_norm] = col
+                    col_names_raw.append(str(val).strip())
     
-    required = ['prenom', 'nom']
-    missing = [c for c in required if c not in headers and c not in headers_bruts]
-    if missing:
-        flash(f'Colonnes manquantes: {", ".join(missing)}. Trouvees: {list(headers.keys())}', 'danger')
-        return redirect(url_for('eleves'))
+    # --- Detection automatique avec listes de synonymes ---
+    # Chaque champ a une liste de mots-cles possibles, classes par priorite
+    SYNONYMES = {
+        'prenom': ['prenom', 'prenoms', 'first_name', 'firstname', 'first name', 'given_name', 'givenname'],
+        'nom': ['nom', 'name', 'last_name', 'lastname', 'last name', 'surname', 'family_name', 'familyname', 'nom_de_famille', 'nom_famille'],
+        'sexe': ['sexe', 'genre', 'gender', 'sex', 'civilite', 'civilite', 'm_f', 'mf'],
+        'classe': ['classe', 'class', 'niveau', 'grade', 'level', 'form', 'division', 'div'],
+        'tel': ['tel', 'telephone', 'phone', 'mobile', 'cell', 'contact', 'gsm', 'phone_number', 'phonenumber', 'numero'],
+        'date_naissance': ['date_naissance', 'date_de_naissance', 'date naissance', 'ne_le', 'ne le', 'ne(e)_le', 'birth_date', 'birthdate', 'birth', 'anniversaire', 'date_of_birth', 'dob', 'naissance', 'date_naiss'],
+        'lieu_naissance': ['lieu_naissance', 'lieu_de_naissance', 'lieu naissance', 'ne_a', 'ne a', 'birth_place', 'birthplace', 'place_of_birth', 'pob', 'ville_naissance'],
+        'tuteur': ['tuteur', 'parent', 'responsable', 'responsable_legal', 'gardien', 'guardian', 'pere', 'mere', 'pere_mere', 'father', 'mother', 'tuteur_legal'],
+        'adresse': ['adresse', 'address', 'domicile', 'residence', 'quartier', 'localisation', 'lieu', 'ville', 'commune'],
+        'precedente_ecole': ['precedente_ecole', 'ecole_precedente', 'ecole_origine', 'provenance', 'ancienne_ecole', 'previous_school', 'etablissement_precedent', 'derniere_ecole', 'ecole_anterieure'],
+        'date_entree': ['date_entree', 'date_d_entree', 'date_dentree', 'date entree', 'inscription', 'admission', 'date_inscription', 'entry_date', 'date_admission', 'rentree', 'date_rentree'],
+        'observations': ['observations', 'obs', 'notes', 'remarques', 'commentaires', 'comment', 'remarque', 'note', 'divers'],
+    }
     
-    def _col(*cles):
-        """Cherche une colonne par plusieurs cles possibles"""
-        for cle in cles:
-            if cle in headers:
-                return headers[cle]
-            if cle in headers_bruts:
-                return headers_bruts[cle]
+    def _trouver_colonne(champ):
+        """Trouve l'index d'une colonne par tous les synonymes possibles + partial match"""
+        if champ not in SYNONYMES:
+            return None
+        for mot_cle in SYNONYMES[champ]:
+            mot = _normaliser(mot_cle)
+            # Exact match
+            if mot in headers_bruts:
+                return headers_bruts[mot]
+            if mot in headers:
+                return headers[mot]
+            # Partial match: le mot-cle est contenu dans le header
+            for k, v in headers_bruts.items():
+                if mot in k or k in mot:
+                    return v
+            for k, v in headers.items():
+                if mot in k or k in mot:
+                    return v
+        # Fallback ultime: cherche un mot-cle de 3+ lettres
+        mots_cles_courts = [m for m in SYNONYMES[champ] if len(m) >= 3]
+        for mk in mots_cles_courts:
+            mk_norm = _normaliser(mk)
+            for k, v in headers_bruts.items():
+                if mk_norm in k or k in mk_norm:
+                    return v
+            for k, v in headers.items():
+                if mk_norm in k or k in mk_norm:
+                    return v
         return None
     
-    col_prenom = headers.get('prenom')
-    col_nom = headers.get('nom')
-    col_sexe = headers.get('sexe')
-    col_classe = headers.get('classe')
-    col_tel = _col('tel', 'telephone')
-    col_dn = _col('date_naissance', 'date_de_naissance', 'date naissance')
-    col_ln = _col('lieu_naissance', 'lieu_de_naissance', 'lieu naissance')
-    col_tuteur = headers.get('tuteur')
-    col_adresse = headers.get('adresse')
-    col_prec_ecole = _col('precedente_ecole', 'ecole_precedente', 'precedente ecole')
-    col_date_entree = _col('date_entree', 'date_d_entree', 'date_dentree', 'date entree')
-    col_obs = headers.get('observations')
+    col_prenom = _trouver_colonne('prenom')
+    col_nom = _trouver_colonne('nom')
+    col_sexe = _trouver_colonne('sexe')
+    col_classe = _trouver_colonne('classe')
+    col_tel = _trouver_colonne('tel')
+    col_dn = _trouver_colonne('date_naissance')
+    col_ln = _trouver_colonne('lieu_naissance')
+    col_tuteur = _trouver_colonne('tuteur')
+    col_adresse = _trouver_colonne('adresse')
+    col_prec_ecole = _trouver_colonne('precedente_ecole')
+    col_date_entree = _trouver_colonne('date_entree')
+    col_obs = _trouver_colonne('observations')
+    
+    # Verifier les colonnes obligatoires
+    if not col_prenom or not col_nom:
+        cols_trouvees = ', '.join(col_names_raw[:15]) if col_names_raw else '(aucune)'
+        flash(f'Colonnes PRENOM et NOM obligatoires. Colonnes detectees: {cols_trouvees}', 'danger')
+        return redirect(url_for('eleves'))
     
     from datetime import datetime
     year = str(datetime.now().year)
@@ -220,7 +263,20 @@ def eleves_importer():
     next_id = (last_el.id + 1) if last_el else 1
     ajoutes = ignores = 0
     
-    for row_idx in range(2, ws.max_row + 1):
+    # Trouver la ligne de debut des donnees (apres les headers)
+    data_start = 2
+    # Verifier si la ligne 2 contient encore des headers
+    if ws.cell(2, col_prenom).value:
+        val_l2 = _normaliser(str(ws.cell(2, col_prenom).value))
+        if val_l2 in ['prenom', 'prenoms', 'first_name', 'firstname']:
+            data_start = 3
+            # Verifier aussi la ligne 3
+            if ws.cell(3, col_prenom).value:
+                val_l3 = _normaliser(str(ws.cell(3, col_prenom).value))
+                if val_l3 in ['prenom', 'prenoms', 'first_name', 'firstname']:
+                    data_start = 4
+    
+    for row_idx in range(data_start, ws.max_row + 1):
         prenom = str(ws.cell(row_idx, col_prenom).value or '').strip()
         nom = str(ws.cell(row_idx, col_nom).value or '').strip()
         if not prenom or not nom:
