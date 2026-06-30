@@ -33,24 +33,27 @@
 
     /* Print styles */
     @media print {
-        body { background: white !important; }
-        .navbar, footer, .btn, .card, form, .no-print, .d-print-none { display: none !important; }
-        .print-title { display: block !important; }
+        @page { margin: 6mm; size: A4 landscape; }
+        html, body { width: 100%; height: auto; }
+        body * { display: none !important; visibility: hidden !important; }
+        #print-wrapper, #print-wrapper * { display: revert !important; visibility: visible !important; }
+        #print-wrapper { position: absolute; left: 0; top: 0; width: 100%; }
+        #print-wrapper .td-actions { display: none !important; }
+        #print-wrapper .td-check { display: none !important; }
+        #print-wrapper thead th:first-child, #print-wrapper thead th:last-child { display: none !important; }
+        #print-wrapper tbody td:first-child, #print-wrapper tbody td:last-child { display: none !important; }
         #table-eleves { border-collapse: collapse !important; width: 100% !important; }
         #table-eleves.table td, #table-eleves.table th {
-            padding: 2px 4px !important;
-            font-size: 0.6rem !important;
+            padding: 2px 3px !important;
+            font-size: 0.55rem !important;
             border: 1px solid #000 !important;
             color: #000 !important;
         }
         #table-eleves.table thead th {
-            background: #eee !important;
+            background: #ddd !important;
             color: #000 !important;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact; print-color-adjust: exact;
         }
-        #table-eleves .td-actions { display: none !important; }
-        #table-eleves .td-check, #table-eleves .td-check ~ th { display: none !important; }
         #table-eleves .td-long {
             max-width: none; overflow: visible; text-overflow: clip; white-space: normal; word-break: break-word;
         }
@@ -121,6 +124,8 @@
     <p class="mb-1 small text-muted">Liste des eleves - {{ eleves|length }} eleve(s)</p>
 </div>
 
+<div id="print-wrapper">
+
 <form id="formBulk" method="POST" action="{{ url_for('eleves_supprimer_bulk') }}">
 <div style="max-height:65vh;overflow:auto;">
     <table class="table table-sm table-bordered align-middle bg-white" id="table-eleves">
@@ -173,6 +178,8 @@
     </table>
 </div>
 </form>
+
+</div><!-- /#print-wrapper -->
 
 <script>
 function toggleAll(source) {
