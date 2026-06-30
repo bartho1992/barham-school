@@ -1,5 +1,37 @@
 {% extends "base.html" %}
 {% block title %}Eleves - {{ ecole.nom }}{% endblock %}
+{% block extra_css %}
+<style>
+    /* Override style.css pour le tableau eleves */
+    #table-eleves.table td, #table-eleves.table th {
+        padding: 3px 6px !important;
+        border: 1px solid #ddd !important;
+        white-space: nowrap;
+        font-size: 0.7rem;
+        vertical-align: middle;
+    }
+    #table-eleves.table thead th {
+        background: #2E7D32 !important;
+        color: #fff !important;
+        font-size: 0.62rem;
+        padding: 5px 6px !important;
+    }
+    /* Colonnes larges avec troncature */
+    #table-eleves .td-long {
+        max-width: 140px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    /* Colonnes etroites */
+    #table-eleves .td-check { width: 28px; }
+    #table-eleves .td-code { width: 70px; text-align: center; }
+    #table-eleves .td-sexe { width: 40px; text-align: center; }
+    #table-eleves .td-classe { width: 80px; text-align: center; }
+    #table-eleves .td-sit { width: 70px; text-align: center; }
+    #table-eleves .td-actions { width: 110px; text-align: center; }
+</style>
+{% endblock %}
 {% block content %}
 
 <div class="d-flex justify-content-between align-items-center mb-2">
@@ -60,7 +92,7 @@
 
 <form id="formBulk" method="POST" action="{{ url_for('eleves_supprimer_bulk') }}">
 <div style="max-height:65vh;overflow:auto;">
-    <table class="table table-sm table-bordered align-middle bg-white">
+    <table class="table table-sm table-bordered align-middle bg-white" id="table-eleves">
         <thead>
             <tr>
                 <th style="width:32px;"><input class="form-check-input" type="checkbox" id="selectAll" onchange="toggleAll(this)"></th>
@@ -72,30 +104,30 @@
         <tbody>
             {% for e in eleves %}
             <tr>
-                <td class="text-center">
+                <td class="td-check text-center">
                     <input class="form-check-input eleve-check" type="checkbox" name="eleve_ids[]" value="{{ e.id }}" onchange="updateBouton()">
                 </td>
-                <td class="text-center"><code>{{ e.code }}</code></td>
-                <td>{{ e.prenom }}</td>
-                <td class="fw-bold">{{ e.nom }}</td>
-                <td class="text-center">
+                <td class="td-code"><code>{{ e.code }}</code></td>
+                <td class="td-long" title="{{ e.prenom }}">{{ e.prenom }}</td>
+                <td class="td-long fw-bold" title="{{ e.nom }}">{{ e.nom }}</td>
+                <td class="td-sexe">
                     {% if e.sexe == 'M' %}<span class="badge bg-info">M</span>
                     {% else %}<span class="badge bg-danger">F</span>{% endif %}
                 </td>
-                <td class="text-center"><span class="badge bg-secondary">{{ e.classe.nom if e.classe else '-' }}</span></td>
-                <td>{{ e.tel or '-' }}</td>
-                <td>{{ e.date_naissance or '-' }}</td>
-                <td>{{ e.lieu_naissance or '-' }}</td>
-                <td>{{ e.tuteur or '-' }}</td>
-                <td>{{ e.adresse or '-' }}</td>
-                <td>{{ e.precedente_ecole or '-' }}</td>
-                <td>{{ e.date_entree or '-' }}</td>
-                <td title="{{ e.observations }}">{{ (e.observations or '-')[:20] }}{% if e.observations and e.observations|length > 20 %}...{% endif %}</td>
-                <td class="text-center">
+                <td class="td-classe"><span class="badge bg-secondary">{{ e.classe.nom if e.classe else '-' }}</span></td>
+                <td class="td-long" title="{{ e.tel or '' }}">{{ e.tel or '-' }}</td>
+                <td class="td-long" title="{{ e.date_naissance or '' }}">{{ (e.date_naissance or '-')[:10] }}</td>
+                <td class="td-long" title="{{ e.lieu_naissance or '' }}">{{ e.lieu_naissance or '-' }}</td>
+                <td class="td-long" title="{{ e.tuteur or '' }}">{{ e.tuteur or '-' }}</td>
+                <td class="td-long" title="{{ e.adresse or '' }}">{{ e.adresse or '-' }}</td>
+                <td class="td-long" title="{{ e.precedente_ecole or '' }}">{{ e.precedente_ecole or '-' }}</td>
+                <td class="td-long" title="{{ e.date_entree or '' }}">{{ (e.date_entree or '-')[:10] }}</td>
+                <td class="td-long" title="{{ e.observations }}">{{ (e.observations or '-')[:20] }}{% if e.observations and e.observations|length > 20 %}...{% endif %}</td>
+                <td class="td-sit">
                     {% if e.situation == 'Inscrit' %}<span class="badge bg-success">{{ e.situation }}</span>
                     {% else %}<span class="badge bg-warning">{{ e.situation }}</span>{% endif %}
                 </td>
-                <td class="text-center">
+                <td class="td-actions">
                     <div class="btn-group btn-group-sm">
                         <a href="{{ url_for('eleve_fiche', id=e.id) }}" class="btn btn-outline-info" title="Fiche"><i class="bi bi-eye"></i></a>
                         <a href="{{ url_for('eleve_modifier', id=e.id) }}" class="btn btn-outline-warning" title="Modifier"><i class="bi bi-pencil"></i></a>
