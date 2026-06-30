@@ -30,6 +30,31 @@
     #table-eleves .td-classe { width: 80px; text-align: center; }
     #table-eleves .td-sit { width: 70px; text-align: center; }
     #table-eleves .td-actions { width: 110px; text-align: center; }
+
+    /* Print styles */
+    @media print {
+        body { background: white !important; }
+        .navbar, footer, .btn, .card, form, .no-print, .d-print-none { display: none !important; }
+        .print-title { display: block !important; }
+        #table-eleves { border-collapse: collapse !important; width: 100% !important; }
+        #table-eleves.table td, #table-eleves.table th {
+            padding: 2px 4px !important;
+            font-size: 0.6rem !important;
+            border: 1px solid #000 !important;
+            color: #000 !important;
+        }
+        #table-eleves.table thead th {
+            background: #eee !important;
+            color: #000 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        #table-eleves .td-actions { display: none !important; }
+        #table-eleves .td-check, #table-eleves .td-check ~ th { display: none !important; }
+        #table-eleves .td-long {
+            max-width: none; overflow: visible; text-overflow: clip; white-space: normal; word-break: break-word;
+        }
+    }
 </style>
 {% endblock %}
 {% block content %}
@@ -40,6 +65,7 @@
         <button id="btnSupprimerBulk" class="btn btn-danger d-none" onclick="supprimerSelection()">
             <i class="bi bi-trash"></i> Supprimer la selection
         </button>
+        <button class="btn btn-sm btn-outline-dark ms-1" onclick="imprimerTableau()"><i class="bi bi-printer"></i> Imprimer</button>
         <a href="{{ url_for('eleve_ajouter') }}" class="btn btn-sm btn-primary ms-1"><i class="bi bi-person-plus"></i> Inscrire</a>
         <button class="btn btn-sm btn-outline-success ms-1" onclick="document.getElementById('importModal').classList.remove('d-none')"><i class="bi bi-file-earmark-excel"></i> Importer Excel</button>
         <a href="{{ url_for('eleves_modele') }}" class="btn btn-sm btn-outline-secondary ms-1"><i class="bi bi-download"></i> Modele</a>
@@ -47,7 +73,7 @@
 </div>
 
 <!-- MODAL IMPORT EXCEL -->
-<div id="importModal" class="d-none position-fixed top-0 start-0 w-100 h-100" style="background:rgba(0,0,0,0.5);z-index:9999;display:flex;justify-content:center;align-items:center;">
+<div id="importModal" class="d-none position-fixed top-0 start-0 w-100 h-100 no-print" style="background:rgba(0,0,0,0.5);z-index:9999;display:flex;justify-content:center;align-items:center;">
     <div class="bg-white rounded shadow-lg p-3" style="max-width:500px;width:90%;">
         <div class="d-flex justify-content-between align-items-center mb-2">
             <h6 class="mb-0"><i class="bi bi-file-earmark-excel text-success"></i> Importer des eleves</h6>
@@ -88,6 +114,11 @@
             <div class="col-md-3 text-end"><span class="badge bg-success fs-6">{{ eleves|length }} eleves</span></div>
         </form>
     </div>
+</div>
+
+<div class="print-title d-none" style="text-align:center;margin-bottom:8px;">
+    <h5>{{ ecole.nom }}</h5>
+    <p class="mb-1 small text-muted">Liste des eleves - {{ eleves|length }} eleve(s)</p>
 </div>
 
 <form id="formBulk" method="POST" action="{{ url_for('eleves_supprimer_bulk') }}">
@@ -159,6 +190,10 @@ function supprimerSelection() {
     if (checked === 0) return;
     if (!confirm('Supprimer ' + checked + ' eleve(s) ?\n\nATTENTION : Toutes leurs donnees seront definitivement supprimees.')) return;
     document.getElementById('formBulk').submit();
+}
+
+function imprimerTableau() {
+    window.print();
 }
 </script>
 {% endblock %}
