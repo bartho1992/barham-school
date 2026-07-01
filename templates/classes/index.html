@@ -18,6 +18,7 @@
         <button id="btnAjoutLot" class="btn btn-outline-success btn-sm me-1" onclick="toggleAjoutLot()">
             <i class="bi bi-list-ul"></i> Ajouter en lot
         </button>
+        <button class="btn btn-outline-dark btn-sm me-1" onclick="imprimerTableau()"><i class="bi bi-printer"></i> Imprimer</button>
         <a href="{{ url_for('classe_ajouter') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Ajouter</a>
     </div>
 </div>
@@ -128,6 +129,36 @@ function supprimerSelection() {
     if (n === 0) return;
     if (!confirm('Supprimer ' + n + ' classe(s) ? Les notes et scolarites liees seront supprimees.')) return;
     document.getElementById('formBulk').submit();
+}
+
+function imprimerTableau() {
+    var tbodyHTML = '';
+    document.querySelectorAll('#sortable-tbody tr').forEach(function(tr, idx) {
+        var cells = tr.querySelectorAll('td');
+        if (cells.length < 5) return;
+        var nom = cells[2].textContent.trim();
+        var niveau = cells[3].textContent.trim();
+        var effectif = cells[4].textContent.trim();
+        var bg = idx % 2 === 0 ? '#fff' : '#f2f2f2';
+        tbodyHTML += '<tr style="background:' + bg + ';"><td style="text-align:center;">' + (idx + 1) + '</td>' +
+            '<td>' + nom + '</td><td style="text-align:center;">' + niveau + '</td>' +
+            '<td style="text-align:center;">' + effectif + '</td></tr>';
+    });
+    var thead = '<tr><th>N°</th><th>NOM</th><th>NIVEAU</th><th>EFFECTIF</th></tr>';
+    var dateImpr = new Date().toLocaleDateString('fr-FR');
+    var w = window.open('', '_blank', 'width=900,height=600');
+    w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Liste des classes</title>' +
+        '<style>@page{size:A4 portrait;margin:10mm}body{font-family:Arial,sans-serif;margin:0}' +
+        'table{border-collapse:collapse;width:100%;font-size:12px}thead{display:table-header-group}' +
+        'thead th{background:#2E7D32;color:#fff;padding:6px;border:1px solid #2E7D32;font-size:11px}' +
+        'tbody td{padding:5px;border:1px solid #ccc}tr:nth-child(even){background:#f7f7f7}' +
+        '.header{text-align:center;margin-bottom:10px;border-bottom:2px solid #2E7D32;padding-bottom:6px}' +
+        '.header h2{margin:0 0 4px 0;color:#2E7D32}.header p{margin:0;font-size:12px}' +
+        '</style></head><body><div class="header"><h2>{{ ecole.nom }}</h2>' +
+        '<p>Liste des classes - ' + document.querySelectorAll('#sortable-tbody tr').length + ' classe(s) - Imprime le ' + dateImpr + '</p></div>' +
+        '<table><thead>' + thead + '</thead><tbody>' + tbodyHTML + '</tbody></table></body></html>');
+    w.document.close();
+    setTimeout(function() { w.print(); w.close(); }, 500);
 }
 </script>
 {% endblock %}

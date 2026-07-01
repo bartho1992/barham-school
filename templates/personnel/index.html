@@ -3,10 +3,13 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-2">
     <div class="section-header"><i class="bi bi-person-badge"></i> Gestion du Personnel</div>
-    <a href="{{ url_for('personnel_ajouter') }}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Ajouter</a>
+    <div>
+        <button class="btn btn-outline-dark btn-sm me-1" onclick="imprimerTableau()"><i class="bi bi-printer"></i> Imprimer</button>
+        <a href="{{ url_for('personnel_ajouter') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Ajouter</a>
+    </div>
 </div>
 <div style="max-height:65vh;overflow:auto;">
-    <table class="table table-sm table-bordered align-middle bg-white">
+    <table class="table table-sm table-bordered align-middle bg-white" id="table-personnel">
         <thead><tr><th>CODE</th><th>PRENOM</th><th>NOM</th><th>FONCTION</th><th>TEL</th><th>SALAIRE FIXE</th><th>TAUX IMPOT</th><th>Actions</th></tr></thead>
         <tbody>
             {% for p in personnels %}
@@ -26,4 +29,42 @@
         </tbody>
     </table>
 </div>
+
+<script>
+function imprimerTableau() {
+    var tbodyHTML = '';
+    document.querySelectorAll('#table-personnel tbody tr').forEach(function(tr, idx) {
+        var cells = tr.querySelectorAll('td');
+        if (cells.length < 6) return;
+        var code = cells[0].textContent.trim();
+        var prenom = cells[1].textContent.trim();
+        var nom = cells[2].textContent.trim();
+        var fonction = cells[3].textContent.trim();
+        var tel = cells[4].textContent.trim();
+        var salaire = cells[5].textContent.trim();
+        var impot = cells[6].textContent.trim();
+        var bg = idx % 2 === 0 ? '#fff' : '#f2f2f2';
+        tbodyHTML += '<tr style="background:' + bg + ';"><td style="text-align:center;">' + (idx + 1) + '</td>' +
+            '<td>' + code + '</td><td>' + prenom + '</td><td style="font-weight:bold;">' + nom + '</td>' +
+            '<td>' + fonction + '</td><td>' + tel + '</td>' +
+            '<td style="text-align:right;">' + salaire + '</td><td style="text-align:center;">' + impot + '</td></tr>';
+    });
+    var total = document.querySelectorAll('#table-personnel tbody tr').length;
+    var thead = '<tr><th>N°</th><th>CODE</th><th>PRENOM</th><th>NOM</th><th>FONCTION</th><th>TEL</th><th>SALAIRE FIXE</th><th>TAUX IMPOT</th></tr>';
+    var dateImpr = new Date().toLocaleDateString('fr-FR');
+    var w = window.open('', '_blank', 'width=1000,height=600');
+    w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Liste du personnel</title>' +
+        '<style>@page{size:A4 landscape;margin:8mm}body{font-family:Arial,sans-serif;margin:0}' +
+        'table{border-collapse:collapse;width:100%;font-size:10px}thead{display:table-header-group}' +
+        'thead th{background:#1e3a8a;color:#fff;padding:5px;border:1px solid #1e3a8a;font-size:9px}' +
+        'tbody td{padding:3px 4px;border:1px solid #ccc}' +
+        '.header{text-align:center;margin-bottom:8px;border-bottom:2px solid #1e3a8a;padding-bottom:4px}' +
+        '.header h2{margin:0;color:#1e3a8a;font-size:16px}.header p{margin:2px 0 0 0;font-size:11px}' +
+        '</style></head><body><div class="header"><h2>{{ ecole.nom }}</h2>' +
+        '<p>Liste du personnel - ' + total + ' employe(s) - Imprime le ' + dateImpr + '</p></div>' +
+        '<table><thead>' + thead + '</thead><tbody>' + tbodyHTML + '</tbody></table></body></html>');
+    w.document.close();
+    setTimeout(function() { w.print(); w.close(); }, 500);
+}
+</script>
 {% endblock %}
