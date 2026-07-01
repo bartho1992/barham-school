@@ -43,6 +43,8 @@
         #print-wrapper { display: block !important; }
         .print-title { display: block !important; }
         .app-main, .container-fluid { max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
+        /* Tableau complet sans scroll */
+        #print-wrapper div[style*="max-height"] { max-height: none !important; overflow: visible !important; }
         #print-wrapper .td-actions { display: none !important; }
         #print-wrapper .td-check, #print-wrapper thead th:first-child { display: none !important; }
         #print-wrapper tbody td:first-child { display: none !important; }
