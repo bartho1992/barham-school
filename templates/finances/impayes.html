@@ -14,6 +14,13 @@
     </div>
 </div>
 
+{% if nb_sans_tarif > 0 %}
+<div class="alert alert-warning py-2 mb-2 small">
+    <i class="bi bi-exclamation-circle"></i> <strong>{{ nb_sans_tarif }}</strong> eleve(s) sans tarifs configures pour leur classe.
+    <a href="{{ url_for('parametres_financiers') }}" class="alert-link">Configurer les tarifs</a> pour calculer precisement les impayes.
+</div>
+{% endif %}
+
 <!-- Résumé -->
 <div class="row mb-2 g-1">
     <div class="col-4">
