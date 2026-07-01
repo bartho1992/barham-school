@@ -33,7 +33,7 @@
 
     /* Print styles */
     @media print {
-        @page { margin: 5mm; size: A4 landscape; }
+        @page { margin: 3mm; size: A4 landscape; }
         html, body { background: white !important; height: auto; }
         /* Cacher sidebar et autres elements */
         .app-sidebar, .sidebar-toggle, .sidebar-overlay, footer, .navbar,
@@ -48,24 +48,49 @@
         #print-wrapper .td-actions { display: none !important; }
         #print-wrapper .td-check, #print-wrapper thead th:first-child { display: none !important; }
         #print-wrapper tbody td:first-child { display: none !important; }
-        #table-eleves { border-collapse: collapse !important; width: 100% !important; }
+        /* Masquer aussi la colonne Actions dans le thead */
+        #print-wrapper thead th:last-child { display: none !important; }
+        #table-eleves { 
+            border-collapse: collapse !important; 
+            width: auto !important; 
+            table-layout: auto !important;
+            font-size: 7px !important;
+        }
         #table-eleves.table td, #table-eleves.table th {
             padding: 1px 2px !important;
-            font-size: 0.55rem !important;
-            border: 1px solid #000 !important;
+            font-size: 7px !important;
+            border: 0.5px solid #666 !important;
             color: #000 !important;
             white-space: normal !important;
             word-break: break-word !important;
+            line-height: 1.1 !important;
         }
         #table-eleves.table thead th {
             background: #ddd !important;
             color: #000 !important;
             -webkit-print-color-adjust: exact; print-color-adjust: exact;
             white-space: nowrap !important;
+            font-size: 6px !important;
+            padding: 1px 1px !important;
+            letter-spacing: -0.3px;
         }
         #table-eleves .td-long {
             max-width: none; overflow: visible; text-overflow: clip;
         }
+        /* Reduire largeur colonnes specifiques */
+        #table-eleves .td-code { width: 55px !important; }
+        #table-eleves .td-sexe { width: 25px !important; }
+        #table-eleves .td-classe { width: 40px !important; }
+        #table-eleves .td-sit { width: 45px !important; }
+        /* Badges en impression */
+        #table-eleves .badge { 
+            font-size: 6px !important; 
+            padding: 0 2px !important; 
+            border: 0.5px solid #ccc !important;
+            background: none !important;
+            color: #000 !important;
+        }
+        #table-eleves code { font-size: 6px !important; background: none !important; color: #000 !important; }
     }
 </style>
 {% endblock %}
