@@ -33,15 +33,19 @@
 
     /* Print styles */
     @media print {
-        @page { margin: 6mm; size: A4 landscape; }
-        html, body { width: 100%; height: auto; }
-        body * { display: none !important; visibility: hidden !important; }
-        #print-wrapper, #print-wrapper * { display: revert !important; visibility: visible !important; }
-        #print-wrapper { position: absolute; left: 0; top: 0; width: 100%; }
+        @page { margin: 5mm; size: A4 landscape; }
+        html, body { background: white !important; height: auto; }
+        /* Cacher sidebar et autres elements */
+        .app-sidebar, .sidebar-toggle, .sidebar-overlay, footer, .navbar,
+        .alert, .modal, #importModal,
+        .card:not(#print-wrapper .card), .card-header:not(#print-wrapper *),
+        .btn:not(#print-wrapper *), #btnSupprimerBulk { display: none !important; }
+        #print-wrapper { display: block !important; }
+        .print-title { display: block !important; }
+        .app-main, .container-fluid { max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
         #print-wrapper .td-actions { display: none !important; }
-        #print-wrapper .td-check { display: none !important; }
-        #print-wrapper thead th:first-child, #print-wrapper thead th:last-child { display: none !important; }
-        #print-wrapper tbody td:first-child, #print-wrapper tbody td:last-child { display: none !important; }
+        #print-wrapper .td-check, #print-wrapper thead th:first-child { display: none !important; }
+        #print-wrapper tbody td:first-child { display: none !important; }
         #table-eleves { border-collapse: collapse !important; width: 100% !important; }
         #table-eleves.table td, #table-eleves.table th {
             padding: 2px 3px !important;
@@ -119,12 +123,11 @@
     </div>
 </div>
 
-<div class="print-title d-none" style="text-align:center;margin-bottom:8px;">
-    <h5>{{ ecole.nom }}</h5>
-    <p class="mb-1 small text-muted">Liste des eleves - {{ eleves|length }} eleve(s)</p>
-</div>
-
 <div id="print-wrapper">
+    <div class="print-title d-none text-center mb-2" style="text-align:center;">
+        <h5>{{ ecole.nom }}</h5>
+        <p class="mb-1 small">Liste des eleves - {{ eleves|length }} eleve(s)</p>
+    </div>
 
 <form id="formBulk" method="POST" action="{{ url_for('eleves_supprimer_bulk') }}">
 <div style="max-height:65vh;overflow:auto;">
