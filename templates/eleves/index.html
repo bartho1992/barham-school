@@ -123,7 +123,7 @@
                 <td class="td-long" title="{{ e.adresse or '' }}">{{ e.adresse or '-' }}</td>
                 <td class="td-long" title="{{ e.precedente_ecole or '' }}">{{ e.precedente_ecole or '-' }}</td>
                 <td class="td-long" title="{{ e.date_entree or '' }}">{{ (e.date_entree or '-')[:10] }}</td>
-                <td class="td-long" title="{{ e.observations }}">{{ (e.observations or '-')[:20] }}{% if e.observations and e.observations|length > 20 %}...{% endif %}</td>
+                <td class="td-long" title="{{ e.observations }}" data-full="{{ e.observations or '-' }}">{{ (e.observations or '-')[:20] }}{% if e.observations and e.observations|length > 20 %}...{% endif %}</td>
                 <td class="td-sit">
                     {% if e.situation == 'Inscrit' %}<span class="badge bg-success">{{ e.situation }}</span>
                     {% else %}<span class="badge bg-warning">{{ e.situation }}</span>{% endif %}
@@ -163,37 +163,90 @@ function supprimerSelection() {
 }
 
 function imprimerTableau() {
-    // Construire un tableau HTML propre pour impression
-    var title = '<h3 style="text-align:center;margin-bottom:4px;">{{ ecole.nom }}</h3><p style="text-align:center;font-size:11px;margin-bottom:6px;">Liste des eleves - {{ eleves|length }} eleve(s)</p>';
-    var table = document.getElementById('table-eleves').cloneNode(true);
-    // Supprimer les colonnes checkbox et actions
-    var allRows = table.querySelectorAll('tr');
-    allRows.forEach(function(row) {
-        var cells = row.querySelectorAll('th, td');
-        if (cells.length > 0) {
-            // Supprimer premiere colonne (checkbox)
-            cells[0].parentNode.removeChild(cells[0]);
-            // Supprimer derniere colonne (actions)
-            cells[cells.length - 1].parentNode.removeChild(cells[cells.length - 1]);
-        }
-    });
-    table.style.cssText = 'border-collapse:collapse;width:100%;font-size:10px;';
-    table.querySelectorAll('th, td').forEach(function(cell) {
-        cell.style.cssText = 'padding:2px 3px;border:0.5px solid #999;font-size:8px;white-space:normal;word-break:break-word;';
-    });
-    table.querySelectorAll('th').forEach(function(th) {
-        th.style.cssText = 'padding:2px 3px;border:0.5px solid #999;font-size:8px;background:#ddd;font-weight:bold;';
-    });
-    table.querySelectorAll('.td-actions').forEach(function(el) { el.style.display = 'none'; });
-    table.querySelectorAll('.badge').forEach(function(b) { b.style.cssText = 'font-size:7px;padding:0 2px;background:none!important;color:#000;'; });
+    // Recuperer les donnees du tableau original
+    var origTable = document.getElementById('table-eleves');
+    var rows = origTable.querySelectorAll('tbody tr');
     
-    var w = window.open('', '_blank', 'width=1100,height=800');
-    w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Liste des eleves</title>' +
-        '<style>@page { margin: 5mm; size: A4 landscape; } body { font-family: Arial, sans-serif; margin: 0; } ' +
-        'thead { display: table-header-group; } ' +
-        '</style></head><body>' + title + table.outerHTML + '</body></html>');
+    // Construire les lignes du tableau d'impression avec TOUTES les donnees
+    var tbodyHTML = '';
+    rows.forEach(function(row, idx) {
+        var cells = row.querySelectorAll('td');
+        if (cells.length < 15) return;
+        // Extraire le texte de chaque cellule (ignorer col 0=checkbox et col 15=actions)
+        var code = cells[1].textContent.trim();
+        var prenom = cells[2].getAttribute('title') || cells[2].textContent.trim();
+        var nom = cells[3].getAttribute('title') || cells[3].textContent.trim();
+        var sexe = cells[4].textContent.trim();
+        var classe = cells[5].textContent.trim();
+        var tel = cells[6].getAttribute('title') || cells[6].textContent.trim();
+        var dateNaiss = cells[7].getAttribute('title') || cells[7].textContent.trim();
+        var lieuNaiss = cells[8].getAttribute('title') || cells[8].textContent.trim();
+        var tuteur = cells[9].getAttribute('title') || cells[9].textContent.trim();
+        var adresse = cells[10].getAttribute('title') || cells[10].textContent.trim();
+        var precEcole = cells[11].getAttribute('title') || cells[11].textContent.trim();
+        var dateEntree = cells[12].getAttribute('title') || cells[12].textContent.trim();
+        var observations = cells[13].getAttribute('data-full') || cells[13].getAttribute('title') || cells[13].textContent.trim();
+        var situation = cells[14].textContent.trim();
+        
+        var bgColor = idx % 2 === 0 ? '#ffffff' : '#f2f2f2';
+        tbodyHTML += '<tr style="background:' + bgColor + ';">' +
+            '<td style="text-align:center;">' + (idx + 1) + '</td>' +
+            '<td style="text-align:center;">' + code + '</td>' +
+            '<td>' + prenom + '</td>' +
+            '<td style="font-weight:bold;">' + nom + '</td>' +
+            '<td style="text-align:center;">' + sexe + '</td>' +
+            '<td style="text-align:center;">' + classe + '</td>' +
+            '<td>' + tel + '</td>' +
+            '<td style="text-align:center;">' + dateNaiss + '</td>' +
+            '<td>' + lieuNaiss + '</td>' +
+            '<td>' + tuteur + '</td>' +
+            '<td>' + adresse + '</td>' +
+            '<td>' + precEcole + '</td>' +
+            '<td style="text-align:center;">' + dateEntree + '</td>' +
+            '<td>' + observations + '</td>' +
+            '<td style="text-align:center;">' + situation + '</td>' +
+            '</tr>';
+    });
+    
+    var theadHTML = '<tr>' +
+        '<th>N°</th><th>CODE</th><th>PRENOM</th><th>NOM</th><th>SEXE</th>' +
+        '<th>CLASSE</th><th>TEL</th><th>DATE NAISS.</th><th>LIEU NAISS.</th>' +
+        '<th>TUTEUR</th><th>ADRESSE</th><th>PREC. ECOLE</th><th>DATE ENTREE</th>' +
+        '<th>OBSERVATIONS</th><th>SITUATION</th>' +
+        '</tr>';
+    
+    var dateImpr = new Date().toLocaleDateString('fr-FR');
+    
+    var htmlContent = '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
+        '<title>Liste des eleves - {{ ecole.nom }}</title>' +
+        '<style>' +
+        '@page { size: A4 landscape; margin: 8mm 6mm; }' +
+        'body { font-family: Arial, Helvetica, sans-serif; margin: 0; padding: 0; color: #222; }' +
+        '.header { text-align: center; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 2px solid #1e3a8a; }' +
+        '.header h2 { margin: 0 0 2px 0; font-size: 18px; color: #1e3a8a; }' +
+        '.header p { margin: 0; font-size: 12px; color: #555; }' +
+        'table { border-collapse: collapse; width: 100%; font-size: 10px; }' +
+        'thead { display: table-header-group; }' +
+        'thead th { background: #1e3a8a; color: #fff; padding: 5px 4px; border: 1px solid #1e3a8a; ' +
+        '  font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; text-align: left; white-space: nowrap; }' +
+        'tbody td { padding: 4px 4px; border: 1px solid #ccc; font-size: 10px; ' +
+        '  white-space: normal; word-break: break-word; vertical-align: top; line-height: 1.3; }' +
+        'tbody tr:nth-child(even) { background: #f7f7f7; }' +
+        '.footer { text-align: right; font-size: 9px; color: #888; margin-top: 6px; }' +
+        '</style>' +
+        '</head><body>' +
+        '<div class="header">' +
+        '<h2>{{ ecole.nom }}</h2>' +
+        '<p>Liste des eleves inscrits &mdash; ' + rows.length + ' eleve(s) &mdash; Imprime le ' + dateImpr + '</p>' +
+        '</div>' +
+        '<table><thead>' + theadHTML + '</thead><tbody>' + tbodyHTML + '</tbody></table>' +
+        '<div class="footer">Barham School &mdash; ' + dateImpr + '</div>' +
+        '</body></html>';
+    
+    var w = window.open('', '_blank', 'width=1200,height=800');
+    w.document.write(htmlContent);
     w.document.close();
-    setTimeout(function() { w.print(); w.close(); }, 500);
+    setTimeout(function() { w.print(); }, 600);
 }
 </script>
 {% endblock %}
