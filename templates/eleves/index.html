@@ -50,18 +50,21 @@
         #print-wrapper tbody td:first-child { display: none !important; }
         #table-eleves { border-collapse: collapse !important; width: 100% !important; }
         #table-eleves.table td, #table-eleves.table th {
-            padding: 2px 3px !important;
+            padding: 1px 2px !important;
             font-size: 0.55rem !important;
             border: 1px solid #000 !important;
             color: #000 !important;
+            white-space: normal !important;
+            word-break: break-word !important;
         }
         #table-eleves.table thead th {
             background: #ddd !important;
             color: #000 !important;
             -webkit-print-color-adjust: exact; print-color-adjust: exact;
+            white-space: nowrap !important;
         }
         #table-eleves .td-long {
-            max-width: none; overflow: visible; text-overflow: clip; white-space: normal; word-break: break-word;
+            max-width: none; overflow: visible; text-overflow: clip;
         }
     }
 </style>
