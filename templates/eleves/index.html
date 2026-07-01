@@ -30,63 +30,6 @@
     #table-eleves .td-classe { width: 80px; text-align: center; }
     #table-eleves .td-sit { width: 70px; text-align: center; }
     #table-eleves .td-actions { width: 110px; text-align: center; }
-
-    /* Print styles */
-    @media print {
-        @page { margin: 2mm; size: A4 landscape; }
-        html, body { background: white !important; width: 100%; height: auto; }
-        /* Cacher sidebar et autres elements */
-        .app-sidebar, .sidebar-toggle, .sidebar-overlay, footer, .navbar,
-        .alert, .modal, #importModal,
-        .card:not(#print-wrapper .card), .card-header:not(#print-wrapper *),
-        .btn:not(#print-wrapper *), #btnSupprimerBulk { display: none !important; }
-        #print-wrapper { display: block !important; }
-        .print-title { display: block !important; }
-        .app-main, .container-fluid { max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
-        /* Tableau complet sans scroll */
-        #print-wrapper div[style*="max-height"] { max-height: none !important; overflow: visible !important; }
-        #print-wrapper .td-actions { display: none !important; }
-        #print-wrapper .td-check, #print-wrapper thead th:first-child { display: none !important; }
-        #print-wrapper tbody td:first-child { display: none !important; }
-        #print-wrapper thead th:last-child { display: none !important; }
-        #print-wrapper tbody td:last-child { display: none !important; }
-        #table-eleves { 
-            border-collapse: collapse !important; 
-            width: 100% !important; 
-            table-layout: fixed !important;
-        }
-        #table-eleves.table td, #table-eleves.table th {
-            padding: 1px 1px !important;
-            font-size: 6px !important;
-            border: 0.3px solid #999 !important;
-            color: #000 !important;
-            white-space: normal !important;
-            word-break: break-word !important;
-            line-height: 1.05 !important;
-            overflow-wrap: break-word !important;
-        }
-        #table-eleves.table thead th {
-            background: #ddd !important;
-            color: #000 !important;
-            -webkit-print-color-adjust: exact; print-color-adjust: exact;
-            white-space: nowrap !important;
-            font-size: 5.5px !important;
-            padding: 1px 0 !important;
-            letter-spacing: -0.5px;
-        }
-        #table-eleves .td-long {
-            max-width: none; overflow: visible; text-overflow: clip;
-        }
-        /* Badges en impression */
-        #table-eleves .badge { 
-            font-size: 5px !important; 
-            padding: 0 1px !important; 
-            border: none !important;
-            background: none !important;
-            color: #000 !important;
-        }
-        #table-eleves code { font-size: 5px !important; background: none !important; color: #000 !important; padding: 0 !important; }
-    }
 </style>
 {% endblock %}
 {% block content %}
@@ -148,12 +91,6 @@
     </div>
 </div>
 
-<div id="print-wrapper">
-    <div class="print-title d-none text-center mb-2" style="text-align:center;">
-        <h5>{{ ecole.nom }}</h5>
-        <p class="mb-1 small">Liste des eleves - {{ eleves|length }} eleve(s)</p>
-    </div>
-
 <form id="formBulk" method="POST" action="{{ url_for('eleves_supprimer_bulk') }}">
 <div style="max-height:65vh;overflow:auto;">
     <table class="table table-sm table-bordered align-middle bg-white" id="table-eleves">
@@ -207,8 +144,6 @@
 </div>
 </form>
 
-</div><!-- /#print-wrapper -->
-
 <script>
 function toggleAll(source) {
     document.querySelectorAll('.eleve-check').forEach(function(cb) { cb.checked = source.checked; });
@@ -228,7 +163,37 @@ function supprimerSelection() {
 }
 
 function imprimerTableau() {
-    window.print();
+    // Construire un tableau HTML propre pour impression
+    var title = '<h3 style="text-align:center;margin-bottom:4px;">{{ ecole.nom }}</h3><p style="text-align:center;font-size:11px;margin-bottom:6px;">Liste des eleves - {{ eleves|length }} eleve(s)</p>';
+    var table = document.getElementById('table-eleves').cloneNode(true);
+    // Supprimer les colonnes checkbox et actions
+    var allRows = table.querySelectorAll('tr');
+    allRows.forEach(function(row) {
+        var cells = row.querySelectorAll('th, td');
+        if (cells.length > 0) {
+            // Supprimer premiere colonne (checkbox)
+            cells[0].parentNode.removeChild(cells[0]);
+            // Supprimer derniere colonne (actions)
+            cells[cells.length - 1].parentNode.removeChild(cells[cells.length - 1]);
+        }
+    });
+    table.style.cssText = 'border-collapse:collapse;width:100%;font-size:10px;';
+    table.querySelectorAll('th, td').forEach(function(cell) {
+        cell.style.cssText = 'padding:2px 3px;border:0.5px solid #999;font-size:8px;white-space:normal;word-break:break-word;';
+    });
+    table.querySelectorAll('th').forEach(function(th) {
+        th.style.cssText = 'padding:2px 3px;border:0.5px solid #999;font-size:8px;background:#ddd;font-weight:bold;';
+    });
+    table.querySelectorAll('.td-actions').forEach(function(el) { el.style.display = 'none'; });
+    table.querySelectorAll('.badge').forEach(function(b) { b.style.cssText = 'font-size:7px;padding:0 2px;background:none!important;color:#000;'; });
+    
+    var w = window.open('', '_blank', 'width=1100,height=800');
+    w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Liste des eleves</title>' +
+        '<style>@page { margin: 5mm; size: A4 landscape; } body { font-family: Arial, sans-serif; margin: 0; } ' +
+        'thead { display: table-header-group; } ' +
+        '</style></head><body>' + title + table.outerHTML + '</body></html>');
+    w.document.close();
+    setTimeout(function() { w.print(); w.close(); }, 500);
 }
 </script>
 {% endblock %}
