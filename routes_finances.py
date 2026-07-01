@@ -258,6 +258,119 @@ def api_services_eleve(eleve_id):
         'type': a.categorie.type_categorie
     } for a in abonnements])
 
+@app.route('/finances/paiement-groupe', methods=['POST'])
+@login_required
+def paiement_groupe():
+    """Paiement groupé : paie le même mois pour plusieurs élèves en une fois"""
+    ecole_id = get_current_ecole_id()
+    e = Ecole.query.get(ecole_id); annee = _annee_courante(e)
+    
+    eleve_ids = request.form.getlist('eleve_ids[]')
+    mois = request.form.get('mois')
+    montant_par_eleve_str = request.form.get('montant_par_eleve', '').strip()
+    mode_paiement = request.form.get('mode_paiement', 'Especes')
+    
+    if not eleve_ids or not mois:
+        flash('Selectionnez au moins un eleve et un mois.', 'danger')
+        return redirect(url_for('impayes'))
+    
+    is_inscription = (mois.lower() == 'inscription')
+    ordre_mois = ['Janvier','Fevrier','Mars','Avril','Mai','Juin',
+                  'Juillet','Aout','Septembre','Octobre','Novembre','Decembre']
+    
+    nb_ok = 0
+    nb_skip = 0
+    total_percu = 0
+    
+    for eleve_id_str in eleve_ids:
+        try:
+            eleve_id = int(eleve_id_str)
+        except ValueError:
+            nb_skip += 1
+            continue
+        
+        eleve = Eleve.query.get(eleve_id)
+        if not eleve or not eleve.classe:
+            nb_skip += 1
+            continue
+        
+        # Calculer le montant attendu (scolarité + services)
+        scolarite = Scolarite.query.filter_by(classe_id=eleve.classe_id, annee_scolaire=annee).first()
+        montant_scolarite = 0
+        if scolarite:
+            if is_inscription:
+                montant_scolarite = scolarite.inscription or 0
+            else:
+                montant_scolarite = getattr(scolarite, mois.lower(), 0) or 0
+        
+        total_services = 0
+        if is_inscription:
+            # Pas de services pour l'inscription dans le paiement groupé
+            pass
+        else:
+            abonnements = AbonnementService.query.filter_by(
+                eleve_id=eleve_id, actif=True
+            ).join(CategorieTarif).filter(CategorieTarif.type_categorie == 'mensuel').all()
+            for abo in abonnements:
+                try:
+                    idx_mois = ordre_mois.index(mois)
+                    idx_debut = ordre_mois.index(abo.mois_debut)
+                    idx_fin = ordre_mois.index(abo.mois_fin)
+                    if idx_debut <= idx_fin:
+                        dans_periode = idx_debut <= idx_mois <= idx_fin
+                    else:
+                        dans_periode = idx_mois >= idx_debut or idx_mois <= idx_fin
+                except ValueError:
+                    dans_periode = True
+                if not dans_periode:
+                    continue
+                cat = abo.categorie
+                tarif = TarifService.query.filter_by(
+                    classe_id=eleve.classe_id, categorie_id=cat.id, annee_scolaire=annee
+                ).first()
+                if abo.montant_personnalise is not None:
+                    total_services += abo.montant_personnalise
+                elif tarif:
+                    total_services += getattr(tarif, mois.lower(), 0) or 0
+        
+        montant_attendu = montant_scolarite + total_services
+        
+        # Montant à payer : soit le montant fixe saisi, soit le tarif exact
+        if montant_par_eleve_str:
+            montant = float(montant_par_eleve_str)
+        else:
+            montant = montant_attendu
+        
+        if montant <= 0:
+            nb_skip += 1
+            continue
+        
+        # Calculer le reste
+        deja_paye = db.session.query(db.func.sum(Paiement.montant)).filter_by(
+            eleve_id=eleve_id, type_paiement=mois, annee_scolaire=annee
+        ).scalar() or 0
+        
+        # Vérifier si déjà payé
+        if deja_paye >= montant_attendu and not montant_par_eleve_str:
+            nb_skip += 1
+            continue
+        
+        montant_restant = max(montant_attendu - deja_paye - montant, 0)
+        
+        p = Paiement(
+            eleve_id=eleve_id, montant=montant, type_paiement=mois,
+            montant_attendu=montant_attendu, montant_restant=montant_restant,
+            caissier=current_user.username, annee_scolaire=annee,
+            mode_paiement=mode_paiement
+        )
+        db.session.add(p)
+        total_percu += montant
+        nb_ok += 1
+    
+    db.session.commit()
+    flash(f'Paiement groupe effectue : {nb_ok} eleve(s) paye(s) pour {mois} ({nb_skip} ignores). Total percu : {total_percu:,.0f} FCFA', 'success')
+    return redirect(url_for('impayes'))
+
 @app.route('/finances/paiement', methods=['GET', 'POST'])
 @login_required
 def paiement_ajouter():

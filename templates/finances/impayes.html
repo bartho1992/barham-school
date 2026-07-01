@@ -7,6 +7,9 @@
         <small class="text-muted">Sequence scolaire : Inscription → Octobre → Novembre → ... → Juin</small>
     </div>
     <div class="col-md-6 text-end">
+        <button id="btnPayerGroupe" class="btn btn-success btn-sm d-none" onclick="ouvrirPaiementGroupe()">
+            <i class="bi bi-cash-stack"></i> Paiement Groupé (<span id="nb-selected">0</span>)
+        </button>
         <a href="{{ url_for('finances') }}" class="btn btn-outline-secondary btn-sm">Retour</a>
     </div>
 </div>
@@ -42,9 +45,10 @@
 <div style="max-height:68vh;overflow-y:auto;overflow-x:hidden;">
     {% if impayes %}
         {% for item in impayes %}
-        <div class="card shadow-sm border-0 mb-2">
+        <div class="card shadow-sm border-0 mb-2 impaye-card" data-eleve-id="{{ item.eleve.id }}">
             <div class="card-header bg-light py-1 px-2 d-flex justify-content-between align-items-center">
                 <div>
+                    <input type="checkbox" class="form-check-input me-1 eleve-check-impaye" data-eleve-id="{{ item.eleve.id }}" onchange="updateBtnGroupe()">
                     <strong>{{ item.eleve.prenom }} {{ item.eleve.nom }}</strong>
                     <span class="badge bg-secondary ms-1">{{ item.eleve.classe.nom }}</span>
                     <small class="text-muted ms-1">{{ item.eleve.code }}</small>
@@ -98,4 +102,96 @@
     </div>
     {% endif %}
 </div>
+
+<!-- MODAL PAIEMENT GROUPE -->
+<div id="modalPaiementGroupe" class="d-none position-fixed top-0 start-0 w-100 h-100" style="background:rgba(0,0,0,0.6);z-index:9999;display:flex;justify-content:center;align-items:center;">
+    <div class="bg-white rounded shadow-lg p-3" style="max-width:550px;width:95%;max-height:85vh;overflow-y:auto;">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="mb-0"><i class="bi bi-cash-stack text-success"></i> Paiement Groupé</h6>
+            <button class="btn btn-sm btn-outline-danger py-0 px-1" onclick="document.getElementById('modalPaiementGroupe').classList.add('d-none')">&times;</button>
+        </div>
+        <form id="formPaiementGroupe" method="POST" action="{{ url_for('paiement_groupe') }}">
+            <div class="mb-2">
+                <label class="form-label small fw-bold"><i class="bi bi-people"></i> Élèves sélectionnés</label>
+                <div id="liste-eleves-groupe" class="border rounded p-2 bg-light" style="max-height:120px;overflow-y:auto;"></div>
+            </div>
+            <div class="mb-2">
+                <label class="form-label small fw-bold"><i class="bi bi-calendar-event"></i> Mois à payer</label>
+                <select name="mois" class="form-select form-select-sm" required>
+                    <option value="">-- Sélectionner le mois --</option>
+                    <option value="Inscription">Inscription</option>
+                    <option value="Octobre">Octobre</option>
+                    <option value="Novembre">Novembre</option>
+                    <option value="Decembre">Decembre</option>
+                    <option value="Janvier">Janvier</option>
+                    <option value="Fevrier">Fevrier</option>
+                    <option value="Mars">Mars</option>
+                    <option value="Avril">Avril</option>
+                    <option value="Mai">Mai</option>
+                    <option value="Juin">Juin</option>
+                </select>
+            </div>
+            <div class="mb-2">
+                <label class="form-label small fw-bold"><i class="bi bi-cash"></i> Montant par élève (FCFA)</label>
+                <input type="number" name="montant_par_eleve" class="form-control form-control-sm" placeholder="Montant identique pour tous" min="0">
+                <small class="text-muted">Laissez vide pour le tarif exact. Si renseigné, s'applique à tous.</small>
+            </div>
+            <div class="mb-2">
+                <label class="form-label small fw-bold"><i class="bi bi-credit-card"></i> Mode de paiement</label>
+                <select name="mode_paiement" class="form-select form-select-sm">
+                    <option value="Especes">Especes</option>
+                    <option value="Cheque">Cheque</option>
+                    <option value="Virement">Virement</option>
+                    <option value="Mobile Money">Mobile Money</option>
+                    <option value="Wave">Wave</option>
+                    <option value="Carte bancaire">Carte bancaire</option>
+                </select>
+            </div>
+            <div class="alert alert-info py-1 px-2 small" id="resume-groupe">
+                <i class="bi bi-info-circle"></i> <span id="txt-resume">Sélectionnez des élèves et un mois</span>
+            </div>
+            <button type="submit" class="btn btn-success w-100"><i class="bi bi-check-circle"></i> Confirmer le paiement groupé</button>
+        </form>
+    </div>
+</div>
+
+<script>
+function updateBtnGroupe() {
+    var checked = document.querySelectorAll('.eleve-check-impaye:checked');
+    var btn = document.getElementById('btnPayerGroupe');
+    var nb = document.getElementById('nb-selected');
+    if (checked.length > 0) {
+        btn.classList.remove('d-none');
+        nb.textContent = checked.length;
+    } else {
+        btn.classList.add('d-none');
+    }
+}
+
+function ouvrirPaiementGroupe() {
+    var checked = document.querySelectorAll('.eleve-check-impaye:checked');
+    var listeDiv = document.getElementById('liste-eleves-groupe');
+    var totalImpaye = 0;
+    listeDiv.innerHTML = '';
+    var container = document.createElement('div');
+    checked.forEach(function(cb) {
+        var card = cb.closest('.impaye-card');
+        var nom = card.querySelector('strong').textContent;
+        var classe = card.querySelector('.badge.bg-secondary').textContent;
+        var totalEl = card.querySelector('.badge.bg-dark').textContent;
+        var id = cb.getAttribute('data-eleve-id');
+        totalImpaye += parseFloat(totalEl.replace(/\s/g, '')) || 0;
+        var row = document.createElement('div');
+        row.className = 'd-flex justify-content-between align-items-center py-1 border-bottom';
+        row.innerHTML = '<div><strong style="font-size:0.75rem;">' + nom + '</strong> <span class="badge bg-secondary" style="font-size:0.6rem;">' + classe + '</span></div>' +
+            '<input type="hidden" name="eleve_ids[]" value="' + id + '">' +
+            '<span class="text-danger fw-bold" style="font-size:0.7rem;">' + totalEl + '</span>';
+        container.appendChild(row);
+    });
+    listeDiv.appendChild(container);
+    var totalEl = document.getElementById('txt-resume');
+    totalEl.innerHTML = checked.length + ' eleve(s) selectionne(s) | Total impayes global: <strong>' + totalImpaye.toLocaleString('fr-FR').replace(/\s/g,' ') + ' FCFA</strong>';
+    document.getElementById('modalPaiementGroupe').classList.remove('d-none');
+}
+</script>
 {% endblock %}
