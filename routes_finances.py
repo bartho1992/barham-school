@@ -769,10 +769,9 @@ def scolarite_sauvegarder():
 @login_required
 def scolarite_ajouter_ligne():
     """Ajoute une ou plusieurs nouvelles lignes de scolarite"""
-    if current_user.role != 'super_users':
-        flash('Acces non autorise', 'danger')
-        return redirect(url_for('parametres_financiers'))
     ecole_id = get_current_ecole_id()
+    err = _check_parametres_access(ecole_id)
+    if err: return err
     annee = _annee_courante(Ecole.query.get(ecole_id))
     noms_classes = request.form.get('noms_classes', '').strip()
     if not noms_classes:
@@ -921,10 +920,9 @@ def api_scolarite_reorder():
 @login_required
 def tarif_service_sauvegarder():
     """Sauvegarde les tarifs de service pour une classe et une categorie"""
-    if current_user.role != 'super_users':
-        flash('Acces non autorise', 'danger')
-        return redirect(url_for('parametres_financiers'))
     ecole_id = get_current_ecole_id()
+    err = _check_parametres_access(ecole_id)
+    if err: return err
     annee = _annee_courante(Ecole.query.get(ecole_id))
     classe_id = request.form.get('classe_id')
     categorie_id = request.form.get('categorie_id')
@@ -951,9 +949,9 @@ def tarif_service_sauvegarder():
 @app.route('/finances/parametres/tarif-service/supprimer/<int:id>', methods=['POST'])
 @login_required
 def tarif_service_supprimer(id):
-    if current_user.role != 'super_users':
-        flash('Acces non autorise', 'danger')
-        return redirect(url_for('parametres_financiers'))
+    ecole_id = get_current_ecole_id()
+    err = _check_parametres_access(ecole_id)
+    if err: return err
     tarif = TarifService.query.get_or_404(id)
     db.session.delete(tarif)
     db.session.commit()
