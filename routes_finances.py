@@ -743,15 +743,16 @@ def api_tarif_service(classe_id, categorie_id):
 @login_required
 def scolarite_sauvegarder():
     """Sauvegarde les scolarites pour toutes les classes"""
+    ecole_id = get_current_ecole_id()
     # Alow all users with active licence
     if current_user.role != 'super_users':
         from models import Licence
         lic = Licence.licence_active_for_ecole(ecole_id)
         if not lic:
-            return jsonify({'success': False, 'message': 'Abonnement requis'}), 403
+            flash('Vous devez avoir un abonnement actif.', 'danger')
+            return redirect(url_for('abonnement'))
     mois_list = ['inscription', 'janvier', 'fevrier', 'mars', 'avril', 'mai', 'juin',
                  'juillet', 'aout', 'septembre', 'octobre', 'novembre', 'decembre']
-    ecole_id = get_current_ecole_id()
     annee = _annee_courante(Ecole.query.get(ecole_id))
     save_count = 0
     classes = Classe.query.all()

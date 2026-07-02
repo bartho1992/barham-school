@@ -147,16 +147,17 @@
                                 <td><input type="number" name="decembre_{{s.classe_id}}" data-mois="decembre" class="form-control form-control-sm" value="{{ s.decembre|default(0)|int }}"></td>
                                 <td class="fw-bold text-end" id="total_{{s.classe_id}}">{{ s.total_annuel|default(0)|int }} FCFA</td>
                                 <td class="text-nowrap">
-                                    <button type="button" class="btn btn-success btn-xs py-0 px-1" onclick="sauvegarderLigne({{ s.classe_id }})" title="Sauvegarder" style="font-size:0.6rem;"><i class="bi bi-check-lg"></i></button>
-                                    <button type="button" class="btn btn-outline-warning btn-xs py-0 px-1 ms-1" onclick="reinitialiserLigne({{ s.classe_id }})" title="Remettre à zéro" style="font-size:0.6rem;"><i class="bi bi-arrow-counterclockwise"></i></button>
-                                    <button type="button" class="btn btn-outline-danger btn-xs py-0 px-1 ms-1" onclick="supprimerLigne({{ s.classe_id }})" title="Supprimer la ligne" style="font-size:0.6rem;"><i class="bi bi-trash"></i></button>
+                                    <button type="button" class="btn btn-outline-warning btn-xs py-0 px-1 mb-1" onclick="reinitialiserLigne({{ s.classe_id }})" title="Remettre a zero" style="font-size:0.6rem;"><i class="bi bi-arrow-counterclockwise"></i></button>
+                                    <button type="button" class="btn btn-outline-danger btn-xs py-0 px-1" onclick="supprimerLigne({{ s.classe_id }})" title="Supprimer la ligne" style="font-size:0.6rem;"><i class="bi bi-trash"></i></button>
                                 </td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
-                <button type="submit" class="btn btn-success btn-xs py-0 w-100 mt-1" style="font-size:0.65rem;">Enregistrer toutes les Scolarites</button>
+                <button type="submit" class="btn btn-success w-100 mt-1 py-1 fw-bold" style="font-size:0.75rem;">
+                    <i class="bi bi-check-circle"></i> ENREGISTRER TOUT
+                </button>
             </form>
         </div>
     </div>
