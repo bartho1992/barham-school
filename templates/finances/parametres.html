@@ -77,21 +77,21 @@
             <form action="{{ url_for('scolarite_sauvegarder') }}" method="POST">
                 <div class="d-flex justify-content-between align-items-center mb-1 small">
                     <div class="d-flex gap-1 align-items-center flex-wrap">
-                        <label class="mb-0 fw-bold me-1" style="font-size:0.65rem;">Appliquer :</label>
-                        <input type="number" id="montant_inscription" class="form-control form-control-sm" style="width:38px;padding:0 1px;font-size:0.6rem;height:18px;" placeholder="INS">
-                        <input type="number" id="montant_janvier" class="form-control form-control-sm" style="width:38px;padding:0 1px;font-size:0.6rem;height:18px;" placeholder="JAN">
-                        <input type="number" id="montant_fevrier" class="form-control form-control-sm" style="width:38px;padding:0 1px;font-size:0.6rem;height:18px;" placeholder="FEV">
-                        <input type="number" id="montant_mars" class="form-control form-control-sm" style="width:38px;padding:0 1px;font-size:0.6rem;height:18px;" placeholder="MAR">
-                        <input type="number" id="montant_avril" class="form-control form-control-sm" style="width:38px;padding:0 1px;font-size:0.6rem;height:18px;" placeholder="AVR">
-                        <input type="number" id="montant_mai" class="form-control form-control-sm" style="width:38px;padding:0 1px;font-size:0.6rem;height:18px;" placeholder="MAI">
-                        <input type="number" id="montant_juin" class="form-control form-control-sm" style="width:38px;padding:0 1px;font-size:0.6rem;height:18px;" placeholder="JUI">
-                        <input type="number" id="montant_juillet" class="form-control form-control-sm" style="width:38px;padding:0 1px;font-size:0.6rem;height:18px;" placeholder="JUL">
-                        <input type="number" id="montant_aout" class="form-control form-control-sm" style="width:38px;padding:0 1px;font-size:0.6rem;height:18px;" placeholder="AOU">
-                        <input type="number" id="montant_septembre" class="form-control form-control-sm" style="width:38px;padding:0 1px;font-size:0.6rem;height:18px;" placeholder="SEP">
-                        <input type="number" id="montant_octobre" class="form-control form-control-sm" style="width:38px;padding:0 1px;font-size:0.6rem;height:18px;" placeholder="OCT">
-                        <input type="number" id="montant_novembre" class="form-control form-control-sm" style="width:38px;padding:0 1px;font-size:0.6rem;height:18px;" placeholder="NOV">
-                        <input type="number" id="montant_decembre" class="form-control form-control-sm" style="width:38px;padding:0 1px;font-size:0.6rem;height:18px;" placeholder="DEC">
-                        <button type="button" class="btn btn-primary btn-xs py-0 px-1" onclick="appliquerMontantSelection()" style="font-size:0.6rem;">Appliquer</button>
+                        <label class="mb-0 fw-bold me-1" style="font-size:0.7rem;">Appliquer :</label>
+                        <input type="number" id="montant_inscription" class="form-control form-control-sm" style="width:65px;padding:0 3px;font-size:0.7rem;height:24px;" placeholder="INS" onfocus="this.select()">
+                        <input type="number" id="montant_janvier" class="form-control form-control-sm" style="width:65px;padding:0 3px;font-size:0.7rem;height:24px;" placeholder="JAN" onfocus="this.select()">
+                        <input type="number" id="montant_fevrier" class="form-control form-control-sm" style="width:65px;padding:0 3px;font-size:0.7rem;height:24px;" placeholder="FEV" onfocus="this.select()">
+                        <input type="number" id="montant_mars" class="form-control form-control-sm" style="width:65px;padding:0 3px;font-size:0.7rem;height:24px;" placeholder="MAR" onfocus="this.select()">
+                        <input type="number" id="montant_avril" class="form-control form-control-sm" style="width:65px;padding:0 3px;font-size:0.7rem;height:24px;" placeholder="AVR" onfocus="this.select()">
+                        <input type="number" id="montant_mai" class="form-control form-control-sm" style="width:65px;padding:0 3px;font-size:0.7rem;height:24px;" placeholder="MAI" onfocus="this.select()">
+                        <input type="number" id="montant_juin" class="form-control form-control-sm" style="width:65px;padding:0 3px;font-size:0.7rem;height:24px;" placeholder="JUI" onfocus="this.select()">
+                        <input type="number" id="montant_juillet" class="form-control form-control-sm" style="width:65px;padding:0 3px;font-size:0.7rem;height:24px;" placeholder="JUL" onfocus="this.select()">
+                        <input type="number" id="montant_aout" class="form-control form-control-sm" style="width:65px;padding:0 3px;font-size:0.7rem;height:24px;" placeholder="AOU" onfocus="this.select()">
+                        <input type="number" id="montant_septembre" class="form-control form-control-sm" style="width:65px;padding:0 3px;font-size:0.7rem;height:24px;" placeholder="SEP" onfocus="this.select()">
+                        <input type="number" id="montant_octobre" class="form-control form-control-sm" style="width:65px;padding:0 3px;font-size:0.7rem;height:24px;" placeholder="OCT" onfocus="this.select()">
+                        <input type="number" id="montant_novembre" class="form-control form-control-sm" style="width:65px;padding:0 3px;font-size:0.7rem;height:24px;" placeholder="NOV" onfocus="this.select()">
+                        <input type="number" id="montant_decembre" class="form-control form-control-sm" style="width:65px;padding:0 3px;font-size:0.7rem;height:24px;" placeholder="DEC" onfocus="this.select()">
+                        <button type="button" class="btn btn-primary btn-sm py-0 px-2" onclick="appliquerMontantSelection()" style="font-size:0.7rem;height:24px;">Appliquer</button>
                     </div>
                      <div>
                          <button type="button" class="btn btn-outline-danger btn-xs py-0 px-1 me-1" onclick="supprimerSelection()" style="font-size:0.6rem;"><i class="bi bi-trash"></i></button>
