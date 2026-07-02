@@ -529,68 +529,80 @@ def finances_liste():
 @app.route('/finances/impayes')
 @login_required
 def impayes():
-    """Liste tous les eleves avec leurs mois impayes (sequence scolaire)"""
+    """Tableau des impayes (format Excel) : eleves x mois scolaires"""
     ecole_id = get_current_ecole_id()
     e = Ecole.query.get(ecole_id); annee = _annee_courante(e)
     
     mois_scolaires = ['Inscription','Octobre','Novembre','Decembre','Janvier','Fevrier','Mars','Avril','Mai','Juin']
     
-    # Inclure les eleves meme sans annee_scolaire (fallback sur l'ecole)
     eleves = Eleve.query.filter_by(ecole_id=ecole_id).filter(
         db.or_(Eleve.annee_scolaire == annee, Eleve.annee_scolaire == None, Eleve.annee_scolaire == '')
     ).order_by(Eleve.nom).all()
     
-    impayes_liste = []
-    total_impayes_global = 0
+    # Map: classe_id -> Scolarite
+    scolarites_map = {}
+    for s in Scolarite.query.filter_by(annee_scolaire=annee).all():
+        scolarites_map[s.classe_id] = s
+    
+    # Map: eleve_id -> {mois: total_paye}
+    paiements_map = {}
+    for p in Paiement.query.filter_by(annee_scolaire=annee).all():
+        if p.eleve_id not in paiements_map:
+            paiements_map[p.eleve_id] = {}
+        paiements_map[p.eleve_id][p.type_paiement] = paiements_map[p.eleve_id].get(p.type_paiement, 0) + p.montant
+    
+    lignes = []
     nb_sans_tarif = 0
+    total_global = 0
     
     for eleve in eleves:
         if not eleve.classe: continue
+        scol = scolarites_map.get(eleve.classe_id)
+        payes = paiements_map.get(eleve.id, {})
         
-        scolarite = Scolarite.query.filter_by(classe_id=eleve.classe_id, annee_scolaire=annee).first()
+        ligne = {'eleve': eleve, 'mois_cells': [], 'nb_impayes': 0, 'total_impaye': 0, 'has_tarif': scol is not None}
         
-        paiements = Paiement.query.filter_by(eleve_id=eleve.id, annee_scolaire=annee).all()
-        paye_par_mois = {}
-        for p in paiements:
-            paye_par_mois[p.type_paiement] = paye_par_mois.get(p.type_paiement, 0) + p.montant
-        
-        mois_impayes = []
-        total_du = 0
-        total_paye = 0
-        
-        if scolarite:
-            for mois in mois_scolaires:
-                tarif_mois = 0
-                if mois == 'Inscription':
-                    tarif_mois = scolarite.inscription or 0
-                else:
-                    tarif_mois = getattr(scolarite, mois.lower(), 0) or 0
-                
-                if tarif_mois > 0:
-                    total_du += tarif_mois
-                    versement = paye_par_mois.get(mois, 0)
-                    total_paye += versement
-                    reste = tarif_mois - versement
-                    if reste > 0:
-                        mois_impayes.append({'mois': mois, 'tarif': tarif_mois, 'paye': versement, 'reste': reste})
-                        total_impayes_global += reste
-        else:
+        if not scol:
             nb_sans_tarif += 1
-            # Sans tarif defini, considerer comme impaye si aucun paiement
-            if not paiements:
-                mois_impayes.append({'mois': 'Tarifs', 'tarif': 0, 'paye': 0, 'reste': 0})
+            # Pas de tarif : tous les mois sont "inconnus", 1 impaye symbolique
+            for mois in mois_scolaires:
+                ligne['mois_cells'].append({
+                    'mois': mois, 'tarif': 0, 'paye': payes.get(mois, 0),
+                    'reste': 0, 'statut': 'inconnu'
+                })
+            ligne['nb_impayes'] = 1
+            ligne['total_impaye'] = 0
+            lignes.append(ligne)
+            continue
         
-        if mois_impayes:
-            impayes_liste.append({
-                'eleve': eleve,
-                'mois': mois_impayes,
-                'total_impaye': sum(m['reste'] for m in mois_impayes),
-                'nb_mois': len(mois_impayes)
+        for mois in mois_scolaires:
+            tarif = scol.inscription if mois == 'Inscription' else (getattr(scol, mois.lower(), 0) or 0)
+            paye = payes.get(mois, 0)
+            
+            if tarif > 0:
+                reste = max(tarif - paye, 0)
+                if reste > 0:
+                    ligne['nb_impayes'] += 1
+                    ligne['total_impaye'] += reste
+                    total_global += reste
+                statut = 'impaye' if reste > 0 else 'paye'
+            else:
+                reste = 0
+                statut = 'non_applicable'
+                # S'il y a eu un paiement mais pas de tarif, signaler
+                if paye > 0:
+                    statut = 'surpaye'
+            
+            ligne['mois_cells'].append({
+                'mois': mois, 'tarif': tarif, 'paye': paye, 'reste': reste, 'statut': statut
             })
+        
+        lignes.append(ligne)
     
-    return render_template('finances/impayes.html', impayes=impayes_liste, ecole=e,
-                         total_impayes_global=total_impayes_global, nb_eleves=len(impayes_liste),
-                         mois_scolaires=mois_scolaires, nb_sans_tarif=nb_sans_tarif)
+    return render_template('finances/impayes.html',
+                         lignes=lignes, ecole=e, mois_scolaires=mois_scolaires,
+                         total_impayes_global=total_global, nb_eleves=len(lignes),
+                         nb_sans_tarif=nb_sans_tarif)
 
 @app.route('/finances/parametres')
 @login_required
