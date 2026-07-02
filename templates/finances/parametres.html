@@ -580,60 +580,59 @@ function reinitialiserLigne(classeId) {
 }
 
 function supprimerLigne(classeId) {
-    if (!confirm('Supprimer définitivement cette ligne de scolarité ?\nCette action est irréversible.')) return;
-    
-    const tr = document.querySelector('tr[data-classe-id="' + classeId + '"]');
+    if (!confirm('Supprimer definitivement cette ligne de scolarite ?\nCette action est irreversible.')) return;
+    var tr = document.querySelector('tr[data-classe-id="' + classeId + '"]');
     if (!tr) return;
-    
-    // Supprimer immédiatement du DOM pour un retour visuel instantané
-    tr.remove();
-    
-    // XHR SYNCHRONE : garantit que la suppression est traitée par le serveur
-    // avant que cette fonction ne retourne (et avant tout rechargement de page)
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', '/api/scolarite/supprimer/' + classeId, false);
-    xhr.setRequestHeader('Content-Type', 'application/json');
-    try {
-        xhr.send(JSON.stringify({}));
-    } catch(e) {
-        // Ignorer les erreurs réseau
-    }
+    // Utiliser fetch moderne au lieu de XHR synchrone
+    fetch('/api/scolarite/supprimer/' + classeId, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({})
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(res) {
+        if (res.success) { tr.remove(); }
+        else { alert(res.message || 'Erreur lors de la suppression.'); }
+    })
+    .catch(function(err) {
+        alert('Erreur reseau : ' + err);
+    });
 }
 
 function supprimerSelection() {
-    const selected = document.querySelectorAll('.select-classe:checked');
+    var selected = document.querySelectorAll('.select-classe:checked');
     if (selected.length === 0) {
-        alert('Veuillez sélectionner au moins une classe à supprimer');
+        alert('Veuillez selectionner au moins une classe a supprimer');
         return;
     }
-    
-    const noms = [];
-    const classeIds = [];
+    var noms = [];
+    var classeIds = [];
     selected.forEach(function(cb) {
-        const tr = cb.closest('tr');
-        const classeNom = tr.querySelector('td:nth-child(2)').textContent.trim();
+        var tr = cb.closest('tr');
+        var classeNom = tr.querySelector('td:nth-child(3)').textContent.trim();
         noms.push(classeNom);
         classeIds.push(tr.dataset.classeId);
     });
-    
-    if (!confirm('Supprimer définitivement ' + selected.length + ' ligne(s) de scolarité ?\n\n' + noms.join(', ') + '\n\nCette action est irréversible.')) return;
-    
-    // Supprimer immédiatement les lignes du DOM pour un retour visuel instantané
-    selected.forEach(function(cb) {
-        cb.closest('tr').remove();
-    });
-    
-    // XHR SYNCHRONE pour chaque suppression : garantit que chaque suppression
-    // est traitée par le serveur avant de passer à la suivante et avant tout rechargement
+    if (!confirm('Supprimer definitivement ' + selected.length + ' ligne(s) de scolarite ?\n\n' + noms.join(', ') + '\n\nCette action est irreversible.')) return;
+    var promises = [];
+    var rows = [];
     classeIds.forEach(function(classeId) {
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', '/api/scolarite/supprimer/' + classeId, false);
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        try {
-            xhr.send(JSON.stringify({}));
-        } catch(e) {
-            // Ignorer les erreurs réseau
-        }
+        var tr = document.querySelector('tr[data-classe-id="' + classeId + '"]');
+        if (tr) rows.push(tr);
+        promises.push(fetch('/api/scolarite/supprimer/' + classeId, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({})
+        }).then(function(r) { return r.json(); }));
+    });
+    Promise.all(promises).then(function(results) {
+        var ok = 0;
+        results.forEach(function(res, i) {
+            if (res.success) { if (rows[i]) rows[i].remove(); ok++; }
+        });
+        if (ok > 0) alert(ok + ' ligne(s) supprimee(s) avec succes.');
+    }).catch(function(err) {
+        alert('Erreur reseau : ' + err);
     });
 }
 

@@ -870,6 +870,7 @@ def api_scolarite_reinitialiser(classe_id):
 @login_required
 def api_scolarite_supprimer(classe_id):
     """Supprime une ligne de scolarite (AJAX)"""
+    ecole_id = get_current_ecole_id()
     # Alow all users with active licence
     if current_user.role != 'super_users':
         from models import Licence
