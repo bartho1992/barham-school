@@ -19,8 +19,16 @@ def _check_parametres_access(ecole_id):
         from models import Licence
         lic = Licence.licence_active_for_ecole(ecole_id)
         if not lic:
-            flash('Vous devez avoir un abonnement actif pour modifier les parametres.', 'danger')
             return redirect(url_for('abonnement'))
+    return None
+
+def _check_parametres_access_json(ecole_id):
+    """Version JSON pour les appels AJAX"""
+    if current_user.role != 'super_users':
+        from models import Licence
+        lic = Licence.licence_active_for_ecole(ecole_id)
+        if not lic:
+            return jsonify({'error': 'Licence expiree', 'redirect': url_for('abonnement')}), 403
     return None
 
 @app.route('/finances')
@@ -770,7 +778,7 @@ def scolarite_sauvegarder():
 def scolarite_ajouter_ligne():
     """Ajoute une ou plusieurs nouvelles lignes de scolarite"""
     ecole_id = get_current_ecole_id()
-    err = _check_parametres_access(ecole_id)
+    err = _check_parametres_access_json(ecole_id)
     if err: return err
     annee = _annee_courante(Ecole.query.get(ecole_id))
     noms_classes = request.form.get('noms_classes', '').strip()
@@ -812,13 +820,13 @@ def scolarite_ajouter_ligne():
 @login_required
 def api_scolarite_sauvegarder(classe_id):
     """Sauvegarde les montants de scolarite pour une classe (AJAX)"""
+    ecole_id = get_current_ecole_id()
     # Alow all users with active licence
     if current_user.role != 'super_users':
         from models import Licence
         lic = Licence.licence_active_for_ecole(ecole_id)
         if not lic:
             return jsonify({'success': False, 'message': 'Abonnement requis'}), 403
-    ecole_id = get_current_ecole_id()
     annee = _annee_courante(Ecole.query.get(ecole_id))
     data = request.get_json()
     if not data:
@@ -840,13 +848,13 @@ def api_scolarite_sauvegarder(classe_id):
 @login_required
 def api_scolarite_reinitialiser(classe_id):
     """Remet a zero les montants de scolarite pour une classe (AJAX)"""
+    ecole_id = get_current_ecole_id()
     # Alow all users with active licence
     if current_user.role != 'super_users':
         from models import Licence
         lic = Licence.licence_active_for_ecole(ecole_id)
         if not lic:
             return jsonify({'success': False, 'message': 'Abonnement requis'}), 403
-    ecole_id = get_current_ecole_id()
     annee = _annee_courante(Ecole.query.get(ecole_id))
     scolarite = Scolarite.query.filter_by(classe_id=classe_id, annee_scolaire=annee).first()
     if scolarite:
@@ -867,7 +875,6 @@ def api_scolarite_supprimer(classe_id):
         lic = Licence.licence_active_for_ecole(ecole_id)
         if not lic:
             return jsonify({'success': False, 'message': 'Abonnement requis'}), 403
-    ecole_id = get_current_ecole_id()
     annee = _annee_courante(Ecole.query.get(ecole_id))
     scolarite = Scolarite.query.filter_by(classe_id=classe_id, annee_scolaire=annee).first()
     if scolarite:
@@ -921,7 +928,7 @@ def api_scolarite_reorder():
 def tarif_service_sauvegarder():
     """Sauvegarde les tarifs de service pour une classe et une categorie"""
     ecole_id = get_current_ecole_id()
-    err = _check_parametres_access(ecole_id)
+    err = _check_parametres_access_json(ecole_id)
     if err: return err
     annee = _annee_courante(Ecole.query.get(ecole_id))
     classe_id = request.form.get('classe_id')
