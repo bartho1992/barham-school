@@ -47,6 +47,31 @@
     </div>
 </div>
 
+<!-- FILTRES -->
+<div class="d-flex gap-1 align-items-center mb-1 flex-wrap">
+    <span class="fw-bold small me-1"><i class="bi bi-funnel"></i> Filtrer :</span>
+    <select id="filtre-classe" class="form-select form-select-sm" style="width:auto;min-width:80px;" onchange="filtrer()">
+        <option value="">Toutes classes</option>
+        {% set classes_vues = [] %}
+        {% for ligne in lignes %}
+            {% set cn = ligne.eleve.classe.nom %}
+            {% if cn not in classes_vues %}
+                {% set _ = classes_vues.append(cn) %}
+                <option value="{{ cn }}">{{ cn }}</option>
+            {% endif %}
+        {% endfor %}
+    </select>
+    <select id="filtre-mois" class="form-select form-select-sm" style="width:auto;min-width:80px;" onchange="filtrer()">
+        <option value="">Tous mois</option>
+        <option value="impayes">Avec impayes</option>
+        <option value="sans_tarif">Sans tarif</option>
+        {% for m in mois_scolaires %}<option value="{{ m }}">{{ m }}</option>{% endfor %}
+    </select>
+    <input type="text" id="filtre-nom" class="form-control form-control-sm" style="width:150px;" placeholder="Nom ou prenom..." oninput="filtrer()">
+    <button class="btn btn-outline-secondary btn-sm py-0" onclick="document.getElementById('filtre-classe').value='';document.getElementById('filtre-mois').value='';document.getElementById('filtre-nom').value='';filtrer();"><i class="bi bi-x"></i> Reinit.</button>
+</div>
+<div id="filtre-count" class="small text-muted mb-1" style="display:none;"></div>
+
 <!-- TABLEAU IMPAYES -->
 <div style="max-height:62vh;overflow:auto;">
     <table class="table table-sm table-bordered mb-0 bg-white" id="table-impayes" style="font-size:0.65rem;">
@@ -78,7 +103,7 @@
         <tbody>
             {% for ligne in lignes %}
             {% set e = ligne.eleve %}
-            <tr class="impaye-row" data-eleve-id="{{ e.id }}" data-has-tarif="{{ '1' if ligne.has_tarif else '0' }}">
+            <tr class="impaye-row" data-eleve-id="{{ e.id }}" data-has-tarif="{{ '1' if ligne.has_tarif else '0' }}" data-classe="{{ e.classe.nom }}" data-nom="{{ e.nom }} {{ e.prenom }}" data-impaye-mois="{% for cell in ligne.mois_cells %}{% if cell.statut == 'impaye' %}{{ cell.mois }},{% endif %}{% endfor %}{% if not ligne.has_tarif %}inconnu{% endif %}">
                 <td style="text-align:center;">
                     <input type="checkbox" class="eleve-check-impaye" data-eleve-id="{{ e.id }}" onchange="updateBtnGroupe()">
                 </td>
@@ -183,6 +208,40 @@ function updateBtnGroupe() {
         nb.textContent = checked.length;
     } else {
         btn.classList.add('d-none');
+    }
+}
+
+function filtrer() {
+    var classe = (document.getElementById('filtre-classe').value || '').toLowerCase();
+    var mois = document.getElementById('filtre-mois').value;
+    var nom = (document.getElementById('filtre-nom').value || '').toLowerCase();
+    var rows = document.querySelectorAll('#table-impayes tbody tr');
+    var visible = 0;
+    rows.forEach(function(tr) {
+        var show = true;
+        var dataClasse = (tr.getAttribute('data-classe') || '').toLowerCase();
+        var dataNom = (tr.getAttribute('data-nom') || '').toLowerCase();
+        var dataImpayeMois = tr.getAttribute('data-impaye-mois') || '';
+        var hasTarif = tr.getAttribute('data-has-tarif') === '1';
+        if (classe && dataClasse.indexOf(classe) === -1) show = false;
+        if (nom && dataNom.indexOf(nom) === -1) show = false;
+        if (mois === 'impayes') {
+            if (!dataImpayeMois || dataImpayeMois.trim() === '') show = false;
+        } else if (mois === 'sans_tarif') {
+            if (hasTarif) show = false;
+        } else if (mois) {
+            if (',' + dataImpayeMois + ','.indexOf(',' + mois + ',') === -1) show = false;
+        }
+        tr.style.display = show ? '' : 'none';
+        if (show) visible++;
+    });
+    var countEl = document.getElementById('filtre-count');
+    var total = rows.length;
+    if (visible !== total) {
+        countEl.style.display = 'block';
+        countEl.textContent = visible + ' / ' + total + ' eleve(s) affiche(s)';
+    } else {
+        countEl.style.display = 'none';
     }
 }
 
