@@ -103,7 +103,7 @@
         <tbody>
             {% for ligne in lignes %}
             {% set e = ligne.eleve %}
-            <tr class="impaye-row" data-eleve-id="{{ e.id }}" data-has-tarif="{{ '1' if ligne.has_tarif else '0' }}" data-classe="{{ e.classe.nom }}" data-nom="{{ e.nom }} {{ e.prenom }}" data-impaye-mois="{{ ligne.mois_cells|selectattr('statut','equalto','impaye')|map(attribute='mois')|join(',') }}{% if not ligne.has_tarif %},inconnu{% endif %}">
+            <tr class="impaye-row" data-eleve-id="{{ e.id }}" data-has-tarif="{{ '1' if ligne.has_tarif else '0' }}" data-classe="{{ e.classe.nom }}" data-nom="{{ e.nom }} {{ e.prenom }}" data-impaye-mois="{{ ligne.impaye_mois|join(',') }}{% if not ligne.has_tarif %},inconnu{% endif %}">
                 <td style="text-align:center;">
                     <input type="checkbox" class="eleve-check-impaye" data-eleve-id="{{ e.id }}" onchange="updateBtnGroupe()">
                 </td>

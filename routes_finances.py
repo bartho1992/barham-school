@@ -568,7 +568,7 @@ def impayes():
         scol = scolarites_map.get(eleve.classe_id)
         payes = paiements_map.get(eleve.id, {})
         
-        ligne = {'eleve': eleve, 'mois_cells': [], 'nb_impayes': 0, 'total_impaye': 0, 'has_tarif': scol is not None}
+        ligne = {'eleve': eleve, 'mois_cells': [], 'nb_impayes': 0, 'total_impaye': 0, 'has_tarif': scol is not None, 'impaye_mois': []}
         
         if not scol:
             nb_sans_tarif += 1
@@ -592,6 +592,7 @@ def impayes():
                 if reste > 0:
                     ligne['nb_impayes'] += 1
                     ligne['total_impaye'] += reste
+                    ligne['impaye_mois'].append(mois)
                     total_global += reste
                 statut = 'impaye' if reste > 0 else 'paye'
             else:
