@@ -82,7 +82,7 @@
                 <th style="min-width:130px;">NOM & PRENOM</th>
                 <th style="width:55px;">CLASSE</th>
                 {% for m in mois_scolaires %}
-                <th style="width:38px;text-align:center;font-size:0.55rem;padding:1px;" title="{{ m }}">
+                <th class="col-mois col-mois-{{ loop.index }}" style="width:38px;text-align:center;font-size:0.55rem;padding:1px;" title="{{ m }}" data-mois="{{ m }}">
                     {% if m == 'Inscription' %}INS
                     {% elif m == 'Octobre' %}OCT
                     {% elif m == 'Novembre' %}NOV
@@ -111,7 +111,7 @@
                 <td style="white-space:nowrap;"><strong>{{ e.nom }}</strong> {{ e.prenom }}</td>
                 <td style="text-align:center;"><span class="badge bg-secondary" style="font-size:0.55rem;">{{ e.classe.nom }}</span></td>
                 {% for cell in ligne.mois_cells %}
-                <td style="text-align:center;padding:1px;font-size:0.55rem;
+                <td class="col-mois col-mois-{{ loop.index }}" style="text-align:center;padding:1px;font-size:0.55rem;
                     {% if cell.statut == 'impaye' %}background:#ffe0e0;color:#a00;{% elif cell.statut == 'paye' %}background:#d4edda;color:#155724;{% elif cell.statut == 'surpaye' %}background:#fff3cd;{% elif cell.statut == 'inconnu' %}background:#f0f0f0;color:#999;{% endif %}
                 " title="{{ cell.mois }} | Tarif: {{ '{:,.0f}'.format(cell.tarif).replace(',', ' ') }} | Paye: {{ '{:,.0f}'.format(cell.paye).replace(',', ' ') }}">
                     {% if cell.statut == 'impaye' %}
@@ -217,23 +217,43 @@ function filtrer() {
     var nom = (document.getElementById('filtre-nom').value || '').toLowerCase().trim();
     var rows = document.querySelectorAll('#table-impayes tbody tr');
     var visible = 0;
+    
+    // Gerer affichage colonnes
+    var allCols = document.querySelectorAll('.col-mois');
+    if (mois && mois !== 'impayes' && mois !== 'sans_tarif') {
+        // Afficher seulement la colonne du mois choisi
+        allCols.forEach(function(col) {
+            if (col.getAttribute('data-mois') === mois) {
+                col.style.display = '';
+            } else {
+                col.style.display = 'none';
+            }
+        });
+    } else {
+        // Afficher toutes les colonnes
+        allCols.forEach(function(col) { col.style.display = ''; });
+    }
+    
     rows.forEach(function(tr) {
         var show = true;
         var dataClasse = (tr.getAttribute('data-classe') || '').toLowerCase().trim();
         var dataNom = (tr.getAttribute('data-nom') || '').toLowerCase().trim();
         var dataImpayeMois = (tr.getAttribute('data-impaye-mois') || '').trim();
         var hasTarif = tr.getAttribute('data-has-tarif') === '1';
+        
         if (classe && dataClasse.indexOf(classe) === -1) show = false;
         if (nom && dataNom.indexOf(nom) === -1) show = false;
+        
         if (mois === 'impayes') {
             if (!dataImpayeMois) show = false;
         } else if (mois === 'sans_tarif') {
             if (hasTarif) show = false;
         } else if (mois) {
-            // Chercher le mois exact dans la liste separee par des virgules
+            // Mois specifique : cacher les lignes qui n'ont PAS d'impaye pour ce mois
             var moisList = dataImpayeMois.split(',').map(function(s){ return s.trim(); });
             if (moisList.indexOf(mois) === -1) show = false;
         }
+        
         tr.style.display = show ? '' : 'none';
         if (show) visible++;
     });
