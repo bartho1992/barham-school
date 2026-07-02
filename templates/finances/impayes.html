@@ -50,7 +50,7 @@
 <!-- FILTRES -->
 <div class="d-flex gap-1 align-items-center mb-1 flex-wrap">
     <span class="fw-bold small me-1"><i class="bi bi-funnel"></i> Filtrer :</span>
-    <select id="filtre-classe" class="form-select form-select-sm" style="width:auto;min-width:80px;" onchange="filtrer()">
+    <select id="filtre-classe" class="form-select form-select-sm" style="width:auto;min-width:100px;font-size:0.7rem;height:28px;" onchange="filtrer()">
         <option value="">Toutes classes</option>
         {% set classes_vues = [] %}
         {% for ligne in lignes %}
@@ -61,13 +61,13 @@
             {% endif %}
         {% endfor %}
     </select>
-    <select id="filtre-mois" class="form-select form-select-sm" style="width:auto;min-width:80px;" onchange="filtrer()">
+    <select id="filtre-mois" class="form-select form-select-sm" style="width:auto;min-width:100px;font-size:0.7rem;height:28px;" onchange="filtrer()">
         <option value="">Tous mois</option>
         <option value="impayes">Avec impayes</option>
         <option value="sans_tarif">Sans tarif</option>
         {% for m in mois_scolaires %}<option value="{{ m }}">{{ m }}</option>{% endfor %}
     </select>
-    <input type="text" id="filtre-nom" class="form-control form-control-sm" style="width:150px;" placeholder="Nom ou prenom..." oninput="filtrer()">
+    <input type="text" id="filtre-nom" class="form-control form-control-sm" style="width:170px;height:28px;font-size:0.7rem;" placeholder="Nom ou prenom..." oninput="filtrer()">
     <button class="btn btn-outline-secondary btn-sm py-0" onclick="document.getElementById('filtre-classe').value='';document.getElementById('filtre-mois').value='';document.getElementById('filtre-nom').value='';filtrer();"><i class="bi bi-x"></i> Reinit.</button>
 </div>
 <div id="filtre-count" class="small text-muted mb-1" style="display:none;"></div>
@@ -103,7 +103,7 @@
         <tbody>
             {% for ligne in lignes %}
             {% set e = ligne.eleve %}
-            <tr class="impaye-row" data-eleve-id="{{ e.id }}" data-has-tarif="{{ '1' if ligne.has_tarif else '0' }}" data-classe="{{ e.classe.nom }}" data-nom="{{ e.nom }} {{ e.prenom }}" data-impaye-mois="{% for cell in ligne.mois_cells %}{% if cell.statut == 'impaye' %}{{ cell.mois }},{% endif %}{% endfor %}{% if not ligne.has_tarif %}inconnu{% endif %}">
+            <tr class="impaye-row" data-eleve-id="{{ e.id }}" data-has-tarif="{{ '1' if ligne.has_tarif else '0' }}" data-classe="{{ e.classe.nom }}" data-nom="{{ e.nom }} {{ e.prenom }}" data-impaye-mois="{{ ligne.mois_cells|selectattr('statut','equalto','impaye')|map(attribute='mois')|join(',') }}{% if not ligne.has_tarif %},inconnu{% endif %}">
                 <td style="text-align:center;">
                     <input type="checkbox" class="eleve-check-impaye" data-eleve-id="{{ e.id }}" onchange="updateBtnGroupe()">
                 </td>
@@ -212,25 +212,27 @@ function updateBtnGroupe() {
 }
 
 function filtrer() {
-    var classe = (document.getElementById('filtre-classe').value || '').toLowerCase();
-    var mois = document.getElementById('filtre-mois').value;
-    var nom = (document.getElementById('filtre-nom').value || '').toLowerCase();
+    var classe = (document.getElementById('filtre-classe').value || '').toLowerCase().trim();
+    var mois = (document.getElementById('filtre-mois').value || '').trim();
+    var nom = (document.getElementById('filtre-nom').value || '').toLowerCase().trim();
     var rows = document.querySelectorAll('#table-impayes tbody tr');
     var visible = 0;
     rows.forEach(function(tr) {
         var show = true;
-        var dataClasse = (tr.getAttribute('data-classe') || '').toLowerCase();
-        var dataNom = (tr.getAttribute('data-nom') || '').toLowerCase();
-        var dataImpayeMois = tr.getAttribute('data-impaye-mois') || '';
+        var dataClasse = (tr.getAttribute('data-classe') || '').toLowerCase().trim();
+        var dataNom = (tr.getAttribute('data-nom') || '').toLowerCase().trim();
+        var dataImpayeMois = (tr.getAttribute('data-impaye-mois') || '').trim();
         var hasTarif = tr.getAttribute('data-has-tarif') === '1';
         if (classe && dataClasse.indexOf(classe) === -1) show = false;
         if (nom && dataNom.indexOf(nom) === -1) show = false;
         if (mois === 'impayes') {
-            if (!dataImpayeMois || dataImpayeMois.trim() === '') show = false;
+            if (!dataImpayeMois) show = false;
         } else if (mois === 'sans_tarif') {
             if (hasTarif) show = false;
         } else if (mois) {
-            if (',' + dataImpayeMois + ','.indexOf(',' + mois + ',') === -1) show = false;
+            // Chercher le mois exact dans la liste separee par des virgules
+            var moisList = dataImpayeMois.split(',').map(function(s){ return s.trim(); });
+            if (moisList.indexOf(mois) === -1) show = false;
         }
         tr.style.display = show ? '' : 'none';
         if (show) visible++;
