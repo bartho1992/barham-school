@@ -115,11 +115,11 @@
                     {% if cell.statut == 'impaye' %}background:#ffe0e0;color:#a00;{% elif cell.statut == 'paye' %}background:#d4edda;color:#155724;{% elif cell.statut == 'surpaye' %}background:#fff3cd;{% elif cell.statut == 'inconnu' %}background:#f0f0f0;color:#999;{% endif %}
                 " title="{{ cell.mois }} | Tarif: {{ '{:,.0f}'.format(cell.tarif).replace(',', ' ') }} | Paye: {{ '{:,.0f}'.format(cell.paye).replace(',', ' ') }}">
                     {% if cell.statut == 'impaye' %}
-                        {{ '{:,.0f}'.format(cell.reste).replace(',', ' ') }}
+                        {{ cell.reste }}
                     {% elif cell.statut == 'paye' %}
                         &#10003;
                     {% elif cell.statut == 'surpaye' %}
-                        +{{ '{:,.0f}'.format(cell.paye).replace(',', ' ') }}
+                        +{{ cell.paye }}
                     {% elif cell.statut == 'inconnu' %}
                         ?
                     {% endif %}
@@ -221,17 +221,27 @@ function filtrer() {
     // Gerer affichage colonnes
     var allCols = document.querySelectorAll('.col-mois');
     if (mois && mois !== 'impayes' && mois !== 'sans_tarif') {
-        // Afficher seulement la colonne du mois choisi
+        // Afficher seulement la colonne du mois choisi et l'elargir
         allCols.forEach(function(col) {
             if (col.getAttribute('data-mois') === mois) {
                 col.style.display = '';
+                col.style.width = 'auto';
+                col.style.minWidth = '70px';
+                col.style.fontSize = '0.7rem';
+                col.style.fontWeight = 'bold';
             } else {
                 col.style.display = 'none';
             }
         });
     } else {
-        // Afficher toutes les colonnes
-        allCols.forEach(function(col) { col.style.display = ''; });
+        // Afficher toutes les colonnes avec leur taille normale
+        allCols.forEach(function(col) {
+            col.style.display = '';
+            col.style.width = '38px';
+            col.style.minWidth = '';
+            col.style.fontSize = '0.55rem';
+            col.style.fontWeight = '';
+        });
     }
     
     rows.forEach(function(tr) {
