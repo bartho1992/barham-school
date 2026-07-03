@@ -222,6 +222,7 @@ function filtrer() {
     sessionStorage.setItem('impaye_filtre_nom', nom);
     var rows = document.querySelectorAll('#table-impayes tbody tr');
     var visible = 0;
+    var totalVisible = 0;
     
     // Gerer affichage colonnes
     var allTh = document.querySelectorAll('#table-impayes thead .col-mois');
@@ -291,27 +292,27 @@ function filtrer() {
         } else if (mois === 'sans_tarif') {
             if (hasTarif) show = false;
         } else if (mois) {
-            // Mois specifique : cacher les lignes qui n'ont PAS d'impaye pour ce mois
             var moisList = dataImpayeMois.split(',').map(function(s){ return s.trim(); });
             if (moisList.indexOf(mois) === -1) show = false;
         }
         
         tr.style.display = show ? '' : 'none';
-        if (show) visible++;
-    });
-    
-    // Calculer le total des impayes visibles
-    var totalVisible = 0;
-    rows.forEach(function(tr) {
-        if (tr.style.display !== 'none') {
-            var resteCell = tr.querySelector('td:last-child');
-            if (resteCell) {
-                var resteText = resteCell.textContent.trim().replace(/[^\d]/g, '');
-                if (resteText) totalVisible += parseInt(resteText, 10);
-            }
+        if (show) {
+            visible++;
+            // Recuperer RESTE (derniere cellule)
+            var cells = tr.querySelectorAll('td');
+            var lastCellText = cells.length > 0 ? (cells[cells.length - 1].textContent || '') : '';
+            var digits = lastCellText.replace(/\D/g, '');
+            if (digits) totalVisible += parseInt(digits, 10);
         }
     });
-    document.getElementById('total-impayes-card').textContent = totalVisible.toLocaleString('fr-FR').replace(/,/g, ' ');
+    
+    // Mettre a jour la carte FCFA Impayes
+    var cardTotalEl = document.getElementById('total-impayes-card');
+    if (cardTotalEl) {
+        try { cardTotalEl.textContent = totalVisible.toLocaleString('fr-FR'); }
+        catch(e) { cardTotalEl.textContent = totalVisible.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
+    }
     
     var countEl = document.getElementById('filtre-count');
     var total = rows.length;
