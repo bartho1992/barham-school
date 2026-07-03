@@ -219,29 +219,32 @@ function filtrer() {
     var visible = 0;
     
     // Gerer affichage colonnes
-    var allCols = document.querySelectorAll('.col-mois');
+    var allTh = document.querySelectorAll('#table-impayes thead .col-mois');
+    var allTd = document.querySelectorAll('#table-impayes tbody .col-mois');
+    var table = document.getElementById('table-impayes');
     if (mois && mois !== 'impayes' && mois !== 'sans_tarif') {
-        allCols.forEach(function(col) {
+        table.style.tableLayout = 'fixed';
+        allTd.forEach(function(col) {
             if (col.getAttribute('data-mois') === mois) {
                 col.style.display = '';
-                col.style.width = '85px';
-                col.style.minWidth = '85px';
-                col.style.fontSize = '0.7rem';
-                col.style.fontWeight = 'bold';
-                col.style.textAlign = 'right';
+                col.style.width = 'auto';
             } else {
                 col.style.display = 'none';
             }
         });
-    } else {
-        allCols.forEach(function(col) {
-            col.style.display = '';
-            col.style.width = '38px';
-            col.style.minWidth = '';
-            col.style.fontSize = '0.55rem';
-            col.style.fontWeight = '';
-            col.style.textAlign = 'center';
+        allTh.forEach(function(th) {
+            if (th.getAttribute('data-mois') === mois) {
+                th.style.display = '';
+                th.style.width = 'auto';
+                th.style.fontSize = '0.7rem';
+            } else {
+                th.style.display = 'none';
+            }
         });
+    } else {
+        table.style.tableLayout = '';
+        allTd.forEach(function(col) { col.style.display = ''; });
+        allTh.forEach(function(th) { th.style.display = ''; th.style.fontSize = '0.55rem'; });
     }
     
     rows.forEach(function(tr) {
