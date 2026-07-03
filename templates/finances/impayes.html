@@ -73,6 +73,40 @@
 <div id="filtre-count" class="small text-muted mb-1" style="display:none;"></div>
 
 <!-- TABLEAU IMPAYES -->
+<!-- Totaux par colonne -->
+{% set ns = namespace(total_ins=0, total_oct=0, total_nov=0, total_dec=0, total_jan=0, total_fev=0, total_mar=0, total_avr=0, total_mai=0, total_jui=0, total_imp=0, total_reste=0) %}
+{% for ligne in lignes %}
+    {% for cell in ligne.mois_cells %}
+        {% if cell.mois == 'Inscription' and cell.statut == 'impaye' %}{% set ns.total_ins = ns.total_ins + cell.reste %}{% endif %}
+        {% if cell.mois == 'Octobre' and cell.statut == 'impaye' %}{% set ns.total_oct = ns.total_oct + cell.reste %}{% endif %}
+        {% if cell.mois == 'Novembre' and cell.statut == 'impaye' %}{% set ns.total_nov = ns.total_nov + cell.reste %}{% endif %}
+        {% if cell.mois == 'Decembre' and cell.statut == 'impaye' %}{% set ns.total_dec = ns.total_dec + cell.reste %}{% endif %}
+        {% if cell.mois == 'Janvier' and cell.statut == 'impaye' %}{% set ns.total_jan = ns.total_jan + cell.reste %}{% endif %}
+        {% if cell.mois == 'Fevrier' and cell.statut == 'impaye' %}{% set ns.total_fev = ns.total_fev + cell.reste %}{% endif %}
+        {% if cell.mois == 'Mars' and cell.statut == 'impaye' %}{% set ns.total_mar = ns.total_mar + cell.reste %}{% endif %}
+        {% if cell.mois == 'Avril' and cell.statut == 'impaye' %}{% set ns.total_avr = ns.total_avr + cell.reste %}{% endif %}
+        {% if cell.mois == 'Mai' and cell.statut == 'impaye' %}{% set ns.total_mai = ns.total_mai + cell.reste %}{% endif %}
+        {% if cell.mois == 'Juin' and cell.statut == 'impaye' %}{% set ns.total_jui = ns.total_jui + cell.reste %}{% endif %}
+    {% endfor %}
+    {% set ns.total_imp = ns.total_imp + ligne.nb_impayes %}
+    {% if ligne.total_impaye > 0 %}{% set ns.total_reste = ns.total_reste + ligne.total_impaye %}{% endif %}
+{% endfor %}
+<div class="d-flex align-items-center gap-1 mb-2 p-2 rounded" style="background:#e8f0fe;border:1px solid #b0c4de;overflow-x:auto;white-space:nowrap;">
+    <span class="badge bg-primary fw-bold me-1" style="font-size:0.65rem;">TOTAUX</span>
+    <span class="badge bg-white text-dark border" style="font-size:0.55rem;">INS <strong>{{ '{:,.0f}'.format(ns.total_ins).replace(',', ' ') }}</strong></span>
+    <span class="badge bg-white text-dark border" style="font-size:0.55rem;">OCT <strong>{{ '{:,.0f}'.format(ns.total_oct).replace(',', ' ') }}</strong></span>
+    <span class="badge bg-white text-dark border" style="font-size:0.55rem;">NOV <strong>{{ '{:,.0f}'.format(ns.total_nov).replace(',', ' ') }}</strong></span>
+    <span class="badge bg-white text-dark border" style="font-size:0.55rem;">DEC <strong>{{ '{:,.0f}'.format(ns.total_dec).replace(',', ' ') }}</strong></span>
+    <span class="badge bg-white text-dark border" style="font-size:0.55rem;">JAN <strong>{{ '{:,.0f}'.format(ns.total_jan).replace(',', ' ') }}</strong></span>
+    <span class="badge bg-white text-dark border" style="font-size:0.55rem;">FEV <strong>{{ '{:,.0f}'.format(ns.total_fev).replace(',', ' ') }}</strong></span>
+    <span class="badge bg-white text-dark border" style="font-size:0.55rem;">MAR <strong>{{ '{:,.0f}'.format(ns.total_mar).replace(',', ' ') }}</strong></span>
+    <span class="badge bg-white text-dark border" style="font-size:0.55rem;">AVR <strong>{{ '{:,.0f}'.format(ns.total_avr).replace(',', ' ') }}</strong></span>
+    <span class="badge bg-white text-dark border" style="font-size:0.55rem;">MAI <strong>{{ '{:,.0f}'.format(ns.total_mai).replace(',', ' ') }}</strong></span>
+    <span class="badge bg-white text-dark border" style="font-size:0.55rem;">JUI <strong>{{ '{:,.0f}'.format(ns.total_jui).replace(',', ' ') }}</strong></span>
+    <span class="badge bg-danger text-white" style="font-size:0.55rem;">IMP <strong>{{ ns.total_imp }}</strong></span>
+    <span class="badge bg-dark text-white" style="font-size:0.6rem;">RESTE <strong>{{ '{:,.0f}'.format(ns.total_reste).replace(',', ' ') }} FCFA</strong></span>
+</div>
+
 <div style="max-height:62vh;overflow:auto;">
     <table class="table table-sm table-bordered mb-0 bg-white" id="table-impayes" style="font-size:0.65rem;table-layout:auto;white-space:nowrap;">
         <thead style="position:sticky;top:0;z-index:2;">
@@ -138,36 +172,6 @@
             </tr>
             {% endfor %}
         </tbody>
-        {% set ns = namespace(total_ins=0, total_oct=0, total_nov=0, total_dec=0, total_jan=0, total_fev=0, total_mar=0, total_avr=0, total_mai=0, total_jui=0, total_imp=0, total_reste=0) %}
-        {% for ligne in lignes %}
-            {% for cell in ligne.mois_cells %}
-                {% if cell.mois == 'Inscription' and cell.statut == 'impaye' %}{% set ns.total_ins = ns.total_ins + cell.reste %}{% endif %}
-                {% if cell.mois == 'Octobre' and cell.statut == 'impaye' %}{% set ns.total_oct = ns.total_oct + cell.reste %}{% endif %}
-                {% if cell.mois == 'Novembre' and cell.statut == 'impaye' %}{% set ns.total_nov = ns.total_nov + cell.reste %}{% endif %}
-                {% if cell.mois == 'Decembre' and cell.statut == 'impaye' %}{% set ns.total_dec = ns.total_dec + cell.reste %}{% endif %}
-                {% if cell.mois == 'Janvier' and cell.statut == 'impaye' %}{% set ns.total_jan = ns.total_jan + cell.reste %}{% endif %}
-                {% if cell.mois == 'Fevrier' and cell.statut == 'impaye' %}{% set ns.total_fev = ns.total_fev + cell.reste %}{% endif %}
-                {% if cell.mois == 'Mars' and cell.statut == 'impaye' %}{% set ns.total_mar = ns.total_mar + cell.reste %}{% endif %}
-                {% if cell.mois == 'Avril' and cell.statut == 'impaye' %}{% set ns.total_avr = ns.total_avr + cell.reste %}{% endif %}
-                {% if cell.mois == 'Mai' and cell.statut == 'impaye' %}{% set ns.total_mai = ns.total_mai + cell.reste %}{% endif %}
-                {% if cell.mois == 'Juin' and cell.statut == 'impaye' %}{% set ns.total_jui = ns.total_jui + cell.reste %}{% endif %}
-            {% endfor %}
-            {% set ns.total_imp = ns.total_imp + ligne.nb_impayes %}
-            {% if ligne.total_impaye > 0 %}{% set ns.total_reste = ns.total_reste + ligne.total_impaye %}{% endif %}
-        {% endfor %}
-        <tfoot style="position:sticky;bottom:0;z-index:2;">
-            <tr style="background:#1e3a8a;color:#fff;font-weight:bold;font-size:0.6rem;">
-                <td colspan="2" style="text-align:right;padding:3px 4px;">TOTAL</td>
-                <td style="padding:3px 4px;">-</td>
-                <td style="padding:3px 4px;">-</td>
-                {% set totals = [ns.total_ins, ns.total_oct, ns.total_nov, ns.total_dec, ns.total_jan, ns.total_fev, ns.total_mar, ns.total_avr, ns.total_mai, ns.total_jui] %}
-                {% for t in totals %}
-                <td class="col-mois col-mois-{{ loop.index }}" data-mois="{{ mois_scolaires[loop.index0] }}" style="text-align:right;padding:3px 4px;font-size:0.55rem;white-space:nowrap;">{{ '{:,.0f}'.format(t).replace(',', ' ') if t > 0 else '-' }}</td>
-                {% endfor %}
-                <td style="text-align:center;padding:3px 4px;">{{ ns.total_imp }}</td>
-                <td style="text-align:right;padding:3px 4px;">{{ '{:,.0f}'.format(ns.total_reste).replace(',', ' ') }}</td>
-            </tr>
-        </tfoot>
     </table>
 </div>
 
