@@ -111,7 +111,7 @@
                 <td style="white-space:nowrap;"><strong>{{ e.nom }}</strong> {{ e.prenom }}</td>
                 <td style="text-align:center;"><span class="badge bg-secondary" style="font-size:0.55rem;">{{ e.classe.nom }}</span></td>
                 {% for cell in ligne.mois_cells %}
-                <td class="col-mois col-mois-{{ loop.index }}" style="text-align:right;padding:2px 3px;font-size:0.6rem;white-space:nowrap;font-weight:bold;
+                <td class="col-mois col-mois-{{ loop.index }}" data-mois="{{ cell.mois }}" style="text-align:right;padding:2px 3px;font-size:0.6rem;white-space:nowrap;font-weight:bold;
                     {% if cell.statut == 'impaye' %}background:#ffe0e0;color:#a00;{% elif cell.statut == 'paye' %}background:#d4edda;color:#155724;{% elif cell.statut == 'surpaye' %}background:#fff3cd;{% elif cell.statut == 'inconnu' %}background:#f0f0f0;color:#999;{% endif %}
                 " title="{{ cell.mois }} | Tarif: {{ '{:,.0f}'.format(cell.tarif).replace(',', ' ') }} | Paye: {{ '{:,.0f}'.format(cell.paye).replace(',', ' ') }}">
                     {% if cell.statut == 'impaye' %}
