@@ -223,11 +223,18 @@ function filtrer() {
     var allTd = document.querySelectorAll('#table-impayes tbody .col-mois');
     var table = document.getElementById('table-impayes');
     if (mois && mois !== 'impayes' && mois !== 'sans_tarif') {
-        table.style.tableLayout = 'fixed';
+        // Supprimer table-layout:fixed pour que la colonne visible puisse s'elargir librement
+        table.style.tableLayout = 'auto';
+        table.style.width = '100%';
         allTd.forEach(function(col) {
             if (col.getAttribute('data-mois') === mois) {
                 col.style.display = '';
-                col.style.width = 'auto';
+                col.style.width = '';
+                col.style.minWidth = '120px';
+                col.style.fontSize = '0.8rem';
+                col.style.padding = '4px 6px';
+                col.style.fontWeight = 'bold';
+                col.style.textAlign = 'right';
             } else {
                 col.style.display = 'none';
             }
@@ -235,16 +242,33 @@ function filtrer() {
         allTh.forEach(function(th) {
             if (th.getAttribute('data-mois') === mois) {
                 th.style.display = '';
-                th.style.width = 'auto';
+                th.style.width = '';
+                th.style.minWidth = '120px';
                 th.style.fontSize = '0.7rem';
+                th.style.padding = '4px 6px';
             } else {
                 th.style.display = 'none';
             }
         });
     } else {
         table.style.tableLayout = '';
-        allTd.forEach(function(col) { col.style.display = ''; });
-        allTh.forEach(function(th) { th.style.display = ''; th.style.fontSize = '0.55rem'; });
+        table.style.width = '';
+        allTd.forEach(function(col) {
+            col.style.display = '';
+            col.style.width = '38px';
+            col.style.minWidth = '';
+            col.style.fontSize = '0.55rem';
+            col.style.padding = '1px 2px';
+            col.style.fontWeight = '';
+            col.style.textAlign = 'center';
+        });
+        allTh.forEach(function(th) {
+            th.style.display = '';
+            th.style.width = '38px';
+            th.style.minWidth = '';
+            th.style.fontSize = '0.55rem';
+            th.style.padding = '1px';
+        });
     }
     
     rows.forEach(function(tr) {
