@@ -111,15 +111,15 @@
                 <td style="white-space:nowrap;"><strong>{{ e.nom }}</strong> {{ e.prenom }}</td>
                 <td style="text-align:center;"><span class="badge bg-secondary" style="font-size:0.55rem;">{{ e.classe.nom }}</span></td>
                 {% for cell in ligne.mois_cells %}
-                <td class="col-mois col-mois-{{ loop.index }}" style="text-align:center;padding:1px 2px;font-size:0.55rem;white-space:nowrap;
+                <td class="col-mois col-mois-{{ loop.index }}" style="text-align:right;padding:1px 2px;font-size:0.55rem;white-space:nowrap;
                     {% if cell.statut == 'impaye' %}background:#ffe0e0;color:#a00;{% elif cell.statut == 'paye' %}background:#d4edda;color:#155724;{% elif cell.statut == 'surpaye' %}background:#fff3cd;{% elif cell.statut == 'inconnu' %}background:#f0f0f0;color:#999;{% endif %}
                 " title="{{ cell.mois }} | Tarif: {{ '{:,.0f}'.format(cell.tarif).replace(',', ' ') }} | Paye: {{ '{:,.0f}'.format(cell.paye).replace(',', ' ') }}">
                     {% if cell.statut == 'impaye' %}
-                        {{ '{:,.0f}'.format(cell.reste).replace(',', ' ') }}
+                        {{ cell.reste }}
                     {% elif cell.statut == 'paye' %}
                         &#10003;
                     {% elif cell.statut == 'surpaye' %}
-                        +{{ '{:,.0f}'.format(cell.paye).replace(',', ' ') }}
+                        +{{ cell.paye }}
                     {% elif cell.statut == 'inconnu' %}
                         ?
                     {% endif %}
@@ -221,26 +221,26 @@ function filtrer() {
     // Gerer affichage colonnes
     var allCols = document.querySelectorAll('.col-mois');
     if (mois && mois !== 'impayes' && mois !== 'sans_tarif') {
-        // Afficher seulement la colonne du mois choisi et l'elargir
         allCols.forEach(function(col) {
             if (col.getAttribute('data-mois') === mois) {
                 col.style.display = '';
-                col.style.width = 'auto';
-                col.style.minWidth = '70px';
+                col.style.width = '80px';
+                col.style.minWidth = '80px';
                 col.style.fontSize = '0.7rem';
                 col.style.fontWeight = 'bold';
+                col.style.textAlign = 'right';
             } else {
                 col.style.display = 'none';
             }
         });
     } else {
-        // Afficher toutes les colonnes avec leur taille normale
         allCols.forEach(function(col) {
             col.style.display = '';
             col.style.width = '38px';
             col.style.minWidth = '';
             col.style.fontSize = '0.55rem';
             col.style.fontWeight = '';
+            col.style.textAlign = 'center';
         });
     }
     
