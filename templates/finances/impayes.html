@@ -74,7 +74,7 @@
 
 <!-- TABLEAU IMPAYES -->
 <div style="max-height:62vh;overflow:auto;">
-    <table class="table table-sm table-bordered mb-0 bg-white" id="table-impayes" style="font-size:0.65rem;">
+    <table class="table table-sm table-bordered mb-0 bg-white" id="table-impayes" style="font-size:0.65rem;table-layout:auto;white-space:nowrap;">
         <thead style="position:sticky;top:0;z-index:2;">
             <tr>
                 <th style="width:22px;text-align:center;"><input type="checkbox" id="check-all" onchange="toggleAll(this)" title="Tout selectionner"></th>
@@ -96,8 +96,8 @@
                     {% endif %}
                 </th>
                 {% endfor %}
-                <th style="width:50px;text-align:center;">IMP.</th>
-                <th style="width:65px;text-align:right;">RESTE</th>
+                <th style="width:55px;text-align:center;">IMP.</th>
+                <th style="width:80px;text-align:right;">RESTE</th>
             </tr>
         </thead>
         <tbody>
@@ -127,12 +127,12 @@
                 {% endfor %}
                 <td style="text-align:center;font-weight:bold;
                     {% if ligne.nb_impayes > 0 %}color:#c00;{% else %}color:#155724;{% endif %}
-                    font-size:0.6rem;">
+                    font-size:0.65rem;padding:2px 4px;white-space:nowrap;">
                     {{ ligne.nb_impayes }}
                 </td>
                 <td style="text-align:right;font-weight:bold;
                     {% if ligne.total_impaye > 0 %}color:#c00;{% else %}color:#999;{% endif %}
-                    font-size:0.6rem;">
+                    font-size:0.65rem;padding:2px 4px;white-space:nowrap;">
                     {{ '{:,.0f}'.format(ligne.total_impaye).replace(',', ' ') if ligne.total_impaye > 0 else ('?' if not ligne.has_tarif else '-') }}
                 </td>
             </tr>
