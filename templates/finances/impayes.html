@@ -215,6 +215,11 @@ function filtrer() {
     var classe = (document.getElementById('filtre-classe').value || '').toLowerCase().trim();
     var mois = (document.getElementById('filtre-mois').value || '').trim();
     var nom = (document.getElementById('filtre-nom').value || '').toLowerCase().trim();
+    
+    // Sauvegarder dans sessionStorage pour persister apres F5
+    sessionStorage.setItem('impaye_filtre_classe', classe);
+    sessionStorage.setItem('impaye_filtre_mois', mois);
+    sessionStorage.setItem('impaye_filtre_nom', nom);
     var rows = document.querySelectorAll('#table-impayes tbody tr');
     var visible = 0;
     
@@ -329,6 +334,19 @@ function ouvrirPaiementGroupe() {
     document.getElementById('txt-resume').innerHTML = checked.length + ' eleve(s) | Total restant: <strong>' + total.toLocaleString('fr-FR').replace(/\s/g,' ') + ' FCFA</strong>';
     document.getElementById('modalPaiementGroupe').classList.remove('d-none');
 }
+
+// Restaurer les filtres au chargement de la page
+(function() {
+    var savedClasse = sessionStorage.getItem('impaye_filtre_classe');
+    var savedMois = sessionStorage.getItem('impaye_filtre_mois');
+    var savedNom = sessionStorage.getItem('impaye_filtre_nom');
+    if (savedClasse) document.getElementById('filtre-classe').value = savedClasse;
+    if (savedMois) document.getElementById('filtre-mois').value = savedMois;
+    if (savedNom) document.getElementById('filtre-nom').value = savedNom;
+    if (savedClasse || savedMois || savedNom) {
+        filtrer();
+    }
+})();
 
 function imprimerTableau() {
     var title = '<div style="text-align:center;margin-bottom:6px;"><h4 style="margin:0;color:#2E7D32;">{{ ecole.nom }}</h4><p style="margin:0;font-size:10px;">Tableau des impayes - {{ nb_eleves }} eleve(s) - Imprime le ' + new Date().toLocaleDateString('fr-FR') + '</p></div>';
