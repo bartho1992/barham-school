@@ -27,7 +27,7 @@
 <div class="row mb-2 g-1">
     <div class="col-3">
         <div class="card bg-danger text-white border-0 shadow-sm">
-            <div class="card-body text-center py-1"><h5 class="mb-0 fw-bold">{{ "{:,.0f}".format(total_impayes_global).replace(',', ' ') }}</h5><small>FCFA Impayes</small></div>
+            <div class="card-body text-center py-1"><h5 class="mb-0 fw-bold" id="total-impayes-card">{{ "{:,.0f}".format(total_impayes_global).replace(',', ' ') }}</h5><small>FCFA Impayes</small></div>
         </div>
     </div>
     <div class="col-3">
@@ -299,6 +299,20 @@ function filtrer() {
         tr.style.display = show ? '' : 'none';
         if (show) visible++;
     });
+    
+    // Calculer le total des impayes visibles
+    var totalVisible = 0;
+    rows.forEach(function(tr) {
+        if (tr.style.display !== 'none') {
+            var resteCell = tr.querySelector('td:last-child');
+            if (resteCell) {
+                var resteText = resteCell.textContent.trim().replace(/[^\d]/g, '');
+                if (resteText) totalVisible += parseInt(resteText, 10);
+            }
+        }
+    });
+    document.getElementById('total-impayes-card').textContent = totalVisible.toLocaleString('fr-FR').replace(/,/g, ' ');
+    
     var countEl = document.getElementById('filtre-count');
     var total = rows.length;
     if (visible !== total) {
