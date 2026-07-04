@@ -655,7 +655,7 @@ def categorie_ajouter():
     db.session.add(categorie)
     db.session.commit()
     flash('Categorie ajoutee avec succes', 'success')
-    return redirect(url_for('parametres_financiers'))
+    return redirect(url_for('parametres_financiers', _anchor='categories'))
 
 @app.route('/finances/parametres/categorie/supprimer/<int:id>', methods=['POST'])
 @login_required
@@ -673,7 +673,7 @@ def categorie_supprimer(id):
     db.session.delete(categorie)
     db.session.commit()
     flash('Categorie supprimee avec succes', 'success')
-    return redirect(url_for('parametres_financiers'))
+    return redirect(url_for('parametres_financiers', _anchor='categories'))
 
 @app.route('/finances/parametres/abonnement/ajouter', methods=['POST'])
 @login_required
@@ -694,18 +694,19 @@ def abonnement_ajouter():
     db.session.add(abo)
     db.session.commit()
     flash('Abonnement ajoute avec succes', 'success')
-    return redirect(url_for('parametres_financiers'))
+    return redirect(url_for('parametres_financiers', _anchor='abonnements'))
 
 @app.route('/finances/parametres/abonnement/supprimer/<int:id>', methods=['POST'])
 @login_required
 def abonnement_supprimer(id):
+    ecole_id = get_current_ecole_id()
     check = _check_parametres_access(ecole_id)
     if check: return check
     abo = AbonnementService.query.get_or_404(id)
     db.session.delete(abo)
     db.session.commit()
     flash('Abonnement supprime', 'success')
-    return redirect(url_for('parametres_financiers'))
+    return redirect(url_for('parametres_financiers', _anchor='abonnements'))
 
 @app.route('/api/scolarite/<int:classe_id>')
 @login_required
@@ -775,7 +776,7 @@ def scolarite_sauvegarder():
         save_count += 1
     db.session.commit()
     flash(f'{save_count} scolarite(s) sauvegardee(s) avec succes', 'success')
-    return redirect(url_for('parametres_financiers'))
+    return redirect(url_for('parametres_financiers', _anchor='scolarite'))
 
 @app.route('/finances/parametres/scolarite/ajouter-ligne', methods=['POST'])
 @login_required
@@ -788,7 +789,7 @@ def scolarite_ajouter_ligne():
     noms_classes = request.form.get('noms_classes', '').strip()
     if not noms_classes:
         flash('Veuillez saisir au moins un nom de classe', 'warning')
-        return redirect(url_for('parametres_financiers'))
+        return redirect(url_for('parametres_financiers', _anchor='scolarite'))
     lignes = [l.strip() for l in noms_classes.replace('\n', ',').split(',') if l.strip()]
     ajoutees = 0
     existe_deja = []
@@ -818,7 +819,7 @@ def scolarite_ajouter_ligne():
         flash('. '.join(msg_parts), 'success' if ajoutees > 0 else 'info')
     else:
         flash('Aucune ligne ajoutee', 'info')
-    return redirect(url_for('parametres_financiers'))
+    return redirect(url_for('parametres_financiers', _anchor='scolarite'))
 
 @app.route('/api/scolarite/sauvegarder/<int:classe_id>', methods=['POST'])
 @login_required
@@ -940,11 +941,11 @@ def tarif_service_sauvegarder():
     categorie_id = request.form.get('categorie_id')
     if not classe_id or not categorie_id:
         flash('Classe et categorie requises', 'warning')
-        return redirect(url_for('parametres_financiers'))
+        return redirect(url_for('parametres_financiers', _anchor='categories'))
     tarif = TarifService.query.filter_by(classe_id=classe_id, categorie_id=categorie_id, annee_scolaire=annee).first()
     if tarif:
         flash('Ce tarif existe deja.', 'info')
-        return redirect(url_for('parametres_financiers'))
+        return redirect(url_for('parametres_financiers', _anchor='categories'))
     tarif = TarifService(classe_id=classe_id, categorie_id=categorie_id, annee_scolaire=annee)
     mois_list = ['inscription', 'janvier', 'fevrier', 'mars', 'avril', 'mai', 'juin',
                  'juillet', 'aout', 'septembre', 'octobre', 'novembre', 'decembre']
@@ -956,7 +957,7 @@ def tarif_service_sauvegarder():
     db.session.add(tarif)
     db.session.commit()
     flash('Ligne ajoutee avec succes.', 'success')
-    return redirect(url_for('parametres_financiers'))
+    return redirect(url_for('parametres_financiers', _anchor='categories'))
 
 @app.route('/finances/parametres/tarif-service/supprimer/<int:id>', methods=['POST'])
 @login_required
@@ -968,4 +969,4 @@ def tarif_service_supprimer(id):
     db.session.delete(tarif)
     db.session.commit()
     flash('Tarif de service supprime avec succes', 'success')
-    return redirect(url_for('parametres_financiers'))
+    return redirect(url_for('parametres_financiers', _anchor='categories'))

@@ -344,8 +344,14 @@ function showTab(tabName) {
     document.getElementById('btn-' + tabName).classList.add('active');
 }
 
-// Recherche élève pour abonnement
+// Recherche eleve pour abonnement
 document.addEventListener('DOMContentLoaded', function() {
+    // Gestion du hash dans l'URL pour rester sur le bon onglet
+    var hash = window.location.hash.replace('#', '');
+    if (hash && document.getElementById('tab-' + hash)) {
+        showTab(hash);
+    }
+    
     const abonneSearch = document.getElementById('abonne-search');
     const abonneResults = document.getElementById('abonne-results');
     const abonneId = document.getElementById('abonne_eleve_id');
