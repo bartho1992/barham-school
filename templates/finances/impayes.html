@@ -111,12 +111,12 @@
     <table class="table table-sm table-bordered mb-0 bg-white" id="table-impayes" style="font-size:0.65rem;table-layout:auto;white-space:nowrap;">
         <thead style="position:sticky;top:0;z-index:2;">
             <tr>
-                <th style="width:22px;text-align:center;"><input type="checkbox" id="check-all" onchange="toggleAll(this)" title="Tout selectionner"></th>
-                <th style="min-width:60px;">CODE</th>
-                <th style="min-width:130px;">NOM & PRENOM</th>
-                <th style="width:55px;">CLASSE</th>
+                <th style="width:22px;text-align:center;vertical-align:middle;"><input type="checkbox" id="check-all" onchange="toggleAll(this)" title="Tout selectionner"></th>
+                <th style="min-width:60px;vertical-align:middle;">CODE</th>
+                <th style="min-width:130px;vertical-align:middle;">NOM &amp; PRENOM</th>
+                <th style="width:55px;vertical-align:middle;text-align:center;">CLASSE</th>
                 {% for m in mois_scolaires %}
-                <th class="col-mois col-mois-{{ loop.index }}" style="width:38px;text-align:center;font-size:0.55rem;padding:1px;" title="{{ m }}" data-mois="{{ m }}">
+                <th class="col-mois col-mois-{{ loop.index }}" style="width:38px;text-align:center;font-size:0.55rem;padding:1px;vertical-align:middle;" title="{{ m }}" data-mois="{{ m }}">
                     {% if m == 'Inscription' %}INS
                     {% elif m == 'Octobre' %}OCT
                     {% elif m == 'Novembre' %}NOV
@@ -130,8 +130,8 @@
                     {% endif %}
                 </th>
                 {% endfor %}
-                <th style="width:55px;text-align:center;">IMP.</th>
-                <th style="width:80px;text-align:right;">RESTE</th>
+                <th style="width:55px;text-align:center;vertical-align:middle;">IMP.</th>
+                <th style="width:80px;text-align:right;vertical-align:middle;">RESTE</th>
             </tr>
         </thead>
         <tbody>
