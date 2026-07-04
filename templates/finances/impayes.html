@@ -5,7 +5,7 @@
 <div class="d-flex justify-content-between align-items-center mb-2">
     <div>
         <h6 class="mb-0"><i class="bi bi-exclamation-triangle text-danger"></i> Suivi des Impayes</h6>
-        <small class="text-muted">Sequence scolaire : Inscription - Octobre - Novembre - ... - Juin</small>
+        <small class="text-muted">{{ nb_eleves }} eleves &bull; {{ categories|length }} categories de services</small>
     </div>
     <div>
         <button id="btnPayerGroupe" class="btn btn-success btn-sm d-none" onclick="ouvrirPaiementGroupe()">
@@ -16,14 +16,8 @@
     </div>
 </div>
 
-{% if nb_sans_tarif > 0 %}
-<div class="alert alert-warning py-2 mb-2 small">
-    <i class="bi bi-exclamation-circle"></i> <strong>{{ nb_sans_tarif }}</strong> eleve(s) sans tarifs configures.
-    <a href="{{ url_for('parametres_financiers') }}" class="alert-link fw-bold">Configurer les tarifs ici</a> pour calculer les impayes.
-</div>
-{% endif %}
-
 <!-- Resume -->
+<!-- Total RESTE dans la premiere carte -->
 <div class="row mb-2 g-1">
     <div class="col-3">
         <div class="card bg-danger text-white border-0 shadow-sm">
@@ -37,12 +31,12 @@
     </div>
     <div class="col-3">
         <div class="card bg-info text-white border-0 shadow-sm">
-            <div class="card-body text-center py-1"><h5 class="mb-0 fw-bold">{{ mois_scolaires|length }}</h5><small>Mois</small></div>
+            <div class="card-body text-center py-1"><h5 class="mb-0 fw-bold">{{ categories|length }}</h5><small>Categories</small></div>
         </div>
     </div>
     <div class="col-3">
-        <div class="card bg-secondary text-white border-0 shadow-sm">
-            <div class="card-body text-center py-1"><h5 class="mb-0 fw-bold">{{ nb_sans_tarif }}</h5><small>Sans tarif</small></div>
+        <div class="card bg-success text-white border-0 shadow-sm">
+            <div class="card-body text-center py-1"><h5 class="mb-0 fw-bold">{{ '{:,.0f}'.format(total_impayes_global).replace(',', ' ') }}</h5><small>Total Restant</small></div>
         </div>
     </div>
 </div>
@@ -62,184 +56,118 @@
         {% endfor %}
     </select>
     <select id="filtre-mois" class="form-select form-select-sm" style="width:auto;min-width:100px;font-size:0.7rem;height:28px;" onchange="filtrer()">
-        <option value="">Tous mois</option>
+        <option value="">Tous statuts</option>
         <option value="impayes">Avec impayes</option>
-        <option value="sans_tarif">Sans tarif</option>
-        {% for m in mois_scolaires %}<option value="{{ m }}">{{ m }}</option>{% endfor %}
     </select>
     <input type="text" id="filtre-nom" class="form-control form-control-sm" style="width:170px;height:28px;font-size:0.7rem;" placeholder="Nom ou prenom..." oninput="filtrer()">
     <button class="btn btn-outline-secondary btn-sm py-0" onclick="document.getElementById('filtre-classe').value='';document.getElementById('filtre-mois').value='';document.getElementById('filtre-nom').value='';filtrer();"><i class="bi bi-x"></i> Reinit.</button>
 </div>
 <div id="filtre-count" class="small text-muted mb-1" style="display:none;"></div>
 
-<!-- TABLEAU IMPAYES -->
 <!-- Totaux par colonne -->
-{% set ns = namespace(total_ins=0, total_oct=0, total_nov=0, total_dec=0, total_jan=0, total_fev=0, total_mar=0, total_avr=0, total_mai=0, total_jui=0, total_imp=0, total_reste=0) %}
+{% set ns = namespace(total_du=0, total_avance=0, total_reste=0, total_mois=0, cats_sums={}) %}
+{% for cat in categories %}{% set _ = ns.cats_sums.update({cat.nom: 0}) %}{% endfor %}
 {% for ligne in lignes %}
-    {% for cell in ligne.mois_cells %}
-        {% if cell.mois == 'Inscription' and cell.statut == 'impaye' %}{% set ns.total_ins = ns.total_ins + cell.reste %}{% endif %}
-        {% if cell.mois == 'Octobre' and cell.statut == 'impaye' %}{% set ns.total_oct = ns.total_oct + cell.reste %}{% endif %}
-        {% if cell.mois == 'Novembre' and cell.statut == 'impaye' %}{% set ns.total_nov = ns.total_nov + cell.reste %}{% endif %}
-        {% if cell.mois == 'Decembre' and cell.statut == 'impaye' %}{% set ns.total_dec = ns.total_dec + cell.reste %}{% endif %}
-        {% if cell.mois == 'Janvier' and cell.statut == 'impaye' %}{% set ns.total_jan = ns.total_jan + cell.reste %}{% endif %}
-        {% if cell.mois == 'Fevrier' and cell.statut == 'impaye' %}{% set ns.total_fev = ns.total_fev + cell.reste %}{% endif %}
-        {% if cell.mois == 'Mars' and cell.statut == 'impaye' %}{% set ns.total_mar = ns.total_mar + cell.reste %}{% endif %}
-        {% if cell.mois == 'Avril' and cell.statut == 'impaye' %}{% set ns.total_avr = ns.total_avr + cell.reste %}{% endif %}
-        {% if cell.mois == 'Mai' and cell.statut == 'impaye' %}{% set ns.total_mai = ns.total_mai + cell.reste %}{% endif %}
-        {% if cell.mois == 'Juin' and cell.statut == 'impaye' %}{% set ns.total_jui = ns.total_jui + cell.reste %}{% endif %}
+    {% set ns.total_du = ns.total_du + ligne.total_du %}
+    {% set ns.total_paye = ligne.total_paye or 0 %}
+    {% set ns.total_reste = ns.total_reste + ligne.total_reste %}
+    {% set ns.total_mois = ns.total_mois + ligne.montant_mois %}
+    {% for cl in ligne.cat_lines %}
+        {% set cur = ns.cats_sums.get(cl.cat.nom, 0) %}
+        {% set _ = ns.cats_sums.update({cl.cat.nom: cur + cl.reste}) %}
     {% endfor %}
-    {% set ns.total_imp = ns.total_imp + ligne.nb_impayes %}
-    {% if ligne.total_impaye > 0 %}{% set ns.total_reste = ns.total_reste + ligne.total_impaye %}{% endif %}
 {% endfor %}
 <div class="d-flex align-items-center gap-1 mb-2 p-2 rounded" style="background:#e8f0fe;border:1px solid #b0c4de;overflow-x:auto;white-space:nowrap;">
     <span class="badge bg-primary fw-bold me-1" style="font-size:0.68rem;">TOTAUX</span>
-    <span class="badge bg-white text-dark border" style="font-size:0.63rem;">INS <strong>{{ '{:,.0f}'.format(ns.total_ins).replace(',', ' ') }}</strong></span>
-    <span class="badge bg-white text-dark border" style="font-size:0.63rem;">OCT <strong>{{ '{:,.0f}'.format(ns.total_oct).replace(',', ' ') }}</strong></span>
-    <span class="badge bg-white text-dark border" style="font-size:0.63rem;">NOV <strong>{{ '{:,.0f}'.format(ns.total_nov).replace(',', ' ') }}</strong></span>
-    <span class="badge bg-white text-dark border" style="font-size:0.63rem;">DEC <strong>{{ '{:,.0f}'.format(ns.total_dec).replace(',', ' ') }}</strong></span>
-    <span class="badge bg-white text-dark border" style="font-size:0.63rem;">JAN <strong>{{ '{:,.0f}'.format(ns.total_jan).replace(',', ' ') }}</strong></span>
-    <span class="badge bg-white text-dark border" style="font-size:0.63rem;">FEV <strong>{{ '{:,.0f}'.format(ns.total_fev).replace(',', ' ') }}</strong></span>
-    <span class="badge bg-white text-dark border" style="font-size:0.63rem;">MAR <strong>{{ '{:,.0f}'.format(ns.total_mar).replace(',', ' ') }}</strong></span>
-    <span class="badge bg-white text-dark border" style="font-size:0.63rem;">AVR <strong>{{ '{:,.0f}'.format(ns.total_avr).replace(',', ' ') }}</strong></span>
-    <span class="badge bg-white text-dark border" style="font-size:0.63rem;">MAI <strong>{{ '{:,.0f}'.format(ns.total_mai).replace(',', ' ') }}</strong></span>
-    <span class="badge bg-white text-dark border" style="font-size:0.63rem;">JUI <strong>{{ '{:,.0f}'.format(ns.total_jui).replace(',', ' ') }}</strong></span>
-    <span class="badge bg-danger text-white" style="font-size:0.63rem;">IMP <strong>{{ ns.total_imp }}</strong></span>
-    <span class="badge bg-dark text-white" style="font-size:0.68rem;">RESTE <strong>{{ '{:,.0f}'.format(ns.total_reste).replace(',', ' ') }} FCFA</strong></span>
+    <span class="badge bg-white text-dark border" style="font-size:0.63rem;">DU <strong>{{ '{:,.0f}'.format(ns.total_du).replace(',', ' ') }}</strong></span>
+    <span class="badge bg-white text-dark border" style="font-size:0.63rem;">AV <strong>{{ '{:,.0f}'.format(ns.total_avance).replace(',', ' ') }}</strong></span>
+    <span class="badge bg-white text-dark border" style="font-size:0.63rem;">RESTE <strong>{{ '{:,.0f}'.format(ns.total_reste).replace(',', ' ') }}</strong></span>
+    <span class="badge bg-white text-dark border" style="font-size:0.63rem;">MOIS <strong>{{ '{:,.0f}'.format(ns.total_mois).replace(',', ' ') }}</strong></span>
+    {% for cat in categories %}
+    <span class="badge bg-white text-dark border" style="font-size:0.63rem;">{{ cat.nom|upper|truncate(8,true,'') }} <strong>{{ '{:,.0f}'.format(ns.cats_sums.get(cat.nom, 0)).replace(',', ' ') }}</strong></span>
+    {% endfor %}
 </div>
 
 <div style="max-height:62vh;overflow:auto;">
     <table class="table table-sm table-bordered mb-0 bg-white" id="table-impayes" style="font-size:0.65rem;table-layout:auto;white-space:nowrap;">
-        <thead style="position:sticky;top:0;z-index:2;">
+        <thead class="bg-light" style="position:sticky;top:0;z-index:2;">
             <tr>
                 <th style="width:22px;text-align:center;vertical-align:middle;"><input type="checkbox" id="check-all" onchange="toggleAll(this)" title="Tout selectionner"></th>
-                <th style="min-width:60px;vertical-align:middle;">CODE</th>
-                <th style="min-width:130px;vertical-align:middle;">NOM &amp; PRENOM</th>
-                <th style="width:55px;vertical-align:middle;text-align:center;">CLASSE</th>
-                {% for m in mois_scolaires %}
-                <th class="col-mois col-mois-{{ loop.index }}" style="width:38px;text-align:center;font-size:0.55rem;padding:1px;vertical-align:middle;" title="{{ m }}" data-mois="{{ m }}">
-                    {% if m == 'Inscription' %}INS
-                    {% elif m == 'Octobre' %}OCT
-                    {% elif m == 'Novembre' %}NOV
-                    {% elif m == 'Decembre' %}DEC
-                    {% elif m == 'Janvier' %}JAN
-                    {% elif m == 'Fevrier' %}FEV
-                    {% elif m == 'Mars' %}MAR
-                    {% elif m == 'Avril' %}AVR
-                    {% elif m == 'Mai' %}MAI
-                    {% elif m == 'Juin' %}JUI
-                    {% endif %}
-                </th>
+                <th style="min-width:50px;vertical-align:middle;">CODE</th>
+                <th style="min-width:80px;vertical-align:middle;">PRENOM</th>
+                <th style="min-width:80px;vertical-align:middle;">NOM</th>
+                <th style="width:50px;vertical-align:middle;text-align:center;">CLASSE</th>
+                <th style="width:65px;vertical-align:middle;text-align:right;">DU</th>
+                <th style="width:65px;vertical-align:middle;text-align:right;">AVANCE</th>
+                <th style="width:65px;vertical-align:middle;text-align:right;">RESTE</th>
+                <th style="width:65px;vertical-align:middle;text-align:right;">CUMUL</th>
+                <th style="width:55px;vertical-align:middle;text-align:center;">LIMITE</th>
+                <th style="width:65px;vertical-align:middle;">TEL</th>
+                <th style="width:55px;vertical-align:middle;text-align:right;">MOIS</th>
+                {% for cat in categories %}
+                <th style="width:55px;vertical-align:middle;text-align:right;font-size:0.55rem;" title="{{ cat.nom }}">{{ cat.nom|upper|truncate(8,true,'') }}</th>
                 {% endfor %}
-                <th style="width:55px;text-align:center;vertical-align:middle;">IMP.</th>
-                <th style="width:80px;text-align:right;vertical-align:middle;">RESTE</th>
             </tr>
         </thead>
         <tbody>
             {% for ligne in lignes %}
             {% set e = ligne.eleve %}
-            <tr class="impaye-row" data-eleve-id="{{ e.id }}" data-has-tarif="{{ '1' if ligne.has_tarif else '0' }}" data-classe="{{ e.classe.nom }}" data-nom="{{ e.nom }} {{ e.prenom }}" data-impaye-mois="{{ ligne.impaye_mois|join(',') }}{% if not ligne.has_tarif %},inconnu{% endif %}">
-                <td style="text-align:center;">
-                    <input type="checkbox" class="eleve-check-impaye" data-eleve-id="{{ e.id }}" onchange="updateBtnGroupe()">
+            <tr class="impaye-row" data-eleve-id="{{ e.id }}" data-classe="{{ e.classe.nom }}" data-nom="{{ e.nom }} {{ e.prenom }}" data-has-impaye="{{ '1' if ligne.total_reste > 0 else '0' }}">
+                <td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="eleve-check-impaye" value="{{ e.id }}" onchange="updateBtnGroupe()"></td>
+                <td style="vertical-align:middle;font-size:0.6rem;">{{ e.code }}</td>
+                <td style="vertical-align:middle;">{{ e.prenom }}</td>
+                <td style="vertical-align:middle;">{{ e.nom }}</td>
+                <td style="text-align:center;vertical-align:middle;font-size:0.6rem;">{{ e.classe.nom }}</td>
+                <td style="text-align:right;vertical-align:middle;font-weight:bold;{% if ligne.total_du > 0 %}color:#1a5276;{% else %}color:#999;{% endif %}">
+                    {{ '{:,.0f}'.format(ligne.total_du).replace(',', ' ') if ligne.total_du > 0 else '-' }}
                 </td>
-                <td><code style="font-size:0.6rem;">{{ e.code }}</code></td>
-                <td style="white-space:nowrap;"><strong>{{ e.nom }}</strong> {{ e.prenom }}</td>
-                <td style="text-align:center;"><span class="badge bg-secondary" style="font-size:0.55rem;">{{ e.classe.nom }}</span></td>
-                {% for cell in ligne.mois_cells %}
-                <td class="col-mois col-mois-{{ loop.index }}" data-mois="{{ cell.mois }}" style="text-align:right;padding:2px 3px;font-size:0.6rem;white-space:nowrap;font-weight:bold;
-                    {% if cell.statut == 'impaye' %}background:#ffe0e0;color:#a00;{% elif cell.statut == 'paye' %}background:#d4edda;color:#155724;{% elif cell.statut == 'surpaye' %}background:#fff3cd;{% elif cell.statut == 'inconnu' %}background:#f0f0f0;color:#999;{% endif %}
-                " title="{{ cell.mois }} | Tarif: {{ '{:,.0f}'.format(cell.tarif).replace(',', ' ') }} | Paye: {{ '{:,.0f}'.format(cell.paye).replace(',', ' ') }}">
-                    {% if cell.statut == 'impaye' %}
-                        {{ cell.reste }}
-                    {% elif cell.statut == 'paye' %}
-                        &#10003;
-                    {% elif cell.statut == 'surpaye' %}
-                        +{{ cell.paye }}
-                    {% elif cell.statut == 'inconnu' %}
-                        ?
+                <td style="text-align:right;vertical-align:middle;{% if ligne.total_paye > 0 %}color:#155724;{% else %}color:#999;{% endif %}">
+                    {{ '{:,.0f}'.format(ligne.total_paye).replace(',', ' ') if ligne.total_paye > 0 else '0' }}
+                </td>
+                <td style="text-align:right;vertical-align:middle;font-weight:bold;font-size:0.7rem;white-space:nowrap;
+                    {% if ligne.total_reste > 0 %}color:#c00;{% else %}color:#155724;{% endif %}">
+                    {{ '{:,.0f}'.format(ligne.total_reste).replace(',', ' ') if ligne.total_reste > 0 else '&#10003;' }}
+                </td>
+                <td style="text-align:right;vertical-align:middle;{% if ligne.total_reste > 0 %}color:#c00;{% else %}color:#999;{% endif %}">
+                    {{ '{:,.0f}'.format(ligne.total_reste).replace(',', ' ') if ligne.total_reste > 0 else '-' }}
+                </td>
+                <td style="text-align:center;vertical-align:middle;font-size:0.55rem;">{{ ligne.date_limite }}</td>
+                <td style="vertical-align:middle;font-size:0.55rem;">{{ e.tel or '-' }}</td>
+                <td style="text-align:right;vertical-align:middle;font-size:0.6rem;">
+                    {{ '{:,.0f}'.format(ligne.montant_mois).replace(',', ' ') if ligne.montant_mois > 0 else '-' }}
+                </td>
+                {% for cl in ligne.cat_lines %}
+                <td style="text-align:right;vertical-align:middle;font-size:0.6rem;white-space:nowrap;
+                    {% if cl.reste > 0 %}color:#c00;font-weight:bold;{% elif cl.statut == 'paye' %}color:#155724;{% else %}color:#ccc;{% endif %}"
+                    title="{{ cl.cat.nom }}: DU={{ '{:,.0f}'.format(cl.due).replace(',', ' ') }} | Paye={{ '{:,.0f}'.format(cl.paye).replace(',', ' ') }}">
+                    {% if cl.statut == 'inactif' %}&#9866;
+                    {% elif cl.statut == 'sans_tarif' %}?
+                    {% elif cl.reste > 0 %}{{ '{:,.0f}'.format(cl.reste).replace(',', ' ') }}
+                    {% elif cl.statut == 'paye' %}&#10003;
                     {% endif %}
                 </td>
                 {% endfor %}
-                <td style="text-align:center;font-weight:bold;
-                    {% if ligne.nb_impayes > 0 %}color:#c00;{% else %}color:#155724;{% endif %}
-                    font-size:0.65rem;padding:2px 4px;white-space:nowrap;">
-                    {{ ligne.nb_impayes }}
-                </td>
-                <td style="text-align:right;font-weight:bold;
-                    {% if ligne.total_impaye > 0 %}color:#c00;{% else %}color:#999;{% endif %}
-                    font-size:0.65rem;padding:2px 4px;white-space:nowrap;">
-                    {{ '{:,.0f}'.format(ligne.total_impaye).replace(',', ' ') if ligne.total_impaye > 0 else ('?' if not ligne.has_tarif else '-') }}
-                </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
 
-<!-- LEGENDE -->
-<div class="d-flex gap-3 mt-1 flex-wrap" style="font-size:0.55rem;">
-    <span><span style="display:inline-block;width:10px;height:10px;background:#d4edda;border:1px solid #aaa;">&nbsp;</span> Paye</span>
-    <span><span style="display:inline-block;width:10px;height:10px;background:#ffe0e0;border:1px solid #aaa;">&nbsp;</span> Impaye</span>
-    <span><span style="display:inline-block;width:10px;height:10px;background:#fff3cd;border:1px solid #aaa;">&nbsp;</span> Surpaye</span>
-    <span><span style="display:inline-block;width:10px;height:10px;background:#f0f0f0;border:1px solid #aaa;">&nbsp;</span> Tarifs absents</span>
-    <span class="text-muted">Cliquez sur une cellule rouge pour voir le detail</span>
-</div>
-
-<!-- MODAL PAIEMENT GROUPE -->
-<div id="modalPaiementGroupe" class="d-none position-fixed top-0 start-0 w-100 h-100" style="background:rgba(0,0,0,0.6);z-index:9999;display:flex;justify-content:center;align-items:center;">
-    <div class="bg-white rounded shadow-lg p-3" style="max-width:550px;width:95%;max-height:85vh;overflow-y:auto;">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-            <h6 class="mb-0"><i class="bi bi-cash-stack text-success"></i> Paiement Groupe</h6>
-            <button class="btn btn-sm btn-outline-danger py-0 px-1" onclick="document.getElementById('modalPaiementGroupe').classList.add('d-none')">&times;</button>
-        </div>
-        <form id="formPaiementGroupe" method="POST" action="{{ url_for('paiement_groupe') }}">
-            <div class="mb-2">
-                <label class="form-label small fw-bold"><i class="bi bi-people"></i> Eleves selectionnes</label>
-                <div id="liste-eleves-groupe" class="border rounded p-2 bg-light" style="max-height:120px;overflow-y:auto;"></div>
-            </div>
-            <div class="mb-2">
-                <label class="form-label small fw-bold"><i class="bi bi-calendar-event"></i> Mois a payer</label>
-                <select name="mois" class="form-select form-select-sm" required>
-                    <option value="">-- Selectionner le mois --</option>
-                    {% for m in mois_scolaires %}<option value="{{ m }}">{{ m }}</option>{% endfor %}
-                </select>
-            </div>
-            <div class="mb-2">
-                <label class="form-label small fw-bold"><i class="bi bi-cash"></i> Montant par eleve (FCFA)</label>
-                <input type="number" name="montant_par_eleve" class="form-control form-control-sm" placeholder="Montant identique pour tous" min="0">
-                <small class="text-muted">Laissez vide pour le tarif exact. Si renseigne, s'applique a tous.</small>
-            </div>
-            <div class="mb-2">
-                <label class="form-label small fw-bold"><i class="bi bi-credit-card"></i> Mode de paiement</label>
-                <select name="mode_paiement" class="form-select form-select-sm">
-                    <option value="Especes">Especes</option>
-                    <option value="Cheque">Cheque</option>
-                    <option value="Virement">Virement</option>
-                    <option value="Mobile Money">Mobile Money</option>
-                    <option value="Wave">Wave</option>
-                    <option value="Carte bancaire">Carte bancaire</option>
-                </select>
-            </div>
-            <div class="alert alert-info py-1 px-2 small" id="resume-groupe">
-                <i class="bi bi-info-circle"></i> <span id="txt-resume">Selectionnez des eleves et un mois</span>
-            </div>
-            <button type="submit" class="btn btn-success w-100"><i class="bi bi-check-circle"></i> Confirmer le paiement groupe</button>
-        </form>
-    </div>
-</div>
+<p class="text-muted small mt-1 mb-0"><i class="bi bi-info-circle"></i> Cliquez sur une cellule rouge pour voir le detail. <strong>DU</strong> = Total du. <strong>AVANCE</strong> = Total paye. <strong>RESTE</strong> = DU - AVANCE. <strong>CUMUL</strong> = Reste total.</p>
 
 <script>
 function toggleAll(cb) {
-    document.querySelectorAll('.eleve-check-impaye').forEach(function(c) { c.checked = cb.checked; });
+    var checks = document.querySelectorAll('.eleve-check-impaye');
+    checks.forEach(function(c) { c.checked = cb.checked; });
     updateBtnGroupe();
 }
 
 function updateBtnGroupe() {
     var checked = document.querySelectorAll('.eleve-check-impaye:checked');
     var btn = document.getElementById('btnPayerGroupe');
-    var nb = document.getElementById('nb-selected');
     if (checked.length > 0) {
         btn.classList.remove('d-none');
-        nb.textContent = checked.length;
+        document.getElementById('nb-selected').textContent = checked.length;
     } else {
         btn.classList.add('d-none');
     }
@@ -249,99 +177,32 @@ function filtrer() {
     var classe = (document.getElementById('filtre-classe').value || '').toLowerCase().trim();
     var mois = (document.getElementById('filtre-mois').value || '').trim();
     var nom = (document.getElementById('filtre-nom').value || '').toLowerCase().trim();
-    
-    // Sauvegarder dans sessionStorage pour persister apres F5
-    sessionStorage.setItem('impaye_filtre_classe', classe);
-    sessionStorage.setItem('impaye_filtre_mois', mois);
-    sessionStorage.setItem('impaye_filtre_nom', nom);
     var rows = document.querySelectorAll('#table-impayes tbody tr');
     var visible = 0;
     var totalVisible = 0;
-    
-    // Gerer affichage colonnes
-    var allTh = document.querySelectorAll('#table-impayes thead .col-mois');
-    var allTd = document.querySelectorAll('#table-impayes tbody .col-mois');
-    var table = document.getElementById('table-impayes');
-    if (mois && mois !== 'impayes' && mois !== 'sans_tarif') {
-        // Supprimer table-layout:fixed pour que la colonne visible puisse s'elargir librement
-        table.style.tableLayout = 'auto';
-        table.style.width = '100%';
-        allTd.forEach(function(col) {
-            if (col.getAttribute('data-mois') === mois) {
-                col.style.display = '';
-                col.style.width = '';
-                col.style.minWidth = '120px';
-                col.style.fontSize = '0.8rem';
-                col.style.padding = '4px 6px';
-                col.style.fontWeight = 'bold';
-                col.style.textAlign = 'right';
-            } else {
-                col.style.display = 'none';
-            }
-        });
-        allTh.forEach(function(th) {
-            if (th.getAttribute('data-mois') === mois) {
-                th.style.display = '';
-                th.style.width = '';
-                th.style.minWidth = '120px';
-                th.style.fontSize = '0.7rem';
-                th.style.padding = '4px 6px';
-            } else {
-                th.style.display = 'none';
-            }
-        });
-    } else {
-        table.style.tableLayout = '';
-        table.style.width = '';
-        allTd.forEach(function(col) {
-            col.style.display = '';
-            col.style.width = '38px';
-            col.style.minWidth = '';
-            col.style.fontSize = '0.55rem';
-            col.style.padding = '1px 2px';
-            col.style.fontWeight = '';
-            col.style.textAlign = 'center';
-        });
-        allTh.forEach(function(th) {
-            th.style.display = '';
-            th.style.width = '38px';
-            th.style.minWidth = '';
-            th.style.fontSize = '0.55rem';
-            th.style.padding = '1px';
-        });
-    }
     
     rows.forEach(function(tr) {
         var show = true;
         var dataClasse = (tr.getAttribute('data-classe') || '').toLowerCase().trim();
         var dataNom = (tr.getAttribute('data-nom') || '').toLowerCase().trim();
-        var dataImpayeMois = (tr.getAttribute('data-impaye-mois') || '').trim();
-        var hasTarif = tr.getAttribute('data-has-tarif') === '1';
+        var hasImpaye = tr.getAttribute('data-has-impaye') === '1';
         
         if (classe && dataClasse.indexOf(classe) === -1) show = false;
         if (nom && dataNom.indexOf(nom) === -1) show = false;
-        
-        if (mois === 'impayes') {
-            if (!dataImpayeMois) show = false;
-        } else if (mois === 'sans_tarif') {
-            if (hasTarif) show = false;
-        } else if (mois) {
-            var moisList = dataImpayeMois.split(',').map(function(s){ return s.trim(); });
-            if (moisList.indexOf(mois) === -1) show = false;
-        }
+        if (mois === 'impayes' && !hasImpaye) show = false;
         
         tr.style.display = show ? '' : 'none';
         if (show) {
             visible++;
-            // Recuperer RESTE (derniere cellule)
+            // RESTE est dans la 8eme colonne (index 7, 0-based)
             var cells = tr.querySelectorAll('td');
-            var lastCellText = cells.length > 0 ? (cells[cells.length - 1].textContent || '') : '';
-            var digits = lastCellText.replace(/\D/g, '');
-            if (digits) totalVisible += parseInt(digits, 10);
+            if (cells.length > 7) {
+                var resteText = (cells[7].textContent || '').replace(/[^\d]/g, '');
+                if (resteText) totalVisible += parseInt(resteText, 10);
+            }
         }
     });
     
-    // Mettre a jour la carte FCFA Impayes
     var cardTotalEl = document.getElementById('total-impayes-card');
     if (cardTotalEl) {
         try { cardTotalEl.textContent = totalVisible.toLocaleString('fr-FR'); }
@@ -360,31 +221,26 @@ function filtrer() {
 
 function ouvrirPaiementGroupe() {
     var checked = document.querySelectorAll('.eleve-check-impaye:checked');
-    var listeDiv = document.getElementById('liste-eleves-groupe');
-    listeDiv.innerHTML = '';
-    var container = document.createElement('div');
-    var total = 0;
-    checked.forEach(function(cb) {
-        var row = cb.closest('tr');
-        var nom = row.querySelector('strong').textContent + ' ' + row.querySelectorAll('td')[2].textContent.split(' ').pop();
-        var classe = row.querySelector('.badge.bg-secondary').textContent;
-        var resteCell = row.querySelectorAll('td')[row.querySelectorAll('td').length - 1];
-        var reste = resteCell.textContent.trim();
-        var id = cb.getAttribute('data-eleve-id');
-        total += parseFloat(reste.replace(/\s/g, '').replace('?','0').replace('-','0')) || 0;
-        var rowDiv = document.createElement('div');
-        rowDiv.className = 'd-flex justify-content-between align-items-center py-1 border-bottom';
-        rowDiv.innerHTML = '<div><strong style="font-size:0.75rem;">' + nom + '</strong> <span class="badge bg-secondary" style="font-size:0.6rem;">' + classe + '</span></div>' +
-            '<input type="hidden" name="eleve_ids[]" value="' + id + '">' +
-            '<span class="text-danger fw-bold" style="font-size:0.7rem;">' + reste + ' FCFA</span>';
-        container.appendChild(rowDiv);
-    });
-    listeDiv.appendChild(container);
-    document.getElementById('txt-resume').innerHTML = checked.length + ' eleve(s) | Total restant: <strong>' + total.toLocaleString('fr-FR').replace(/\s/g,' ') + ' FCFA</strong>';
-    document.getElementById('modalPaiementGroupe').classList.remove('d-none');
+    if (checked.length === 0) { alert('Selectionnez au moins un eleve'); return; }
+    var ids = [];
+    checked.forEach(function(cb) { ids.push(cb.value); });
+    var url = '/finances/paiement-groupe?ids=' + ids.join(',');
+    window.location.href = url;
 }
 
-// Restaurer les filtres au chargement de la page
+function imprimerTableau() {
+    var printWindow = window.open('', '_blank');
+    printWindow.document.write('<!DOCTYPE html><html><head><title>Impayes</title>');
+    printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">');
+    printWindow.document.write('<style>body{padding:10px;font-size:10px;} table{font-size:9px;} @media print{body{zoom:70%;}}</style></head><body>');
+    printWindow.document.write('<h6>Suivi des Impayes - {{ ecole.nom }}</h6>');
+    printWindow.document.write(document.getElementById('table-impayes').outerHTML);
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+    printWindow.print();
+}
+
+// Sauvegarder dans sessionStorage pour persister apres F5
 (function() {
     var savedClasse = sessionStorage.getItem('impaye_filtre_classe');
     var savedMois = sessionStorage.getItem('impaye_filtre_mois');
@@ -396,41 +252,5 @@ function ouvrirPaiementGroupe() {
         filtrer();
     }
 })();
-
-function imprimerTableau() {
-    var title = '<div style="text-align:center;margin-bottom:6px;"><h4 style="margin:0;color:#2E7D32;">{{ ecole.nom }}</h4><p style="margin:0;font-size:10px;">Tableau des impayes - {{ nb_eleves }} eleve(s) - Imprime le ' + new Date().toLocaleDateString('fr-FR') + '</p></div>';
-    var tableHTML = '<table style="border-collapse:collapse;width:100%;font-size:8px;">';
-    // Thead
-    var theadCells = document.querySelectorAll('#table-impayes thead th');
-    tableHTML += '<thead><tr>';
-    theadCells.forEach(function(th, i) {
-        var txt = th.textContent.trim();
-        tableHTML += '<th style="border:0.5px solid #999;padding:2px;background:#2E7D32;color:#fff;font-size:7px;">' + txt + '</th>';
-    });
-    tableHTML += '</tr></thead><tbody>';
-    // Tbody
-    document.querySelectorAll('#table-impayes tbody tr').forEach(function(tr, idx) {
-        tableHTML += '<tr style="background:' + (idx%2===0?'#fff':'#f7f7f7') + ';">';
-        var cells = tr.querySelectorAll('td');
-        cells.forEach(function(td) {
-            var txt = td.textContent.trim().replace(/\s+/g, ' ');
-            var style = 'border:0.5px solid #ccc;padding:2px;font-size:7px;';
-            if (td.style.color) style += 'color:' + td.style.color + ';';
-            if (td.style.background) style += 'background:' + td.style.background + ';';
-            tableHTML += '<td style="' + style + '">' + txt + '</td>';
-        });
-        tableHTML += '</tr>';
-    });
-    tableHTML += '</tbody></table>';
-    {% if nb_sans_tarif > 0 %}
-    title += '<p style="text-align:center;color:#c90;font-size:9px;font-style:italic;">{{ nb_sans_tarif }} eleve(s) sans tarifs configures</p>';
-    {% endif %}
-    var w = window.open('', '_blank', 'width=1200,height=700');
-    w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Impayes</title>' +
-        '<style>@page{size:A4 landscape;margin:5mm}body{font-family:Arial,sans-serif;margin:0}thead{display:table-header-group}</style>' +
-        '</head><body>' + title + tableHTML + '</body></html>');
-    w.document.close();
-    setTimeout(function() { w.print(); w.close(); }, 500);
-}
 </script>
 {% endblock %}
