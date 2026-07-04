@@ -92,20 +92,20 @@
     <table class="table table-sm table-bordered mb-0 bg-white" id="table-impayes" style="font-size:0.65rem;table-layout:auto;white-space:nowrap;">
         <thead class="bg-light" style="position:sticky;top:0;z-index:2;">
             <tr>
-                <th style="width:22px;text-align:center;vertical-align:middle;"><input type="checkbox" id="check-all" onchange="toggleAll(this)" title="Tout selectionner"></th>
-                <th style="min-width:50px;vertical-align:middle;">CODE</th>
-                <th style="min-width:80px;vertical-align:middle;">PRENOM</th>
-                <th style="min-width:80px;vertical-align:middle;">NOM</th>
-                <th style="width:50px;vertical-align:middle;text-align:center;">CLASSE</th>
-                <th style="width:65px;vertical-align:middle;text-align:right;">DU</th>
-                <th style="width:65px;vertical-align:middle;text-align:right;">AVANCE</th>
-                <th style="width:65px;vertical-align:middle;text-align:right;">RESTE</th>
-                <th style="width:65px;vertical-align:middle;text-align:right;">CUMUL</th>
-                <th style="width:55px;vertical-align:middle;text-align:center;">LIMITE</th>
-                <th style="width:65px;vertical-align:middle;">TEL</th>
-                <th style="width:55px;vertical-align:middle;text-align:right;">MOIS</th>
+                <th style="width:22px;text-align:center;vertical-align:middle;background:#f8f9fa;"><input type="checkbox" id="check-all" onchange="toggleAll(this)" title="Tout selectionner"></th>
+                <th style="min-width:50px;vertical-align:middle;background:#6c757d;color:#fff;">CODE</th>
+                <th style="min-width:80px;vertical-align:middle;background:#0d6efd;color:#fff;">PRENOM</th>
+                <th style="min-width:80px;vertical-align:middle;background:#0d6efd;color:#fff;">NOM</th>
+                <th style="width:50px;vertical-align:middle;text-align:center;background:#0d6efd;color:#fff;">CLASSE</th>
+                <th style="width:65px;vertical-align:middle;text-align:right;background:#198754;color:#fff;">DU</th>
+                <th style="width:65px;vertical-align:middle;text-align:right;background:#198754;color:#fff;">AVANCE</th>
+                <th style="width:65px;vertical-align:middle;text-align:right;background:#dc3545;color:#fff;">RESTE</th>
+                <th style="width:65px;vertical-align:middle;text-align:right;background:#fd7e14;color:#fff;">CUMUL</th>
+                <th style="width:55px;vertical-align:middle;text-align:center;background:#6f42c1;color:#fff;">LIMITE</th>
+                <th style="width:65px;vertical-align:middle;background:#6f42c1;color:#fff;">TEL</th>
+                <th style="width:55px;vertical-align:middle;text-align:right;background:#0a58ca;color:#fff;">MOIS</th>
                 {% for cat in categories %}
-                <th style="width:55px;vertical-align:middle;text-align:right;font-size:0.55rem;" title="{{ cat.nom }}">{{ cat.nom|upper|truncate(8,true,'') }}</th>
+                <th style="width:55px;vertical-align:middle;text-align:right;font-size:0.55rem;background:#0a58ca;color:#fff;" title="{{ cat.nom }}">{{ cat.nom|upper|truncate(8,true,'') }}</th>
                 {% endfor %}
             </tr>
         </thead>
