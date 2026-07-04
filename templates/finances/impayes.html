@@ -92,19 +92,19 @@
     {% if ligne.total_impaye > 0 %}{% set ns.total_reste = ns.total_reste + ligne.total_impaye %}{% endif %}
 {% endfor %}
 <div class="d-flex align-items-center gap-1 mb-2 p-2 rounded" style="background:#e8f0fe;border:1px solid #b0c4de;overflow-x:auto;white-space:nowrap;">
-    <span class="badge bg-primary fw-bold me-1" style="font-size:0.75rem;">TOTAUX</span>
-    <span class="badge bg-white text-dark border" style="font-size:0.7rem;">INS <strong>{{ '{:,.0f}'.format(ns.total_ins).replace(',', ' ') }}</strong></span>
-    <span class="badge bg-white text-dark border" style="font-size:0.7rem;">OCT <strong>{{ '{:,.0f}'.format(ns.total_oct).replace(',', ' ') }}</strong></span>
-    <span class="badge bg-white text-dark border" style="font-size:0.7rem;">NOV <strong>{{ '{:,.0f}'.format(ns.total_nov).replace(',', ' ') }}</strong></span>
-    <span class="badge bg-white text-dark border" style="font-size:0.7rem;">DEC <strong>{{ '{:,.0f}'.format(ns.total_dec).replace(',', ' ') }}</strong></span>
-    <span class="badge bg-white text-dark border" style="font-size:0.7rem;">JAN <strong>{{ '{:,.0f}'.format(ns.total_jan).replace(',', ' ') }}</strong></span>
-    <span class="badge bg-white text-dark border" style="font-size:0.7rem;">FEV <strong>{{ '{:,.0f}'.format(ns.total_fev).replace(',', ' ') }}</strong></span>
-    <span class="badge bg-white text-dark border" style="font-size:0.7rem;">MAR <strong>{{ '{:,.0f}'.format(ns.total_mar).replace(',', ' ') }}</strong></span>
-    <span class="badge bg-white text-dark border" style="font-size:0.7rem;">AVR <strong>{{ '{:,.0f}'.format(ns.total_avr).replace(',', ' ') }}</strong></span>
-    <span class="badge bg-white text-dark border" style="font-size:0.7rem;">MAI <strong>{{ '{:,.0f}'.format(ns.total_mai).replace(',', ' ') }}</strong></span>
-    <span class="badge bg-white text-dark border" style="font-size:0.7rem;">JUI <strong>{{ '{:,.0f}'.format(ns.total_jui).replace(',', ' ') }}</strong></span>
-    <span class="badge bg-danger text-white" style="font-size:0.7rem;">IMP <strong>{{ ns.total_imp }}</strong></span>
-    <span class="badge bg-dark text-white" style="font-size:0.75rem;">RESTE <strong>{{ '{:,.0f}'.format(ns.total_reste).replace(',', ' ') }} FCFA</strong></span>
+    <span class="badge bg-primary fw-bold me-1" style="font-size:0.68rem;">TOTAUX</span>
+    <span class="badge bg-white text-dark border" style="font-size:0.63rem;">INS <strong>{{ '{:,.0f}'.format(ns.total_ins).replace(',', ' ') }}</strong></span>
+    <span class="badge bg-white text-dark border" style="font-size:0.63rem;">OCT <strong>{{ '{:,.0f}'.format(ns.total_oct).replace(',', ' ') }}</strong></span>
+    <span class="badge bg-white text-dark border" style="font-size:0.63rem;">NOV <strong>{{ '{:,.0f}'.format(ns.total_nov).replace(',', ' ') }}</strong></span>
+    <span class="badge bg-white text-dark border" style="font-size:0.63rem;">DEC <strong>{{ '{:,.0f}'.format(ns.total_dec).replace(',', ' ') }}</strong></span>
+    <span class="badge bg-white text-dark border" style="font-size:0.63rem;">JAN <strong>{{ '{:,.0f}'.format(ns.total_jan).replace(',', ' ') }}</strong></span>
+    <span class="badge bg-white text-dark border" style="font-size:0.63rem;">FEV <strong>{{ '{:,.0f}'.format(ns.total_fev).replace(',', ' ') }}</strong></span>
+    <span class="badge bg-white text-dark border" style="font-size:0.63rem;">MAR <strong>{{ '{:,.0f}'.format(ns.total_mar).replace(',', ' ') }}</strong></span>
+    <span class="badge bg-white text-dark border" style="font-size:0.63rem;">AVR <strong>{{ '{:,.0f}'.format(ns.total_avr).replace(',', ' ') }}</strong></span>
+    <span class="badge bg-white text-dark border" style="font-size:0.63rem;">MAI <strong>{{ '{:,.0f}'.format(ns.total_mai).replace(',', ' ') }}</strong></span>
+    <span class="badge bg-white text-dark border" style="font-size:0.63rem;">JUI <strong>{{ '{:,.0f}'.format(ns.total_jui).replace(',', ' ') }}</strong></span>
+    <span class="badge bg-danger text-white" style="font-size:0.63rem;">IMP <strong>{{ ns.total_imp }}</strong></span>
+    <span class="badge bg-dark text-white" style="font-size:0.68rem;">RESTE <strong>{{ '{:,.0f}'.format(ns.total_reste).replace(',', ' ') }} FCFA</strong></span>
 </div>
 
 <div style="max-height:62vh;overflow:auto;">
