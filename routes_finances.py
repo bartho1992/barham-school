@@ -640,6 +640,7 @@ def parametres_financiers():
 @app.route('/finances/parametres/categorie/ajouter', methods=['POST'])
 @login_required
 def categorie_ajouter():
+    ecole_id = get_current_ecole_id()
     # Alow all users with active licence
     if current_user.role != 'super_users':
         from models import Licence
@@ -659,6 +660,7 @@ def categorie_ajouter():
 @app.route('/finances/parametres/categorie/supprimer/<int:id>', methods=['POST'])
 @login_required
 def categorie_supprimer(id):
+    ecole_id = get_current_ecole_id()
     # Alow all users with active licence
     if current_user.role != 'super_users':
         from models import Licence
