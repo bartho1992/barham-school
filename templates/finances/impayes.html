@@ -78,26 +78,43 @@
         {% set _ = ns.cats_sums.update({cl.cat.nom: cur + cl.reste}) %}
     {% endfor %}
 {% endfor %}
-<!-- Barre de totaux au-dessus du tableau -->
 
 <div style="max-height:62vh;overflow:auto;">
     <table class="table table-sm table-bordered mb-0 bg-white" id="table-impayes" style="font-size:0.65rem;table-layout:auto;white-space:nowrap;">
         <thead class="bg-light" style="position:sticky;top:0;z-index:2;">
+            <!-- Ligne de badges de totaux au-dessus des en-tetes -->
+            <tr style="background:#e8f0fe;">
+                <td style="width:22px;text-align:center;padding:2px;border:1px solid #b0c4de;"><span class="badge bg-primary fw-bold" style="font-size:0.55rem;">T</span></td>
+                <td style="border:1px solid #b0c4de;padding:1px;"></td>
+                <td style="border:1px solid #b0c4de;padding:1px;"></td>
+                <td style="border:1px solid #b0c4de;padding:1px;"></td>
+                <td style="border:1px solid #b0c4de;padding:1px;"></td>
+                <td style="text-align:right;padding:1px;border:1px solid #b0c4de;"><span class="badge" style="background:#198754;font-size:0.6rem;padding:1px 4px;">{{ '{:,.0f}'.format(ns.total_du).replace(',', ' ') }}</span></td>
+                <td style="text-align:right;padding:1px;border:1px solid #b0c4de;"><span class="badge" style="background:#198754;font-size:0.6rem;padding:1px 4px;">{{ '{:,.0f}'.format(ns.total_avance).replace(',', ' ') }}</span></td>
+                <td style="text-align:right;padding:1px;border:1px solid #b0c4de;"><span class="badge" style="background:#dc3545;font-size:0.6rem;padding:1px 4px;">{{ '{:,.0f}'.format(ns.total_reste).replace(',', ' ') }}</span></td>
+                <td style="text-align:right;padding:1px;border:1px solid #b0c4de;"><span class="badge" style="background:#fd7e14;font-size:0.6rem;padding:1px 4px;">{{ '{:,.0f}'.format(ns.total_reste).replace(',', ' ') }}</span></td>
+                <td style="border:1px solid #b0c4de;padding:1px;"></td>
+                <td style="border:1px solid #b0c4de;padding:1px;"></td>
+                <td style="text-align:right;padding:1px;border:1px solid #b0c4de;"><span class="badge" style="background:#0a58ca;font-size:0.6rem;padding:1px 4px;">{{ '{:,.0f}'.format(ns.total_mois).replace(',', ' ') }}</span></td>
+                {% for cat in categories %}
+                <td style="text-align:right;padding:1px;border:1px solid #b0c4de;"><span class="badge" style="background:#0a58ca;font-size:0.5rem;padding:1px 3px;">{{ '{:,.0f}'.format(ns.cats_sums.get(cat.nom, 0)).replace(',', ' ') }}</span></td>
+                {% endfor %}
+            </tr>
             <tr>
                 <th style="width:22px;text-align:center;vertical-align:middle;background:#f8f9fa !important;"><input type="checkbox" id="check-all" onchange="toggleAll(this)" title="Tout selectionner"></th>
                 <th style="min-width:50px;vertical-align:middle;background:#6c757d !important;color:#fff;">CODE</th>
                 <th style="min-width:80px;vertical-align:middle;background:#0d6efd !important;color:#fff;">PRENOM</th>
                 <th style="min-width:80px;vertical-align:middle;background:#0d6efd !important;color:#fff;">NOM</th>
                 <th style="width:50px;vertical-align:middle;text-align:center;background:#0d6efd !important;color:#fff;">CLASSE</th>
-                <th style="width:65px;vertical-align:middle;text-align:right;background:#198754 !important;color:#fff;">DU<br><span class="badge" style="background:rgba(255,255,255,0.9);color:#198754;font-size:0.6rem;padding:1px 4px;">{{ '{:,.0f}'.format(ns.total_du).replace(',', ' ') }}</span></th>
-                <th style="width:65px;vertical-align:middle;text-align:right;background:#198754 !important;color:#fff;">AVANCE<br><span class="badge" style="background:rgba(255,255,255,0.9);color:#198754;font-size:0.6rem;padding:1px 4px;">{{ '{:,.0f}'.format(ns.total_avance).replace(',', ' ') }}</span></th>
-                <th style="width:65px;vertical-align:middle;text-align:right;background:#dc3545 !important;color:#fff;">RESTE<br><span class="badge" style="background:rgba(255,255,255,0.9);color:#dc3545;font-size:0.6rem;padding:1px 4px;">{{ '{:,.0f}'.format(ns.total_reste).replace(',', ' ') }}</span></th>
-                <th style="width:65px;vertical-align:middle;text-align:right;background:#fd7e14 !important;color:#fff;">CUMUL<br><span class="badge" style="background:rgba(255,255,255,0.9);color:#fd7e14;font-size:0.6rem;padding:1px 4px;">{{ '{:,.0f}'.format(ns.total_reste).replace(',', ' ') }}</span></th>
+                <th style="width:65px;vertical-align:middle;text-align:right;background:#198754 !important;color:#fff;">DU</th>
+                <th style="width:65px;vertical-align:middle;text-align:right;background:#198754 !important;color:#fff;">AVANCE</th>
+                <th style="width:65px;vertical-align:middle;text-align:right;background:#dc3545 !important;color:#fff;">RESTE</th>
+                <th style="width:65px;vertical-align:middle;text-align:right;background:#fd7e14 !important;color:#fff;">CUMUL</th>
                 <th style="width:55px;vertical-align:middle;text-align:center;background:#6f42c1 !important;color:#fff;">LIMITE</th>
                 <th style="width:65px;vertical-align:middle;background:#6f42c1 !important;color:#fff;">TEL</th>
-                <th style="width:55px;vertical-align:middle;text-align:right;background:#0a58ca !important;color:#fff;">MOIS<br><span class="badge" style="background:rgba(255,255,255,0.9);color:#0a58ca;font-size:0.6rem;padding:1px 4px;">{{ '{:,.0f}'.format(ns.total_mois).replace(',', ' ') }}</span></th>
+                <th style="width:55px;vertical-align:middle;text-align:right;background:#0a58ca !important;color:#fff;">MOIS</th>
                 {% for cat in categories %}
-                <th style="width:55px;vertical-align:middle;text-align:right;font-size:0.55rem;background:#0a58ca !important;color:#fff;" title="{{ cat.nom }}">{{ cat.nom|upper|truncate(8,true,'') }}<br><span class="badge" style="background:rgba(255,255,255,0.9);color:#0a58ca;font-size:0.5rem;padding:1px 3px;">{{ '{:,.0f}'.format(ns.cats_sums.get(cat.nom, 0)).replace(',', ' ') }}</span></th>
+                <th style="width:55px;vertical-align:middle;text-align:right;font-size:0.55rem;background:#0a58ca !important;color:#fff;" title="{{ cat.nom }}">{{ cat.nom|upper|truncate(8,true,'') }}</th>
                 {% endfor %}
             </tr>
         </thead>
