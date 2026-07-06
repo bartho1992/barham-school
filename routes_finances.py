@@ -106,8 +106,10 @@ def finances():
             'paye_au_moins_un': total_paye > 0,
         })
     
+    classes = Classe.query.filter_by(ecole_id=ecole_id).order_by(Classe.nom).all()
+    
     return render_template('finances/index.html', ecole=e, paiements=recent_paiements, total_encaisse=total_encaisse,
-        today_encaisse=today_encaisse, categories=categories, lignes_paiements=lignes_paiements)
+        today_encaisse=today_encaisse, categories=categories, lignes_paiements=lignes_paiements, classes=classes)
 
 @app.route('/api/tarifs/<int:eleve_id>/<mois>')
 @login_required
