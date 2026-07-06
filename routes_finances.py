@@ -538,6 +538,8 @@ def finances_liste():
 @login_required
 def impayes():
     """Tableau des impayes : eleves x categories de services"""
+    import sys
+    print("===== impayES V2 (categories) =====", file=sys.stderr)
     ecole_id = get_current_ecole_id()
     e = Ecole.query.get(ecole_id); annee = _annee_courante(e)
     
