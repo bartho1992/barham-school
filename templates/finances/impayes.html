@@ -149,6 +149,19 @@
                 {% endfor %}
             </tr>
             {% endfor %}
+            <!-- Ligne de totaux -->
+            <tr style="background:#f8f9fa;font-weight:bold;">
+                <td colspan="5" style="text-align:right;vertical-align:middle;padding:4px 8px;font-size:0.7rem;color:#495057;">TOTAUX :</td>
+                <td style="text-align:right;vertical-align:middle;padding:4px 6px;"><span class="badge" style="background:#198754;font-size:0.65rem;">{{ '{:,.0f}'.format(ns.total_du).replace(',', ' ') }}</span></td>
+                <td style="text-align:right;vertical-align:middle;padding:4px 6px;"><span class="badge" style="background:#198754;font-size:0.65rem;">{{ '{:,.0f}'.format(ns.total_avance).replace(',', ' ') }}</span></td>
+                <td style="text-align:right;vertical-align:middle;padding:4px 6px;"><span class="badge" style="background:#dc3545;font-size:0.65rem;">{{ '{:,.0f}'.format(ns.total_reste).replace(',', ' ') }}</span></td>
+                <td style="text-align:right;vertical-align:middle;padding:4px 6px;"><span class="badge" style="background:#fd7e14;font-size:0.65rem;">{{ '{:,.0f}'.format(ns.total_reste).replace(',', ' ') }}</span></td>
+                <td colspan="2" style="text-align:center;vertical-align:middle;padding:4px 6px;"><span class="badge bg-secondary" style="font-size:0.6rem;">-</span></td>
+                <td style="text-align:right;vertical-align:middle;padding:4px 6px;"><span class="badge" style="background:#0a58ca;font-size:0.65rem;">{{ '{:,.0f}'.format(ns.total_mois).replace(',', ' ') }}</span></td>
+                {% for cat in categories %}
+                <td style="text-align:right;vertical-align:middle;padding:4px 6px;"><span class="badge" style="background:#0a58ca;font-size:0.6rem;">{{ '{:,.0f}'.format(ns.cats_sums.get(cat.nom, 0)).replace(',', ' ') }}</span></td>
+                {% endfor %}
+            </tr>
         </tbody>
     </table>
 </div>
