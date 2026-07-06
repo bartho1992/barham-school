@@ -231,10 +231,25 @@ function filtrer() {
 function ouvrirPaiementGroupe() {
     var checked = document.querySelectorAll('.eleve-check-impaye:checked');
     if (checked.length === 0) { alert('Selectionnez au moins un eleve'); return; }
-    var ids = [];
-    checked.forEach(function(cb) { ids.push(cb.value); });
-    var url = '/finances/paiement-groupe?ids=' + ids.join(',');
-    window.location.href = url;
+    var form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/finances/paiement-groupe';
+    checked.forEach(function(cb) {
+        var input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'eleve_ids[]';
+        input.value = cb.value;
+        form.appendChild(input);
+    });
+    // Mois par defaut
+    var moisInput = document.createElement('input');
+    moisInput.type = 'hidden';
+    moisInput.name = 'mois';
+    moisInput.value = prompt('Mois a payer (ex: Janvier, Fevrier, Inscription...) :', 'Inscription');
+    if (!moisInput.value) return;
+    form.appendChild(moisInput);
+    document.body.appendChild(form);
+    form.submit();
 }
 
 function imprimerTableau() {
