@@ -277,7 +277,7 @@ def api_services_eleve(eleve_id):
         'type': a.categorie.type_categorie
     } for a in abonnements])
 
-@app.route('/finances/paiement-groupe', methods=['POST'])
+@app.route('/finances/paiement-groupe', methods=['GET', 'POST'])
 @login_required
 def paiement_groupe():
     """Paiement groupé : paie le même mois pour plusieurs élèves en une fois"""
