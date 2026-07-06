@@ -101,7 +101,6 @@ def finances():
                         nb_mois_actifs = max(nb_mois_actifs, 10)
         if nb_mois_actifs < 1: nb_mois_actifs = 10
         montant_mois = total_du / nb_mois_actifs if total_du > 0 else 0
-        from datetime import datetime
         date_limite = ''
         try:
             annees = annee.split('-') if annee else ['2025','2026']
