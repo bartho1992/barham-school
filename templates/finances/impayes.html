@@ -64,32 +64,7 @@
 </div>
 <div id="filtre-count" class="small text-muted mb-1" style="display:none;"></div>
 
-<!-- Totaux par colonne -->
-{% set ns = namespace(total_du=0, total_avance=0, total_reste=0, total_mois=0, cats_sums={}) %}
-{% for cat in categories %}{% set _ = ns.cats_sums.update({cat.nom: 0}) %}{% endfor %}
-{% for ligne in lignes %}
-    {% set ns.total_du = ns.total_du + ligne.total_du %}
-    {% set ns.total_paye = ligne.total_paye or 0 %}
-    {% set ns.total_reste = ns.total_reste + ligne.total_reste %}
-    {% set ns.total_mois = ns.total_mois + ligne.montant_mois %}
-    {% for cl in ligne.cat_lines %}
-        {% set cur = ns.cats_sums.get(cl.cat.nom, 0) %}
-        {% set _ = ns.cats_sums.update({cl.cat.nom: cur + cl.reste}) %}
-    {% endfor %}
-{% endfor %}
 <div style="max-height:62vh;overflow:auto;">
-    <!-- Barre de totaux au-dessus du tableau -->
-    <div class="d-flex align-items-center gap-1 mb-1 p-1 rounded" style="background:#e8f0fe;border:1px solid #b0c4de;">
-        <span class="badge bg-primary fw-bold me-1" style="font-size:0.68rem;">TOTAUX</span>
-        <span class="badge bg-white text-dark border" style="font-size:0.63rem;"><strong style="color:#198754;">DU</strong> {{ '{:,.0f}'.format(ns.total_du).replace(',', ' ') }}</span>
-        <span class="badge bg-white text-dark border" style="font-size:0.63rem;"><strong style="color:#198754;">AV</strong> {{ '{:,.0f}'.format(ns.total_avance).replace(',', ' ') }}</span>
-        <span class="badge bg-white text-dark border" style="font-size:0.63rem;"><strong style="color:#dc3545;">RESTE</strong> {{ '{:,.0f}'.format(ns.total_reste).replace(',', ' ') }}</span>
-        <span class="badge bg-white text-dark border" style="font-size:0.63rem;"><strong style="color:#fd7e14;">CUMUL</strong> {{ '{:,.0f}'.format(ns.total_reste).replace(',', ' ') }}</span>
-        <span class="badge bg-white text-dark border" style="font-size:0.63rem;"><strong style="color:#0a58ca;">MOIS</strong> {{ '{:,.0f}'.format(ns.total_mois).replace(',', ' ') }}</span>
-        {% for cat in categories %}
-        <span class="badge bg-white text-dark border" style="font-size:0.6rem;"><strong style="color:#0a58ca;">{{ cat.nom|upper|truncate(8,true,'') }}</strong> {{ '{:,.0f}'.format(ns.cats_sums.get(cat.nom, 0)).replace(',', ' ') }}</span>
-        {% endfor %}
-    </div>
     <table class="table table-sm table-bordered mb-0 bg-white" id="table-impayes" style="font-size:0.65rem;table-layout:auto;white-space:nowrap;">
         <thead class="bg-light" style="position:sticky;top:0;z-index:2;">
             <tr>
