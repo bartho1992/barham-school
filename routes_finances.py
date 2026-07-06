@@ -55,8 +55,10 @@ def finances():
         abonnements_map.setdefault(a.eleve_id, set()).add(a.categorie_id)
     paiements_map = {}
     for p in Paiement.query.filter_by(annee_scolaire=annee).all():
-        paiements_map.setdefault(p.eleve_id, {})[p.type_paiement or ''] = \
-            paiements_map[p.eleve_id].get(p.type_paiement or '', 0) + p.montant
+        if p.eleve_id not in paiements_map:
+            paiements_map[p.eleve_id] = {}
+        key = p.type_paiement or ''
+        paiements_map[p.eleve_id][key] = paiements_map[p.eleve_id].get(key, 0) + p.montant
     
     lignes_paiements = []
     for eleve in eleves:
