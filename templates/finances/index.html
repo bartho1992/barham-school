@@ -44,61 +44,88 @@
         </div>
     </div>
     <div style="max-height:62vh;overflow:auto;">
-        {% set ns = namespace(total=0, total_du=0, total_avance=0, total_reste=0, total_mois=0, cats_sums={}) %}
+        {% set ns = namespace(total_du=0, total_avance=0, total_reste=0, total_mois=0) %}
+        {% set ns.cats_sums = {} %}
         {% for cat in categories %}{% set _ = ns.cats_sums.update({cat.nom: 0}) %}{% endfor %}
-        {% for p in paiements %}
-            {% set ns.total = ns.total + p.montant %}
+        {% for lp in lignes_paiements %}
+            {% set ns.total_du = ns.total_du + lp.total_du %}
+            {% set ns.total_avance = ns.total_avance + lp.total_paye %}
+            {% set ns.total_reste = ns.total_reste + lp.total_reste %}
+            {% set ns.total_mois = ns.total_mois + lp.montant_mois %}
+            {% for cl in lp.cat_lines %}
+                {% set cur = ns.cats_sums.get(cl.cat.nom, 0) %}
+                {% set _ = ns.cats_sums.update({cl.cat.nom: cur + cl.reste}) %}
+            {% endfor %}
         {% endfor %}
-        <table class="table table-sm table-bordered mb-0 bg-white" id="table-paiements" style="font-size:0.65rem;table-layout:auto;white-space:nowrap;">
+        <table class="table table-sm table-bordered mb-0 bg-white" id="table-suivi-paiement" style="font-size:0.65rem;table-layout:auto;white-space:nowrap;">
             <thead class="bg-light" style="position:sticky;top:0;z-index:2;">
-                <!-- Ligne de badges des totaux -->
+                <!-- Ligne de badges totaux -->
                 <tr style="background:#e8f0fe;">
-                    <td style="width:70px;text-align:center;padding:2px;border:1px solid #b0c4de;"><span class="badge bg-primary fw-bold" style="font-size:0.55rem;">T</span></td>
+                    <td style="width:22px;border:1px solid #b0c4de;padding:1px;"></td>
                     <td style="border:1px solid #b0c4de;padding:1px;"></td>
                     <td style="border:1px solid #b0c4de;padding:1px;"></td>
                     <td style="border:1px solid #b0c4de;padding:1px;"></td>
+                    <td style="text-align:right;padding:1px;border:1px solid #b0c4de;"><span class="badge" style="background:#198754;font-size:0.6rem;padding:1px 4px;">{{ '{:,.0f}'.format(ns.total_du).replace(',', ' ') }}</span></td>
+                    <td style="text-align:right;padding:1px;border:1px solid #b0c4de;"><span class="badge" style="background:#198754;font-size:0.6rem;padding:1px 4px;">{{ '{:,.0f}'.format(ns.total_avance).replace(',', ' ') }}</span></td>
+                    <td style="text-align:right;padding:1px;border:1px solid #b0c4de;"><span class="badge" style="background:#dc3545;font-size:0.6rem;padding:1px 4px;">{{ '{:,.0f}'.format(ns.total_reste).replace(',', ' ') }}</span></td>
+                    <td style="text-align:right;padding:1px;border:1px solid #b0c4de;"><span class="badge" style="background:#fd7e14;font-size:0.6rem;padding:1px 4px;">{{ '{:,.0f}'.format(ns.total_reste).replace(',', ' ') }}</span></td>
                     <td style="border:1px solid #b0c4de;padding:1px;"></td>
-                    <td style="text-align:right;padding:1px;border:1px solid #b0c4de;"><span class="badge" style="background:#198754;font-size:0.6rem;padding:1px 4px;">{{ '{:,.0f}'.format(ns.total).replace(',', ' ') }}</span></td>
-                    <td colspan="{{ 7 + categories|length }}" style="border:1px solid #b0c4de;padding:1px;"></td>
+                    <td style="border:1px solid #b0c4de;padding:1px;"></td>
+                    <td style="text-align:right;padding:1px;border:1px solid #b0c4de;"><span class="badge" style="background:#0a58ca;font-size:0.6rem;padding:1px 4px;">{{ '{:,.0f}'.format(ns.total_mois).replace(',', ' ') }}</span></td>
+                    {% for cat in categories %}
+                    <td style="text-align:right;padding:1px;border:1px solid #b0c4de;"><span class="badge" style="background:#0a58ca;font-size:0.5rem;padding:1px 3px;">{{ '{:,.0f}'.format(ns.cats_sums.get(cat.nom, 0)).replace(',', ' ') }}</span></td>
+                    {% endfor %}
                 </tr>
                 <tr>
-                    <th style="width:70px;vertical-align:middle;text-align:center;background:#6c757d !important;color:#fff;">DATE</th>
+                    <th style="width:22px;text-align:center;vertical-align:middle;background:#f8f9fa !important;"></th>
                     <th style="min-width:50px;vertical-align:middle;text-align:center;background:#6c757d !important;color:#fff;">CODE</th>
                     <th style="min-width:80px;vertical-align:middle;background:#0d6efd !important;color:#fff;">PRENOM</th>
                     <th style="min-width:80px;vertical-align:middle;background:#0d6efd !important;color:#fff;">NOM</th>
                     <th style="width:50px;vertical-align:middle;text-align:center;background:#0d6efd !important;color:#fff;">CLASSE</th>
-                    <th style="width:65px;vertical-align:middle;text-align:right;background:#198754 !important;color:#fff;">MONTANT</th>
-                    <th style="width:60px;vertical-align:middle;text-align:center;background:#6f42c1 !important;color:#fff;">TYPE</th>
-                    <th style="width:55px;vertical-align:middle;text-align:center;background:#6f42c1 !important;color:#fff;">MODE</th>
-                    <th style="width:55px;vertical-align:middle;text-align:center;background:#dc3545 !important;color:#fff;">ACTIONS</th>
+                    <th style="width:65px;vertical-align:middle;text-align:right;background:#198754 !important;color:#fff;">DU</th>
+                    <th style="width:65px;vertical-align:middle;text-align:right;background:#198754 !important;color:#fff;">AVANCE</th>
+                    <th style="width:65px;vertical-align:middle;text-align:right;background:#dc3545 !important;color:#fff;">RESTE</th>
+                    <th style="width:65px;vertical-align:middle;text-align:right;background:#fd7e14 !important;color:#fff;">CUMUL</th>
+                    <th style="width:55px;vertical-align:middle;text-align:center;background:#6f42c1 !important;color:#fff;">LIMITE</th>
+                    <th style="width:65px;vertical-align:middle;background:#6f42c1 !important;color:#fff;">TEL</th>
+                    <th style="width:65px;vertical-align:middle;text-align:right;background:#0a58ca !important;color:#fff;">MOIS</th>
+                    {% for cat in categories %}
+                    <th style="width:55px;vertical-align:middle;text-align:right;font-size:0.55rem;background:#0a58ca !important;color:#fff;" title="{{ cat.nom }}">{{ cat.nom|upper|truncate(8,true,'') }}</th>
+                    {% endfor %}
                 </tr>
             </thead>
             <tbody>
-                {% for p in paiements %}
-                <tr>
-                    <td style="text-align:center;vertical-align:middle;font-size:0.6rem;">{{ p.date_paiement.strftime('%d/%m/%Y') }}</td>
-                    <td style="text-align:center;vertical-align:middle;font-size:0.6rem;">{{ p.eleve.code }}</td>
-                    <td style="vertical-align:middle;">{{ p.eleve.prenom }}</td>
-                    <td style="vertical-align:middle;">{{ p.eleve.nom }}</td>
-                    <td style="text-align:center;vertical-align:middle;font-size:0.6rem;">{{ p.eleve.classe.nom if p.eleve.classe else '-' }}</td>
-                    <td style="text-align:right;vertical-align:middle;font-weight:bold;color:#1a5276;">{{ '{:,.0f}'.format(p.montant).replace(',', ' ') }}</td>
-                    <td style="text-align:center;vertical-align:middle;"><span class="badge bg-light text-dark border" style="font-size:0.6rem;">{{ p.type_paiement }}</span></td>
-                    <td style="text-align:center;vertical-align:middle;font-size:0.6rem;">{{ p.mode_paiement or 'Especes' }}</td>
-                    <td style="text-align:center;vertical-align:middle;white-space:nowrap;">
-                        <a href="{{ url_for('paiement_recu', id=p.id) }}" class="btn py-0 px-1" style="font-size:0.6rem;color:#0d6efd;" title="Reçu"><i class="bi bi-printer"></i></a>
-                        <form method="POST" action="{{ url_for('paiement_annuler', id=p.id) }}" class="d-inline" onsubmit="return confirm('Annuler ce paiement de {{ '{:,.0f}'.format(p.montant).replace(',', ' ') }} FCFA ?');">
-                            <button type="submit" class="btn py-0 px-1" style="font-size:0.6rem;color:#dc3545;" title="Annuler"><i class="bi bi-x-circle"></i></button>
-                        </form>
-                    </td>
+                {% for lp in lignes_paiements %}
+                {% set e = lp.eleve %}
+                <tr{% if lp.paye_au_moins_un %} style="background:#f0fff0;"{% endif %}>
+                    <td style="text-align:center;vertical-align:middle;"><span class="badge rounded-circle p-1" style="font-size:0.45rem;width:12px;height:12px;display:inline-block;{% if lp.paye_au_moins_un %}background:#28a745;{% else %}background:#dc3545;{% endif %}"></span></td>
+                    <td style="text-align:center;vertical-align:middle;font-size:0.6rem;">{{ e.code }}</td>
+                    <td style="vertical-align:middle;">{{ e.prenom }}</td>
+                    <td style="vertical-align:middle;">{{ e.nom }}</td>
+                    <td style="text-align:center;vertical-align:middle;font-size:0.6rem;">{{ e.classe.nom }}</td>
+                    <td style="text-align:right;vertical-align:middle;font-weight:bold;{% if lp.total_du > 0 %}color:#1a5276;{% else %}color:#999;{% endif %}">{{ '{:,.0f}'.format(lp.total_du).replace(',', ' ') if lp.total_du > 0 else '-' }}</td>
+                    <td style="text-align:right;vertical-align:middle;{% if lp.total_paye > 0 %}color:#155724;font-weight:bold;{% else %}color:#ccc;{% endif %}">{% if lp.total_paye > 0 %}{{ '{:,.0f}'.format(lp.total_paye).replace(',', ' ') }}{% else %}-{% endif %}</td>
+                    <td style="text-align:right;vertical-align:middle;{% if lp.total_reste > 0 and not lp.paye_au_moins_un %}color:#c00;font-weight:bold;font-size:0.7rem;{% elif lp.total_reste > 0 %}color:#c00;font-weight:bold;font-size:0.7rem;{% else %}color:#155724;{% endif %}">{% if lp.total_reste > 0 %}{{ '{:,.0f}'.format(lp.total_reste).replace(',', ' ') }}{% else %}&#10003;{% endif %}</td>
+                    <td style="text-align:right;vertical-align:middle;{% if lp.total_reste > 0 %}color:#c00;{% else %}color:#999;{% endif %}">{{ '{:,.0f}'.format(lp.total_reste).replace(',', ' ') if lp.total_reste > 0 else '-' }}</td>
+                    <td style="text-align:center;vertical-align:middle;font-size:0.55rem;">{{ lp.date_limite }}</td>
+                    <td style="vertical-align:middle;font-size:0.55rem;">{{ e.tel or '-' }}</td>
+                    <td style="text-align:right;vertical-align:middle;font-size:0.6rem;">{{ '{:,.0f}'.format(lp.montant_mois).replace(',', ' ') if lp.montant_mois > 0 else '-' }}</td>
+                    {% for cl in lp.cat_lines %}
+                    <td style="text-align:right;vertical-align:middle;font-size:0.6rem;{% if cl.reste > 0 %}color:#c00;font-weight:bold;{% elif cl.paye > 0 %}color:#155724;{% else %}color:#ccc;{% endif %}">{% if cl.reste > 0 %}{{ '{:,.0f}'.format(cl.reste).replace(',', ' ') }}{% elif cl.paye > 0 %}&#10003;{% else %}&#9866;{% endif %}</td>
+                    {% endfor %}
                 </tr>
                 {% else %}
-                <tr><td colspan="9" class="text-center py-4 text-muted" style="font-size:0.7rem;">Aucun paiement pour le moment.</td></tr>
+                <tr><td colspan="{{ 12 + categories|length }}" class="text-center py-4 text-muted" style="font-size:0.7rem;">Aucun eleve inscrit.</td></tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
     <div class="card-footer bg-white py-1 text-end">
-        <small class="text-muted">Total encaisse : <strong style="color:#198754;">{{ '{:,.0f}'.format(ns.total).replace(',', ' ') }} FCFA</strong> &bull; {{ paiements|length }} paiement(s)</small>
+        <small class="text-muted">
+            <span class="badge bg-success me-1" style="font-size:0.6rem;">&#9679; Payes</span>
+            <span class="badge bg-danger me-1" style="font-size:0.6rem;">&#9679; Impayes</span>
+            Total encaisse : <strong style="color:#198754;">{{ '{:,.0f}'.format(ns.total_avance).replace(',', ' ') }} FCFA</strong>
+        </small>
     </div>
 </div>
 

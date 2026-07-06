@@ -40,8 +40,72 @@ def finances():
     total_encaisse = db.session.query(db.func.sum(Paiement.montant)).filter_by(annee_scolaire=annee).scalar() or 0
     today_encaisse = db.session.query(db.func.sum(Paiement.montant)).filter(db.func.date(Paiement.date_paiement) == datetime.now().date(), Paiement.annee_scolaire == annee).scalar() or 0
     categories = CategorieTarif.query.order_by(CategorieTarif.nom).all()
+    
+    # Calculer les lignes eleves pour le suivi paiement
+    mois_scolaires = ['Inscription','Octobre','Novembre','Decembre','Janvier','Fevrier','Mars','Avril','Mai','Juin']
+    eleves = Eleve.query.filter_by(ecole_id=ecole_id).filter(
+        db.or_(Eleve.annee_scolaire == annee, Eleve.annee_scolaire == None, Eleve.annee_scolaire == '')
+    ).order_by(Eleve.nom).all()
+    scolarites_map = {s.classe_id: s for s in Scolarite.query.filter_by(annee_scolaire=annee).all()}
+    tarifs_services_map = {}
+    for t in TarifService.query.filter_by(annee_scolaire=annee).all():
+        tarifs_services_map[(t.classe_id, t.categorie_id)] = t
+    abonnements_map = {}
+    for a in AbonnementService.query.filter_by(actif=True).all():
+        abonnements_map.setdefault(a.eleve_id, set()).add(a.categorie_id)
+    paiements_map = {}
+    for p in Paiement.query.filter_by(annee_scolaire=annee).all():
+        paiements_map.setdefault(p.eleve_id, {})[p.type_paiement or ''] = \
+            paiements_map[p.eleve_id].get(p.type_paiement or '', 0) + p.montant
+    
+    lignes_paiements = []
+    for eleve in eleves:
+        if not eleve.classe: continue
+        scol = scolarites_map.get(eleve.classe_id)
+        payes = paiements_map.get(eleve.id, {})
+        abos = abonnements_map.get(eleve.id, set())
+        scolarite_due = scol.total_annuel if scol else 0
+        scolarite_paye = sum(payes.get(m, 0) for m in mois_scolaires)
+        cat_lines = []
+        services_due = 0
+        services_paye = 0
+        for cat in categories:
+            tarif = tarifs_services_map.get((eleve.classe_id, cat.id))
+            is_abonne = cat.id in abos
+            if not tarif or not is_abonne:
+                cat_lines.append({'cat': cat, 'due': 0, 'paye': 0, 'reste': 0})
+                continue
+            due = tarif.total_annuel
+            paye = payes.get(cat.nom, 0)
+            reste = max(due - paye, 0)
+            services_due += due
+            services_paye += paye
+            cat_lines.append({'cat': cat, 'due': due, 'paye': paye, 'reste': reste})
+        total_du = scolarite_due + services_due
+        total_paye = scolarite_paye + services_paye
+        total_reste = max(total_du - total_paye, 0)
+        nb_mois_actifs = len([m for m in mois_scolaires if m == 'Inscription' and scol and scol.inscription > 0 or m != 'Inscription' and scol and getattr(scol, m.lower(), 0) > 0]) if scol else 0
+        for cat in categories:
+            tarif = tarifs_services_map.get((eleve.classe_id, cat.id))
+            if tarif and cat.id in abos:
+                for m in ['inscription','janvier','fevrier','mars','avril','mai','juin','octobre','novembre','decembre']:
+                    if getattr(tarif, m, 0) > 0: nb_mois_actifs = max(nb_mois_actifs, 10)
+        if nb_mois_actifs < 1: nb_mois_actifs = 10
+        montant_mois = total_du / nb_mois_actifs if total_du > 0 else 0
+        date_limite = ''
+        try:
+            annees = annee.split('-') if annee else ['2025','2026']
+            date_limite = f'30/06/{annees[1] if len(annees) > 1 else "2026"}'
+        except: pass
+        lignes_paiements.append({
+            'eleve': eleve, 'total_du': total_du, 'total_paye': total_paye,
+            'total_reste': total_reste, 'montant_mois': montant_mois,
+            'date_limite': date_limite, 'cat_lines': cat_lines,
+            'paye_au_moins_un': total_paye > 0,
+        })
+    
     return render_template('finances/index.html', ecole=e, paiements=recent_paiements, total_encaisse=total_encaisse,
-        today_encaisse=today_encaisse, categories=categories)
+        today_encaisse=today_encaisse, categories=categories, lignes_paiements=lignes_paiements)
 
 @app.route('/api/tarifs/<int:eleve_id>/<mois>')
 @login_required
