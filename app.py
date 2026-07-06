@@ -5,6 +5,8 @@ from models import db, init_data, Ecole, AnneeScolaire
 from datetime import timedelta, datetime
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'barham-informatique-2024')
+# Desactiver le cache en production
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 # En production, le repertoire /app/data est necessaire pour SQLite (Render)
 if os.environ.get('RENDER') or os.environ.get('PRODUCTION') or os.environ.get('PYTHONANYWHERE_SITE'):
     data_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'data')
