@@ -40,39 +40,87 @@ def finances():
     total_encaisse = db.session.query(db.func.sum(Paiement.montant)).filter_by(annee_scolaire=annee).scalar() or 0
     today_encaisse = db.session.query(db.func.sum(Paiement.montant)).filter(db.func.date(Paiement.date_paiement) == datetime.now().date(), Paiement.annee_scolaire == annee).scalar() or 0
     
-    # Calcul des impayes (logique sequence scolaire)
+    # Reprendre la meme logique que impayes() pour le tableau
     mois_scolaires = ['Inscription','Octobre','Novembre','Decembre','Janvier','Fevrier','Mars','Avril','Mai','Juin']
-    # Inclure les eleves meme sans annee_scolaire (fallback sur l'ecole)
+    categories = CategorieTarif.query.order_by(CategorieTarif.nom).all()
     eleves = Eleve.query.filter_by(ecole_id=ecole_id).filter(
         db.or_(Eleve.annee_scolaire == annee, Eleve.annee_scolaire == None, Eleve.annee_scolaire == '')
-    ).all()
-    total_impayes = 0
-    nb_impayes = 0
+    ).order_by(Eleve.nom).all()
+    scolarites_map = {s.classe_id: s for s in Scolarite.query.filter_by(annee_scolaire=annee).all()}
+    tarifs_services_map = {}
+    for t in TarifService.query.filter_by(annee_scolaire=annee).all():
+        tarifs_services_map[(t.classe_id, t.categorie_id)] = t
+    abonnements_map = {}
+    for a in AbonnementService.query.filter_by(actif=True).all():
+        if a.eleve_id not in abonnements_map:
+            abonnements_map[a.eleve_id] = set()
+        abonnements_map[a.eleve_id].add(a.categorie_id)
+    paiements_map = {}
+    for p in Paiement.query.filter_by(annee_scolaire=annee).all():
+        if p.eleve_id not in paiements_map:
+            paiements_map[p.eleve_id] = {}
+        key = p.type_paiement or ''
+        paiements_map[p.eleve_id][key] = paiements_map[p.eleve_id].get(key, 0) + p.montant
+    
+    lignes = []
+    total_global = 0
     nb_sans_tarif = 0
-    for elv in eleves:
-        if not elv.classe: continue
-        scol = Scolarite.query.filter_by(classe_id=elv.classe_id, annee_scolaire=annee).first()
-        # Si pas de scolarite, tous les mois sont consideres avec tarif 0
+    for eleve in eleves:
+        if not eleve.classe: continue
+        scol = scolarites_map.get(eleve.classe_id)
         if not scol:
             nb_sans_tarif += 1
-            # Verifier quand meme s'il y a des paiements
-            paiements_elv = Paiement.query.filter_by(eleve_id=elv.id, annee_scolaire=annee).all()
-            if not paiements_elv:
-                nb_impayes += 1
-            continue
-        paiements_elv = Paiement.query.filter_by(eleve_id=elv.id, annee_scolaire=annee).all()
-        paye_mois = {}
-        for p in paiements_elv:
-            paye_mois[p.type_paiement] = paye_mois.get(p.type_paiement, 0) + p.montant
-        for mois in mois_scolaires:
-            tarif = scol.inscription if mois == 'Inscription' else (getattr(scol, mois.lower(), 0) or 0)
-            if tarif > 0:
-                reste = tarif - paye_mois.get(mois, 0)
-                if reste > 0:
-                    total_impayes += reste
-                    nb_impayes += 1
+        payes = paiements_map.get(eleve.id, {})
+        abos = abonnements_map.get(eleve.id, set())
+        scolarite_due = scol.total_annuel if scol else 0
+        scolarite_paye = sum(payes.get(m, 0) for m in mois_scolaires)
+        cat_lines = []
+        services_due = 0
+        services_paye = 0
+        for cat in categories:
+            tarif = tarifs_services_map.get((eleve.classe_id, cat.id))
+            is_abonne = cat.id in abos
+            if not tarif or not is_abonne:
+                cat_lines.append({'cat': cat, 'due': 0, 'paye': 0, 'reste': 0, 'statut': 'inactif' if not is_abonne else 'sans_tarif'})
+                continue
+            due = tarif.total_annuel
+            paye = payes.get(cat.nom, 0)
+            reste = max(due - paye, 0)
+            services_due += due
+            services_paye += paye
+            cat_lines.append({'cat': cat, 'due': due, 'paye': paye, 'reste': reste, 'statut': 'impaye' if reste > 0 else 'paye'})
+        total_du = scolarite_due + services_due
+        total_paye = scolarite_paye + services_paye
+        total_reste = max(total_du - total_paye, 0)
+        nb_mois_actifs = len([m for m in mois_scolaires if (scol.inscription if m == 'Inscription' else getattr(scol, m.lower(), 0) or 0) > 0]) if scol else 0
+        for cat in categories:
+            tarif = tarifs_services_map.get((eleve.classe_id, cat.id))
+            if tarif and cat.id in abos:
+                for m in ['inscription','janvier','fevrier','mars','avril','mai','juin','juillet','aout','septembre','octobre','novembre','decembre']:
+                    if getattr(tarif, m, 0) > 0:
+                        nb_mois_actifs = max(nb_mois_actifs, 10)
+        if nb_mois_actifs < 1: nb_mois_actifs = 10
+        montant_mois = total_du / nb_mois_actifs if total_du > 0 else 0
+        from datetime import datetime
+        date_limite = ''
+        try:
+            annees = annee.split('-') if annee else ['2025','2026']
+            date_limite = f'30/06/{annees[1] if len(annees) > 1 else "2026"}'
+        except: pass
+        ligne = {
+            'eleve': eleve, 'scolarite_due': scolarite_due, 'scolarite_paye': scolarite_paye,
+            'scolarite_reste': max(scolarite_due - scolarite_paye, 0), 'cat_lines': cat_lines,
+            'total_du': total_du, 'total_paye': total_paye, 'total_reste': total_reste,
+            'montant_mois': montant_mois, 'date_limite': date_limite,
+            'nb_impayes': sum(1 for cl in cat_lines if cl['reste'] > 0) + (1 if scol and max(scolarite_due - scolarite_paye, 0) > 0 else 0),
+        }
+        total_global += total_reste
+        lignes.append(ligne)
+    nb_impayes = sum(1 for l in lignes if l['total_reste'] > 0)
     
-    return render_template('finances/index.html', ecole=e, paiements=recent_paiements, total_encaisse=total_encaisse, today_encaisse=today_encaisse, total_impayes=total_impayes, nb_impayes=nb_impayes, nb_sans_tarif=nb_sans_tarif)
+    return render_template('finances/index.html', ecole=e, paiements=recent_paiements, total_encaisse=total_encaisse,
+        today_encaisse=today_encaisse, total_impayes=total_global, nb_impayes=nb_impayes, nb_sans_tarif=nb_sans_tarif,
+        lignes=lignes, categories=categories)
 
 @app.route('/api/tarifs/<int:eleve_id>/<mois>')
 @login_required
