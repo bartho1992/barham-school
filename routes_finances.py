@@ -68,6 +68,18 @@ def finances():
         abos = abonnements_map.get(eleve.id, set())
         scolarite_due = scol.total_annuel if scol else 0
         scolarite_paye = sum(payes.get(m, 0) for m in mois_scolaires)
+        
+        # Donnees par mois pour la scolarite
+        mois_details = {}
+        for m in mois_scolaires:
+            if m == 'Inscription':
+                due_m = scol.inscription if scol else 0
+            else:
+                due_m = getattr(scol, m.lower(), 0) if scol else 0
+            paye_m = payes.get(m, 0)
+            reste_m = max(due_m - paye_m, 0)
+            mois_details[m] = {'due': due_m, 'paye': paye_m, 'reste': reste_m}
+        
         cat_lines = []
         services_due = 0
         services_paye = 0
@@ -105,6 +117,7 @@ def finances():
             'date_limite': date_limite, 'cat_lines': cat_lines,
             'paye_au_moins_un': total_paye > 0,
             'mois_payes': set(payes.keys()),
+            'mois_details': mois_details,
         })
     
     # Mois distincts des paiements pour le filtre

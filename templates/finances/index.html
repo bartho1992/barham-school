@@ -116,7 +116,7 @@
             <tbody>
                 {% for lp in lignes_paiements %}
                 {% set e = lp.eleve %}
-                <tr{% if lp.paye_au_moins_un %} style="background:#f0fff0;"{% endif %} data-mois="{{ lp.mois_payes|join(',') }}">
+                <tr{% if lp.paye_au_moins_un %} style="background:#f0fff0;"{% endif %} data-mois="{{ lp.mois_payes|join(',') }}" data-mois-details='{{ lp.mois_details|tojson }}'>
                     <td style="text-align:center;vertical-align:middle;"><span class="badge rounded-circle p-1" style="font-size:0.45rem;width:12px;height:12px;display:inline-block;{% if lp.paye_au_moins_un %}background:#28a745;{% else %}background:#dc3545;{% endif %}"></span></td>
                     <td style="text-align:center;vertical-align:middle;font-size:0.6rem;">{{ e.code }}</td>
                     <td style="vertical-align:middle;">{{ e.prenom }}</td>
@@ -149,7 +149,29 @@
 </div>
 
 <script>
+function sauvegarderOrigines() {
+    document.querySelectorAll('#table-suivi-paiement tbody tr:not(:has(td[colspan]))').forEach(function(row) {
+        if (row.getAttribute('data-orig-saved')) return;
+        var cells = row.querySelectorAll('td');
+        if (cells.length < 12) return;
+        row.setAttribute('data-orig-du', cells[5].textContent);
+        row.setAttribute('data-orig-du-color', cells[5].style.color || '#1a5276');
+        row.setAttribute('data-orig-du-bold', cells[5].style.fontWeight || 'bold');
+        row.setAttribute('data-orig-avance', cells[6].textContent);
+        row.setAttribute('data-orig-avance-color', cells[6].style.color || '#ccc');
+        row.setAttribute('data-orig-avance-bold', cells[6].style.fontWeight || '');
+        row.setAttribute('data-orig-reste', cells[7].textContent);
+        row.setAttribute('data-orig-reste-color', cells[7].style.color || '');
+        row.setAttribute('data-orig-reste-bold', cells[7].style.fontWeight || '');
+        row.setAttribute('data-orig-reste-font', cells[7].style.fontSize || '');
+        row.setAttribute('data-orig-cumul', cells[8].textContent);
+        row.setAttribute('data-orig-cumul-color', cells[8].style.color || '');
+        row.setAttribute('data-orig-mois', cells[11].textContent);
+        row.setAttribute('data-orig-saved', '1');
+    });
+}
 function filtrerSuivi() {
+    sauvegarderOrigines();
     var classe = (document.getElementById('filtre-classe').value || '').toLowerCase().trim();
     var mois = (document.getElementById('filtre-mois').value || '').trim();
     var nom = (document.getElementById('filtre-nom').value || '').toLowerCase().trim();
@@ -164,10 +186,61 @@ function filtrerSuivi() {
         var show = true;
         if (classe && classeRow.indexOf(classe) === -1) show = false;
         if (nom && prenomCell.indexOf(nom) === -1 && nomCell.indexOf(nom) === -1) show = false;
+        
+        // Gestion filtre mois : affichage DU/AVANCE/RESTE/CUMUL/MOIS
         if (mois) {
-            var moisPayes = (row.getAttribute('data-mois') || '').split(',');
-            if (moisPayes.indexOf(mois) === -1) show = false;
+            var details = null;
+            try { details = JSON.parse(row.getAttribute('data-mois-details') || '{}'); } catch(e) {}
+            if (details && details[mois]) {
+                var d = details[mois];
+                // DU
+                cells[5].textContent = d.due > 0 ? Number(d.due).toLocaleString('fr-FR') : '-';
+                cells[5].style.color = d.due > 0 ? '#1a5276' : '#999';
+                cells[5].style.fontWeight = d.due > 0 ? 'bold' : '';
+                // AVANCE
+                cells[6].textContent = d.paye > 0 ? Number(d.paye).toLocaleString('fr-FR') : '-';
+                cells[6].style.color = d.paye > 0 ? '#155724' : '#ccc';
+                cells[6].style.fontWeight = d.paye > 0 ? 'bold' : '';
+                // RESTE
+                if (d.reste > 0) {
+                    cells[7].textContent = Number(d.reste).toLocaleString('fr-FR');
+                    cells[7].style.color = '#c00';
+                    cells[7].style.fontWeight = 'bold';
+                    cells[7].style.fontSize = '0.7rem';
+                } else if (d.due > 0 && d.paye > 0 && d.reste === 0) {
+                    cells[7].textContent = '\u2713';
+                    cells[7].style.color = '#155724';
+                    cells[7].style.fontWeight = '';
+                    cells[7].style.fontSize = '';
+                }
+                // CUMUL = reste pour ce mois
+                cells[8].textContent = d.reste > 0 ? Number(d.reste).toLocaleString('fr-FR') : '-';
+                cells[8].style.color = d.reste > 0 ? '#c00' : '#999';
+                // MOIS = due pour ce mois
+                cells[11].textContent = d.due > 0 ? Number(d.due).toLocaleString('fr-FR') : '-';
+                
+                if (!show && d.due === 0 && d.paye === 0) show = true;
+            }
+        } else {
+            // Pas de filtre mois : restaurer les donnees agregees
+            var origDu = row.getAttribute('data-orig-du');
+            if (origDu !== null) {
+                cells[5].textContent = origDu;
+                cells[5].style.color = row.getAttribute('data-orig-du-color') || '#1a5276';
+                cells[5].style.fontWeight = row.getAttribute('data-orig-du-bold') || 'bold';
+                cells[6].textContent = row.getAttribute('data-orig-avance') || '';
+                cells[6].style.color = row.getAttribute('data-orig-avance-color') || '#ccc';
+                cells[6].style.fontWeight = row.getAttribute('data-orig-avance-bold') || '';
+                cells[7].textContent = row.getAttribute('data-orig-reste') || '';
+                cells[7].style.color = row.getAttribute('data-orig-reste-color') || '';
+                cells[7].style.fontWeight = row.getAttribute('data-orig-reste-bold') || '';
+                cells[7].style.fontSize = row.getAttribute('data-orig-reste-font') || '';
+                cells[8].textContent = row.getAttribute('data-orig-cumul') || '';
+                cells[8].style.color = row.getAttribute('data-orig-cumul-color') || '';
+                cells[11].textContent = row.getAttribute('data-orig-mois') || '';
+            }
         }
+        
         row.style.display = show ? '' : 'none';
         if (show) visible++;
     });
