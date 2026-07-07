@@ -150,6 +150,7 @@
 
 <script>
 function sauvegarderOrigines() {
+    // Sauvegarder les valeurs des lignes
     document.querySelectorAll('#table-suivi-paiement tbody tr:not(:has(td[colspan]))').forEach(function(row) {
         if (row.getAttribute('data-orig-saved')) return;
         var cells = row.querySelectorAll('td');
@@ -169,6 +170,15 @@ function sauvegarderOrigines() {
         row.setAttribute('data-orig-mois', cells[11].textContent);
         row.setAttribute('data-orig-saved', '1');
     });
+    // Sauvegarder les valeurs des badges
+    var badgeRow = document.querySelector('#table-suivi-paiement thead tr:first-child');
+    if (badgeRow && !badgeRow.getAttribute('data-badge-saved')) {
+        badgeRow.querySelectorAll('td').forEach(function(td) {
+            var b = td.querySelector('.badge');
+            if (b) td.setAttribute('data-orig-badge', b.textContent);
+        });
+        badgeRow.setAttribute('data-badge-saved', '1');
+    }
 }
 function filtrerSuivi() {
     sauvegarderOrigines();
@@ -244,6 +254,39 @@ function filtrerSuivi() {
         row.style.display = show ? '' : 'none';
         if (show) visible++;
     });
+    // Mettre a jour les badges totaux
+    var badgeRow = document.querySelector('#table-suivi-paiement thead tr:first-child');
+    if (badgeRow && mois) {
+        var totalDu = 0, totalAv = 0, totalRe = 0;
+        document.querySelectorAll('#table-suivi-paiement tbody tr:not(:has(td[colspan]))').forEach(function(row) {
+            if (row.style.display === 'none') return;
+            var details = null;
+            try { details = JSON.parse(row.getAttribute('data-mois-details') || '{}'); } catch(e) {}
+            if (details && details[mois]) {
+                totalDu += details[mois].due;
+                totalAv += details[mois].paye;
+                totalRe += details[mois].reste;
+            }
+        });
+        var badges = badgeRow.querySelectorAll('td');
+        if (badges.length > 8) {
+            var fmt = function(n) { return Number(n).toLocaleString('fr-FR'); };
+            badges[5].querySelector('.badge').textContent = fmt(totalDu);
+            badges[6].querySelector('.badge').textContent = fmt(totalAv);
+            badges[7].querySelector('.badge').textContent = fmt(totalRe);
+            badges[8].querySelector('.badge').textContent = fmt(totalRe);
+            badges[11].querySelector('.badge').textContent = fmt(totalDu);
+        }
+    } else if (badgeRow) {
+        // Restaurer les valeurs originales des badges
+        badgeRow.querySelectorAll('td').forEach(function(td, idx) {
+            var orig = td.getAttribute('data-orig-badge');
+            if (orig !== null) {
+                var b = td.querySelector('.badge');
+                if (b) b.textContent = orig;
+            }
+        });
+    }
     var el = document.getElementById('filtre-count');
     if (el) { el.style.display = visible < rows.length || nom || classe || mois ? '' : 'none'; el.textContent = visible + '/' + rows.length + ' eleve(s) affiche(s)'; }
 }
