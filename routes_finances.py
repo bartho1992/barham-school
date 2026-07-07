@@ -121,11 +121,7 @@ def finances():
         })
     
     # Mois distincts des paiements pour le filtre
-    mois_paiements = sorted(set(
-        p.type_paiement for p in Paiement.query.filter_by(annee_scolaire=annee).all() if p.type_paiement
-    ))
-    mois_scolaires_filtre = ['Inscription','Octobre','Novembre','Decembre','Janvier','Fevrier','Mars','Avril','Mai','Juin']
-    mois_list = [m for m in mois_scolaires_filtre if m in mois_paiements] or mois_scolaires_filtre
+    mois_list = ['Inscription','Octobre','Novembre','Decembre','Janvier','Fevrier','Mars','Avril','Mai','Juin']
     
     classes = Classe.query.filter_by(ecole_id=ecole_id).order_by(Classe.nom).all()
     
