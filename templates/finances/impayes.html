@@ -46,21 +46,24 @@
     <span class="fw-bold small me-1"><i class="bi bi-funnel"></i> Filtrer :</span>
     <select id="filtre-classe" class="form-select form-select-sm" style="width:auto;min-width:120px;font-size:0.7rem;height:28px;padding-right:22px;" onchange="filtrer()">
         <option value="">Toutes classes</option>
-        {% set classes_vues = [] %}
-        {% for ligne in lignes %}
-            {% set cn = ligne.eleve.classe.nom %}
-            {% if cn not in classes_vues %}
-                {% set _ = classes_vues.append(cn) %}
-                <option value="{{ cn }}">{{ cn }}</option>
-            {% endif %}
+        {% for c in classes %}
+        <option value="{{ c.nom }}">{{ c.nom }}</option>
         {% endfor %}
     </select>
     <select id="filtre-mois" class="form-select form-select-sm" style="width:auto;min-width:100px;font-size:0.7rem;height:28px;" onchange="filtrer()">
-        <option value="">Tous statuts</option>
-        <option value="impayes">Avec impayes</option>
+        <option value="">Tous les mois</option>
+        {% for m in mois_list %}
+        <option value="{{ m }}">{{ m }}</option>
+        {% endfor %}
+    </select>
+    <select id="filtre-categorie" class="form-select form-select-sm" style="width:auto;min-width:120px;font-size:0.7rem;height:28px;" onchange="filtrer()">
+        <option value="">Toutes categories</option>
+        {% for cat in categories %}
+        <option value="{{ cat.nom }}">{{ cat.nom }}</option>
+        {% endfor %}
     </select>
     <input type="text" id="filtre-nom" class="form-control form-control-sm" style="width:170px;height:28px;font-size:0.7rem;" placeholder="Nom ou prenom..." oninput="filtrer()">
-    <button class="btn btn-outline-secondary btn-sm py-0" onclick="document.getElementById('filtre-classe').value='';document.getElementById('filtre-mois').value='';document.getElementById('filtre-nom').value='';filtrer();"><i class="bi bi-x"></i> Reinit.</button>
+    <button class="btn btn-outline-secondary btn-sm py-0" onclick="document.getElementById('filtre-classe').value='';document.getElementById('filtre-mois').value='';document.getElementById('filtre-categorie').value='';document.getElementById('filtre-nom').value='';filtrer();"><i class="bi bi-x"></i> Reinit.</button>
 </div>
 <div id="filtre-count" class="small text-muted mb-1" style="display:none;"></div>
 
@@ -82,22 +85,22 @@
 <div style="max-height:62vh;overflow:auto;">
     <table class="table table-sm table-bordered mb-0 bg-white" id="table-impayes" style="font-size:0.65rem;table-layout:auto;white-space:nowrap;">
         <thead class="bg-light" style="position:sticky;top:0;z-index:2;">
-            <!-- Ligne de badges de totaux au-dessus des en-tetes -->
-            <tr style="background:#e8f0fe;">
-                <td style="width:22px;text-align:center;padding:2px;border:1px solid #b0c4de;"><span class="badge bg-primary fw-bold" style="font-size:0.55rem;">T</span></td>
-                <td style="border:1px solid #b0c4de;padding:1px;"></td>
-                <td style="border:1px solid #b0c4de;padding:1px;"></td>
-                <td style="border:1px solid #b0c4de;padding:1px;"></td>
-                <td style="border:1px solid #b0c4de;padding:1px;"></td>
-                <td style="text-align:right;padding:1px;border:1px solid #b0c4de;"><span class="badge" style="background:#198754;font-size:0.6rem;padding:1px 4px;">{{ '{:,.0f}'.format(ns.total_du).replace(',', ' ') }}</span></td>
-                <td style="text-align:right;padding:1px;border:1px solid #b0c4de;"><span class="badge" style="background:#198754;font-size:0.6rem;padding:1px 4px;">{{ '{:,.0f}'.format(ns.total_avance).replace(',', ' ') }}</span></td>
-                <td style="text-align:right;padding:1px;border:1px solid #b0c4de;"><span class="badge" style="background:#dc3545;font-size:0.6rem;padding:1px 4px;">{{ '{:,.0f}'.format(ns.total_reste).replace(',', ' ') }}</span></td>
-                <td style="text-align:right;padding:1px;border:1px solid #b0c4de;"><span class="badge" style="background:#fd7e14;font-size:0.6rem;padding:1px 4px;">{{ '{:,.0f}'.format(ns.total_reste).replace(',', ' ') }}</span></td>
-                <td style="border:1px solid #b0c4de;padding:1px;"></td>
-                <td style="border:1px solid #b0c4de;padding:1px;"></td>
-                <td style="text-align:right;padding:1px;border:1px solid #b0c4de;"><span class="badge" style="background:#0a58ca;font-size:0.6rem;padding:1px 4px;">{{ '{:,.0f}'.format(ns.total_mois).replace(',', ' ') }}</span></td>
+            <!-- Ligne de totaux en rectangles colores -->
+            <tr style="background:#e8f0fe;font-size:0;line-height:1;">
+                <td style="width:22px;border:1px solid #b0c4de;padding:0;"></td>
+                <td style="border:1px solid #b0c4de;padding:0;"></td>
+                <td style="border:1px solid #b0c4de;padding:0;"></td>
+                <td style="border:1px solid #b0c4de;padding:0;"></td>
+                <td style="border:1px solid #b0c4de;padding:0;"></td>
+                <td style="text-align:right;border:1px solid #b0c4de;padding:0;"><span style="display:inline-block;background:#198754;color:#fff;font-size:0.6rem;font-weight:bold;padding:1px 3px;line-height:1.2;border-radius:2px;">{{ '{:,.0f}'.format(ns.total_du).replace(',', ' ') }}</span></td>
+                <td style="text-align:right;border:1px solid #b0c4de;padding:0;"><span style="display:inline-block;background:#198754;color:#fff;font-size:0.6rem;font-weight:bold;padding:1px 3px;line-height:1.2;border-radius:2px;">{{ '{:,.0f}'.format(ns.total_avance).replace(',', ' ') }}</span></td>
+                <td style="text-align:right;border:1px solid #b0c4de;padding:0;"><span style="display:inline-block;background:#dc3545;color:#fff;font-size:0.6rem;font-weight:bold;padding:1px 3px;line-height:1.2;border-radius:2px;">{{ '{:,.0f}'.format(ns.total_reste).replace(',', ' ') }}</span></td>
+                <td style="text-align:right;border:1px solid #b0c4de;padding:0;"><span style="display:inline-block;background:#fd7e14;color:#fff;font-size:0.6rem;font-weight:bold;padding:1px 3px;line-height:1.2;border-radius:2px;">{{ '{:,.0f}'.format(ns.total_reste).replace(',', ' ') }}</span></td>
+                <td style="border:1px solid #b0c4de;padding:0;"></td>
+                <td style="border:1px solid #b0c4de;padding:0;"></td>
+                <td style="text-align:right;border:1px solid #b0c4de;padding:0;"><span style="display:inline-block;background:#0a58ca;color:#fff;font-size:0.6rem;font-weight:bold;padding:1px 3px;line-height:1.2;border-radius:2px;">{{ '{:,.0f}'.format(ns.total_mois).replace(',', ' ') }}</span></td>
                 {% for cat in categories %}
-                <td style="text-align:right;padding:1px;border:1px solid #b0c4de;"><span class="badge" style="background:#0a58ca;font-size:0.5rem;padding:1px 3px;">{{ '{:,.0f}'.format(ns.cats_sums.get(cat.nom, 0)).replace(',', ' ') }}</span></td>
+                <td style="text-align:right;border:1px solid #b0c4de;padding:0;"><span style="display:inline-block;background:#0a58ca;color:#fff;font-size:0.5rem;font-weight:bold;padding:1px 2px;line-height:1.2;border-radius:2px;">{{ '{:,.0f}'.format(ns.cats_sums.get(cat.nom, 0)).replace(',', ' ') }}</span></td>
                 {% endfor %}
             </tr>
             <tr>
@@ -121,7 +124,7 @@
         <tbody>
             {% for ligne in lignes %}
             {% set e = ligne.eleve %}
-            <tr class="impaye-row" data-eleve-id="{{ e.id }}" data-classe="{{ e.classe.nom }}" data-nom="{{ e.nom }} {{ e.prenom }}" data-has-impaye="{{ '1' if ligne.total_reste > 0 else '0' }}">
+            <tr class="impaye-row" data-eleve-id="{{ e.id }}" data-classe="{{ e.classe.nom }}" data-nom="{{ e.nom }} {{ e.prenom }}" data-has-impaye="{{ '1' if ligne.total_reste > 0 else '0' }}" data-mois-details='{{ ligne.mois_details|tojson }}'{% for cl in ligne.cat_lines %} data-cat-{{ cl.cat.id }}="{{ cl.reste }}"{% endfor %}>
                 <td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="eleve-check-impaye" value="{{ e.id }}" onchange="updateBtnGroupe()"></td>
                 <td style="vertical-align:middle;font-size:0.6rem;">{{ e.code }}</td>
                 <td style="vertical-align:middle;">{{ e.prenom }}</td>
@@ -182,9 +185,33 @@ function updateBtnGroupe() {
     }
 }
 
+function sauvegarderImpayes() {
+    document.querySelectorAll('#table-impayes tbody tr').forEach(function(tr) {
+        if (tr.getAttribute('data-orig-saved')) return;
+        var cells = tr.querySelectorAll('td');
+        if (cells.length < 12) return;
+        tr.setAttribute('data-orig-du', cells[5].textContent);
+        tr.setAttribute('data-orig-du-color', cells[5].style.color || '#1a5276');
+        tr.setAttribute('data-orig-du-bold', cells[5].style.fontWeight || 'bold');
+        tr.setAttribute('data-orig-avance', cells[6].textContent);
+        tr.setAttribute('data-orig-avance-color', cells[6].style.color || '#999');
+        tr.setAttribute('data-orig-avance-bold', cells[6].style.fontWeight || '');
+        tr.setAttribute('data-orig-reste', cells[7].innerHTML);
+        tr.setAttribute('data-orig-reste-color', cells[7].style.color || '#c00');
+        tr.setAttribute('data-orig-reste-bold', cells[7].style.fontWeight || 'bold');
+        tr.setAttribute('data-orig-reste-font', cells[7].style.fontSize || '');
+        tr.setAttribute('data-orig-cumul', cells[8].textContent);
+        tr.setAttribute('data-orig-cumul-color', cells[8].style.color || '#c00');
+        tr.setAttribute('data-orig-mois', cells[11].textContent);
+        tr.setAttribute('data-orig-saved', '1');
+    });
+}
+
 function filtrer() {
+    sauvegarderImpayes();
     var classe = (document.getElementById('filtre-classe').value || '').toLowerCase().trim();
     var mois = (document.getElementById('filtre-mois').value || '').trim();
+    var categorie = (document.getElementById('filtre-categorie').value || '').trim();
     var nom = (document.getElementById('filtre-nom').value || '').toLowerCase().trim();
     var rows = document.querySelectorAll('#table-impayes tbody tr');
     var visible = 0;
@@ -194,21 +221,78 @@ function filtrer() {
         var show = true;
         var dataClasse = (tr.getAttribute('data-classe') || '').toLowerCase().trim();
         var dataNom = (tr.getAttribute('data-nom') || '').toLowerCase().trim();
-        var hasImpaye = tr.getAttribute('data-has-impaye') === '1';
+        var cells = tr.querySelectorAll('td');
+        if (cells.length < 12) return;
         
         if (classe && dataClasse.indexOf(classe) === -1) show = false;
         if (nom && dataNom.indexOf(nom) === -1) show = false;
-        if (mois === 'impayes' && !hasImpaye) show = false;
+        
+        // Filtre categorie : masquer si la categorie n'a pas de reste > 0
+        if (categorie) {
+            var trouveCat = false;
+            for (var i = 12; i < cells.length; i++) {
+                if (cells[i].textContent.trim() !== '' && cells[i].textContent.trim() !== '-'
+                    && cells[i].textContent.trim() !== '\u2713' && cells[i].textContent.trim() !== '\u2726'
+                    && cells[i].textContent.trim().match(/^\d/)) {
+                    trouveCat = true;
+                    break;
+                }
+            }
+            if (!trouveCat) show = false;
+        }
+        
+        // Filtre mois : modifier les colonnes DU/AVANCE/RESTE/CUMUL/MOIS
+        if (mois) {
+            var details = null;
+            try { details = JSON.parse(tr.getAttribute('data-mois-details') || '{}'); } catch(e) {}
+            if (details && details[mois]) {
+                var d = details[mois];
+                cells[5].textContent = d.due > 0 ? Number(d.due).toLocaleString('fr-FR') : '-';
+                cells[5].style.color = d.due > 0 ? '#1a5276' : '#999';
+                cells[5].style.fontWeight = d.due > 0 ? 'bold' : '';
+                cells[6].textContent = d.paye > 0 ? Number(d.paye).toLocaleString('fr-FR') : '-';
+                cells[6].style.color = d.paye > 0 ? '#155724' : '#ccc';
+                cells[6].style.fontWeight = d.paye > 0 ? 'bold' : '';
+                if (d.reste > 0) {
+                    cells[7].textContent = Number(d.reste).toLocaleString('fr-FR');
+                    cells[7].style.color = '#c00';
+                    cells[7].style.fontWeight = 'bold';
+                    cells[7].style.fontSize = '0.7rem';
+                } else if (d.due > 0) {
+                    cells[7].innerHTML = '\u2713';
+                    cells[7].style.color = '#155724';
+                    cells[7].style.fontWeight = '';
+                    cells[7].style.fontSize = '';
+                } else { cells[7].textContent = '-'; cells[7].style.fontWeight = ''; }
+                cells[8].textContent = d.reste > 0 ? Number(d.reste).toLocaleString('fr-FR') : '-';
+                cells[8].style.color = d.reste > 0 ? '#c00' : '#999';
+                cells[11].textContent = d.due > 0 ? Number(d.due).toLocaleString('fr-FR') : '-';
+            }
+        } else {
+            // Restaurer les valeurs agregees
+            var origDu = tr.getAttribute('data-orig-du');
+            if (origDu !== null) {
+                cells[5].textContent = origDu;
+                cells[5].style.color = tr.getAttribute('data-orig-du-color') || '#1a5276';
+                cells[5].style.fontWeight = tr.getAttribute('data-orig-du-bold') || 'bold';
+                cells[6].textContent = tr.getAttribute('data-orig-avance') || '';
+                cells[6].style.color = tr.getAttribute('data-orig-avance-color') || '#999';
+                cells[6].style.fontWeight = tr.getAttribute('data-orig-avance-bold') || '';
+                cells[7].innerHTML = tr.getAttribute('data-orig-reste') || '';
+                cells[7].style.color = tr.getAttribute('data-orig-reste-color') || '#c00';
+                cells[7].style.fontWeight = tr.getAttribute('data-orig-reste-bold') || 'bold';
+                cells[7].style.fontSize = tr.getAttribute('data-orig-reste-font') || '';
+                cells[8].textContent = tr.getAttribute('data-orig-cumul') || '';
+                cells[8].style.color = tr.getAttribute('data-orig-cumul-color') || '#c00';
+                cells[11].textContent = tr.getAttribute('data-orig-mois') || '';
+            }
+        }
         
         tr.style.display = show ? '' : 'none';
         if (show) {
             visible++;
-            // RESTE est dans la 8eme colonne (index 7, 0-based)
-            var cells = tr.querySelectorAll('td');
-            if (cells.length > 7) {
-                var resteText = (cells[7].textContent || '').replace(/[^\d]/g, '');
-                if (resteText) totalVisible += parseInt(resteText, 10);
-            }
+            var resteText = (cells[7].textContent || '').replace(/[^\d]/g, '');
+            if (resteText) totalVisible += parseInt(resteText, 10);
         }
     });
     

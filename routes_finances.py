@@ -644,6 +644,17 @@ def impayes():
         scolarite_due = scol.total_annuel if scol else 0
         scolarite_paye = sum(payes.get(m, 0) for m in mois_scolaires)
         
+        # Donnees par mois pour la scolarite
+        mois_details = {}
+        for m in mois_scolaires:
+            if m == 'Inscription':
+                due_m = scol.inscription if scol else 0
+            else:
+                due_m = getattr(scol, m.lower(), 0) if scol else 0
+            paye_m = payes.get(m, 0)
+            reste_m = max(due_m - paye_m, 0)
+            mois_details[m] = {'due': due_m, 'paye': paye_m, 'reste': reste_m}
+        
         # --- Services (categories) ---
         cat_lines = []
         services_due = 0
@@ -703,13 +714,18 @@ def impayes():
             'montant_mois': montant_mois,
             'date_limite': date_limite,
             'nb_impayes': sum(1 for cl in cat_lines if cl['reste'] > 0) + (1 if scol and max(scolarite_due - scolarite_paye, 0) > 0 else 0),
+            'mois_details': mois_details,
+            'mois_payes': set(payes.keys()),
         }
         total_global += total_reste
         lignes.append(ligne)
     
+    classes = Classe.query.filter_by(ecole_id=ecole_id).order_by(Classe.nom).all()
+    
     return render_template('finances/impayes.html',
-                         lignes=lignes, ecole=e, categories=categories,
-                         total_impayes_global=total_global, nb_eleves=len(lignes))
+                         lignes=lignes, ecole=e, categories=categories, classes=classes,
+                         total_impayes_global=total_global, nb_eleves=len(lignes),
+                         mois_list=mois_scolaires)
 
 @app.route('/finances/parametres')
 @login_required
