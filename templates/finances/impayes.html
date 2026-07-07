@@ -254,18 +254,26 @@ function filtrer() {
                 cells[6].style.color = d.paye > 0 ? '#155724' : '#ccc';
                 cells[6].style.fontWeight = d.paye > 0 ? 'bold' : '';
                 if (d.reste > 0) {
-                    cells[7].textContent = Number(d.reste).toLocaleString('fr-FR');
-                    cells[7].style.color = '#c00';
-                    cells[7].style.fontWeight = 'bold';
-                    cells[7].style.fontSize = '0.7rem';
-                } else if (d.due > 0) {
-                    cells[7].innerHTML = '\u2713';
-                    cells[7].style.color = '#155724';
-                    cells[7].style.fontWeight = '';
-                    cells[7].style.fontSize = '';
-                } else { cells[7].textContent = '-'; cells[7].style.fontWeight = ''; }
-                cells[8].textContent = d.reste > 0 ? Number(d.reste).toLocaleString('fr-FR') : '-';
-                cells[8].style.color = d.reste > 0 ? '#c00' : '#999';
+                     cells[7].textContent = Number(d.reste).toLocaleString('fr-FR');
+                     cells[7].style.color = '#c00';
+                     cells[7].style.fontWeight = 'bold';
+                     cells[7].style.fontSize = '0.7rem';
+                 } else if (d.due > 0) {
+                     cells[7].innerHTML = '\u2713';
+                     cells[7].style.color = '#155724';
+                     cells[7].style.fontWeight = '';
+                     cells[7].style.fontSize = '';
+                 } else { cells[7].textContent = '-'; cells[7].style.fontWeight = ''; }
+                 // CUMUL = somme cumulative du mois + tous les precedents
+                 var moisOrder = ['Inscription','Octobre','Novembre','Decembre','Janvier','Fevrier','Mars','Avril','Mai','Juin'];
+                 var cumul = 0;
+                 for (var mi = 0; mi < moisOrder.length; mi++) {
+                     var m = moisOrder[mi];
+                     if (details[m]) cumul += details[m].reste;
+                     if (m === mois) break;
+                 }
+                 cells[8].textContent = cumul > 0 ? Number(cumul).toLocaleString('fr-FR') : '\u2713';
+                 cells[8].style.color = cumul > 0 ? '#c00' : '#155724';
                 cells[11].textContent = d.due > 0 ? Number(d.due).toLocaleString('fr-FR') : '-';
             }
         } else {
