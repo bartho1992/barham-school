@@ -52,13 +52,14 @@
             <option value="{{ c.nom }}">{{ c.nom }}</option>
             {% endfor %}
         </select>
-        <select id="filtre-statut" class="form-select form-select-sm" style="width:auto;min-width:100px;font-size:0.7rem;height:28px;" onchange="filtrerSuivi()">
-            <option value="">Tous statuts</option>
-            <option value="paye">Payes</option>
-            <option value="impaye">Impayes</option>
+        <select id="filtre-mois" class="form-select form-select-sm" style="width:auto;min-width:100px;font-size:0.7rem;height:28px;" onchange="filtrerSuivi()">
+            <option value="">Tous mois</option>
+            {% for m in mois_list %}
+            <option value="{{ m }}">{{ m }}</option>
+            {% endfor %}
         </select>
         <input type="text" id="filtre-nom" class="form-control form-control-sm" style="width:170px;height:28px;font-size:0.7rem;" placeholder="Nom ou prenom..." oninput="filtrerSuivi()">
-        <button class="btn btn-outline-secondary btn-sm py-0" onclick="document.getElementById('filtre-classe').value='';document.getElementById('filtre-statut').value='';document.getElementById('filtre-nom').value='';filtrerSuivi();"><i class="bi bi-x"></i> Reinit.</button>
+        <button class="btn btn-outline-secondary btn-sm py-0" onclick="document.getElementById('filtre-classe').value='';document.getElementById('filtre-mois').value='';document.getElementById('filtre-nom').value='';filtrerSuivi();"><i class="bi bi-x"></i> Reinit.</button>
     </div>
     <div id="filtre-count" class="small text-muted mb-1 px-2" style="display:none;"></div>
     <div style="max-height:55vh;overflow:auto;">
@@ -115,7 +116,7 @@
             <tbody>
                 {% for lp in lignes_paiements %}
                 {% set e = lp.eleve %}
-                <tr{% if lp.paye_au_moins_un %} style="background:#f0fff0;"{% endif %}>
+                <tr{% if lp.paye_au_moins_un %} style="background:#f0fff0;"{% endif %} data-mois="{{ lp.mois_payes|join(',') }}">
                     <td style="text-align:center;vertical-align:middle;"><span class="badge rounded-circle p-1" style="font-size:0.45rem;width:12px;height:12px;display:inline-block;{% if lp.paye_au_moins_un %}background:#28a745;{% else %}background:#dc3545;{% endif %}"></span></td>
                     <td style="text-align:center;vertical-align:middle;font-size:0.6rem;">{{ e.code }}</td>
                     <td style="vertical-align:middle;">{{ e.prenom }}</td>
@@ -150,7 +151,7 @@
 <script>
 function filtrerSuivi() {
     var classe = (document.getElementById('filtre-classe').value || '').toLowerCase().trim();
-    var statut = (document.getElementById('filtre-statut').value || '').trim();
+    var mois = (document.getElementById('filtre-mois').value || '').trim();
     var nom = (document.getElementById('filtre-nom').value || '').toLowerCase().trim();
     var rows = document.querySelectorAll('#table-suivi-paiement tbody tr:not(:has(td[colspan]))');
     var visible = 0;
@@ -163,13 +164,15 @@ function filtrerSuivi() {
         var show = true;
         if (classe && classeRow.indexOf(classe) === -1) show = false;
         if (nom && prenomCell.indexOf(nom) === -1 && nomCell.indexOf(nom) === -1) show = false;
-        if (statut === 'paye' && row.style.backgroundColor !== 'rgb(240, 255, 240)') show = false;
-        if (statut === 'impaye' && row.style.backgroundColor === 'rgb(240, 255, 240)') show = false;
+        if (mois) {
+            var moisPayes = (row.getAttribute('data-mois') || '').split(',');
+            if (moisPayes.indexOf(mois) === -1) show = false;
+        }
         row.style.display = show ? '' : 'none';
         if (show) visible++;
     });
     var el = document.getElementById('filtre-count');
-    if (el) { el.style.display = visible < rows.length || nom || classe || statut ? '' : 'none'; el.textContent = visible + '/' + rows.length + ' eleve(s) affiche(s)'; }
+    if (el) { el.style.display = visible < rows.length || nom || classe || mois ? '' : 'none'; el.textContent = visible + '/' + rows.length + ' eleve(s) affiche(s)'; }
 }
 function imprimerTableau() {
     var tbodyHTML = '';

@@ -104,12 +104,20 @@ def finances():
             'total_reste': total_reste, 'montant_mois': montant_mois,
             'date_limite': date_limite, 'cat_lines': cat_lines,
             'paye_au_moins_un': total_paye > 0,
+            'mois_payes': set(payes.keys()),
         })
+    
+    # Mois distincts des paiements pour le filtre
+    mois_paiements = sorted(set(
+        p.type_paiement for p in Paiement.query.filter_by(annee_scolaire=annee).all() if p.type_paiement
+    ))
+    mois_scolaires_filtre = ['Inscription','Octobre','Novembre','Decembre','Janvier','Fevrier','Mars','Avril','Mai','Juin']
+    mois_list = [m for m in mois_scolaires_filtre if m in mois_paiements] or mois_scolaires_filtre
     
     classes = Classe.query.filter_by(ecole_id=ecole_id).order_by(Classe.nom).all()
     
     return render_template('finances/index.html', ecole=e, paiements=recent_paiements, total_encaisse=total_encaisse,
-        today_encaisse=today_encaisse, categories=categories, lignes_paiements=lignes_paiements, classes=classes)
+        today_encaisse=today_encaisse, categories=categories, lignes_paiements=lignes_paiements, classes=classes, mois_list=mois_list)
 
 @app.route('/api/tarifs/<int:eleve_id>/<mois>')
 @login_required
