@@ -174,9 +174,9 @@ function sauvegarderOrigines() {
     // Sauvegarder les valeurs des badges
     var badgeRow = document.querySelector('#table-suivi-paiement thead tr:first-child');
     if (badgeRow && !badgeRow.getAttribute('data-badge-saved')) {
-        badgeRow.querySelectorAll('td').forEach(function(td) {
-            var b = td.querySelector('.badge');
-            if (b) td.setAttribute('data-orig-badge', b.textContent);
+        badgeRow.querySelectorAll('span').forEach(function(sp) {
+            var td = sp.parentElement;
+            td.setAttribute('data-orig-badge', sp.textContent);
         });
         badgeRow.setAttribute('data-badge-saved', '1');
     }
@@ -186,8 +186,10 @@ function filtrerSuivi() {
     var classe = (document.getElementById('filtre-classe').value || '').toLowerCase().trim();
     var mois = (document.getElementById('filtre-mois').value || '').trim();
     var nom = (document.getElementById('filtre-nom').value || '').toLowerCase().trim();
+    console.log('FILTRER_SUIVI: mois=', mois, 'classe=', classe, 'nom=', nom);
     var rows = document.querySelectorAll('#table-suivi-paiement tbody tr:not(:has(td[colspan]))');
     var visible = 0;
+    var nbRowsUpdated = 0;
     rows.forEach(function(row) {
         var cells = row.querySelectorAll('td');
         if (cells.length < 3) return;
@@ -200,9 +202,14 @@ function filtrerSuivi() {
         
         // Gestion filtre mois : affichage DU/AVANCE/RESTE/CUMUL/MOIS
         if (mois) {
+            var raw = row.getAttribute('data-mois-details');
+            console.log('ROW-SUIVI raw data:', raw ? raw.substring(0,80) : '(empty)');
             var details = null;
-            try { details = JSON.parse(row.getAttribute('data-mois-details') || '{}'); } catch(e) {}
+            try { details = JSON.parse(raw || '{}'); } catch(e) { console.log('JSON parse error:', e); }
+            console.log('ROW-SUIVI details:', details);
             if (details && details[mois]) {
+                console.log('Found mois data:', mois, details[mois]);
+                nbRowsUpdated++;
                 var d = details[mois];
                 // DU
                 cells[5].textContent = d.due > 0 ? Number(d.due).toLocaleString('fr-FR') : '-';
@@ -257,8 +264,9 @@ function filtrerSuivi() {
     });
     // Mettre a jour les badges totaux
     var badgeRow = document.querySelector('#table-suivi-paiement thead tr:first-child');
-    if (badgeRow && mois) {
-        var totalDu = 0, totalAv = 0, totalRe = 0;
+    if (!badgeRow) return;
+    if (mois) {
+        var totalDu = 0, totalAv = 0, totalRe = 0, totalMois = 0;
         document.querySelectorAll('#table-suivi-paiement tbody tr:not(:has(td[colspan]))').forEach(function(row) {
             if (row.style.display === 'none') return;
             var details = null;
@@ -267,27 +275,26 @@ function filtrerSuivi() {
                 totalDu += details[mois].due;
                 totalAv += details[mois].paye;
                 totalRe += details[mois].reste;
+                totalMois += details[mois].due;
             }
         });
-        var badges = badgeRow.querySelectorAll('td');
-        if (badges.length > 8) {
+        var spans = badgeRow.querySelectorAll('span');
+        if (spans.length >= 5) {
             var fmt = function(n) { return Number(n).toLocaleString('fr-FR'); };
-            badges[5].querySelector('.badge').textContent = fmt(totalDu);
-            badges[6].querySelector('.badge').textContent = fmt(totalAv);
-            badges[7].querySelector('.badge').textContent = fmt(totalRe);
-            badges[8].querySelector('.badge').textContent = fmt(totalRe);
-            badges[11].querySelector('.badge').textContent = fmt(totalDu);
+            spans[0].textContent = fmt(totalDu);
+            spans[1].textContent = fmt(totalAv);
+            spans[2].textContent = fmt(totalRe);
+            spans[3].textContent = fmt(totalRe);
+            spans[4].textContent = fmt(totalMois);
         }
-    } else if (badgeRow) {
+    } else {
         // Restaurer les valeurs originales des badges
-        badgeRow.querySelectorAll('td').forEach(function(td, idx) {
-            var orig = td.getAttribute('data-orig-badge');
-            if (orig !== null) {
-                var b = td.querySelector('.badge');
-                if (b) b.textContent = orig;
-            }
+        badgeRow.querySelectorAll('span').forEach(function(sp) {
+            var orig = sp.parentElement.getAttribute('data-orig-badge');
+            if (orig !== null) sp.textContent = orig;
         });
     }
+    console.log('Rows updated with mois data (suivi):', nbRowsUpdated, '/', rows.length);
     var el = document.getElementById('filtre-count');
     if (el) { el.style.display = visible < rows.length || nom || classe || mois ? '' : 'none'; el.textContent = visible + '/' + rows.length + ' eleve(s) affiche(s)'; }
 }

@@ -205,6 +205,15 @@ function sauvegarderImpayes() {
         tr.setAttribute('data-orig-mois', cells[11].textContent);
         tr.setAttribute('data-orig-saved', '1');
     });
+    // Sauvegarder les badges
+    var badgeRow = document.querySelector('#table-impayes thead tr:first-child');
+    if (badgeRow && !badgeRow.getAttribute('data-badge-saved')) {
+        badgeRow.querySelectorAll('span').forEach(function(sp) {
+            var td = sp.parentElement;
+            td.setAttribute('data-orig-badge', sp.textContent);
+        });
+        badgeRow.setAttribute('data-badge-saved', '1');
+    }
 }
 
 function filtrer() {
@@ -213,9 +222,12 @@ function filtrer() {
     var mois = (document.getElementById('filtre-mois').value || '').trim();
     var categorie = (document.getElementById('filtre-categorie').value || '').trim();
     var nom = (document.getElementById('filtre-nom').value || '').toLowerCase().trim();
+    document.getElementById('filtre-count').textContent = 'Filtre: mois="' + mois + '" classe="' + classe + '"';
+    document.getElementById('filtre-count').style.display = 'block';
     var rows = document.querySelectorAll('#table-impayes tbody tr');
     var visible = 0;
     var totalVisible = 0;
+    var nbRowsUpdated = 0;
     
     rows.forEach(function(tr) {
         var show = true;
@@ -243,9 +255,11 @@ function filtrer() {
         
         // Filtre mois : modifier les colonnes DU/AVANCE/RESTE/CUMUL/MOIS
         if (mois) {
+            var raw = tr.getAttribute('data-mois-details');
             var details = null;
-            try { details = JSON.parse(tr.getAttribute('data-mois-details') || '{}'); } catch(e) {}
+            try { details = JSON.parse(raw || '{}'); } catch(e) {}
             if (details && details[mois]) {
+                nbRowsUpdated++;
                 var d = details[mois];
                 cells[5].textContent = d.due > 0 ? Number(d.due).toLocaleString('fr-FR') : '-';
                 cells[5].style.color = d.due > 0 ? '#1a5276' : '#999';
@@ -312,11 +326,45 @@ function filtrer() {
     
     var countEl = document.getElementById('filtre-count');
     var total = rows.length;
-    if (visible !== total) {
+    if (mois || classe || nom || categorie || visible !== total) {
         countEl.style.display = 'block';
-        countEl.textContent = visible + ' / ' + total + ' eleve(s) affiche(s)';
+        countEl.textContent = visible + ' / ' + total + ' eleve(s) affiche(s)' + (mois ? ' | Mois: ' + mois : '') + (nbRowsUpdated ? ' | ' + nbRowsUpdated + ' ligne(s) mise(s) a jour' : ' | AUCUNE ligne mise a jour');
     } else {
         countEl.style.display = 'none';
+    }
+    
+    // Mettre a jour les badges selon le filtre mois
+    var badgeRow = document.querySelector('#table-impayes thead tr:first-child');
+    if (!badgeRow) return;
+    if (mois) {
+        // Recalculer les totaux a partir des lignes visibles
+        var tDU = 0, tAV = 0, tRE = 0, tMOIS = 0;
+        rows.forEach(function(tr) {
+            if (tr.style.display === 'none') return;
+            var details = null;
+            try { details = JSON.parse(tr.getAttribute('data-mois-details') || '{}'); } catch(e) {}
+            if (details && details[mois]) {
+                tDU += details[mois].due;
+                tAV += details[mois].paye;
+                tRE += details[mois].reste;
+                tMOIS += details[mois].due;
+            }
+        });
+        var spans = badgeRow.querySelectorAll('span');
+        if (spans.length >= 5) {
+            var fmt = function(n) { return Number(n).toLocaleString('fr-FR'); };
+            spans[0].textContent = fmt(tDU);
+            spans[1].textContent = fmt(tAV);
+            spans[2].textContent = fmt(tRE);
+            spans[3].textContent = fmt(tRE);
+            spans[4].textContent = fmt(tMOIS);
+        }
+    } else {
+        // Restaurer les valeurs originales
+        badgeRow.querySelectorAll('span').forEach(function(sp) {
+            var orig = sp.parentElement.getAttribute('data-orig-badge');
+            if (orig !== null) sp.textContent = orig;
+        });
     }
 }
 
