@@ -70,8 +70,12 @@
         .table tbody tr:nth-child(even) {
             background-color: #f5faf5;
         }
-        .table tbody tr:hover {
-            background-color: #e8f5e9;
+        .table tbody tr:hover td,
+        .table tbody tr:hover th {
+            background-color: #e8f0fe !important;
+        }
+        .table tbody tr {
+            cursor: pointer;
         }
         .table-striped > tbody > tr:nth-of-type(odd) {
             --bs-table-accent-bg: #fff;
