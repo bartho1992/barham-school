@@ -19,23 +19,39 @@
 <!-- Resume -->
 <div class="row mb-1 g-1">
     <div class="col-3">
-        <div class="card bg-danger text-white border-0 shadow-sm">
-            <div class="card-body text-center py-0 px-1" style="font-size:0.6rem;"><strong style="font-size:0.7rem;" id="total-impayes-card">{{ "{:,.0f}".format(total_impayes_global).replace(',', ' ') }}</strong><br>FCFA Impayés</div>
+        <div class="card bg-danger text-white shadow-sm border-0">
+            <div class="card-body text-center d-flex flex-column align-items-center justify-content-center" style="padding:0.4rem; aspect-ratio:1; max-height:100px;">
+                <div style="font-size:0.5rem; opacity:0.85; font-weight:700; line-height:1.1;">IMPAYÉS</div>
+                <div id="total-impayes-card" style="font-size:0.8rem; font-weight:800; line-height:1.1;">{{ "{:,.0f}".format(total_impayes_global).replace(',', ' ') }}</div>
+                <div style="font-size:0.5rem; font-weight:600; opacity:0.75;">FCFA</div>
+            </div>
         </div>
     </div>
     <div class="col-3">
-        <div class="card bg-warning text-dark border-0 shadow-sm">
-            <div class="card-body text-center py-0 px-1" style="font-size:0.6rem;"><strong style="font-size:0.7rem;">{{ nb_eleves }}</strong><br>Élèves</div>
+        <div class="card bg-warning text-dark shadow-sm border-0">
+            <div class="card-body text-center d-flex flex-column align-items-center justify-content-center" style="padding:0.4rem; aspect-ratio:1; max-height:100px;">
+                <div style="font-size:0.5rem; opacity:0.85; font-weight:700; line-height:1.1;">ÉLÈVES</div>
+                <div style="font-size:0.8rem; font-weight:800; line-height:1.1;">{{ nb_eleves }}</div>
+                <div style="font-size:0.5rem; font-weight:600; opacity:0.75;">&nbsp;</div>
+            </div>
         </div>
     </div>
     <div class="col-3">
-        <div class="card bg-info text-white border-0 shadow-sm">
-            <div class="card-body text-center py-0 px-1" style="font-size:0.6rem;"><strong style="font-size:0.7rem;">{{ categories|length }}</strong><br>Catégories</div>
+        <div class="card bg-info text-white shadow-sm border-0">
+            <div class="card-body text-center d-flex flex-column align-items-center justify-content-center" style="padding:0.4rem; aspect-ratio:1; max-height:100px;">
+                <div style="font-size:0.5rem; opacity:0.85; font-weight:700; line-height:1.1;">CATÉGORIES</div>
+                <div style="font-size:0.8rem; font-weight:800; line-height:1.1;">{{ categories|length }}</div>
+                <div style="font-size:0.5rem; font-weight:600; opacity:0.75;">&nbsp;</div>
+            </div>
         </div>
     </div>
     <div class="col-3">
-        <div class="card bg-success text-white border-0 shadow-sm">
-            <div class="card-body text-center py-0 px-1" style="font-size:0.6rem;"><strong style="font-size:0.7rem;">{{ '{:,.0f}'.format(total_impayes_global).replace(',', ' ') }}</strong><br>Total Restant</div>
+        <div class="card bg-success text-white shadow-sm border-0">
+            <div class="card-body text-center d-flex flex-column align-items-center justify-content-center" style="padding:0.4rem; aspect-ratio:1; max-height:100px;">
+                <div style="font-size:0.5rem; opacity:0.85; font-weight:700; line-height:1.1;">RESTANT</div>
+                <div style="font-size:0.8rem; font-weight:800; line-height:1.1;">{{ '{:,.0f}'.format(total_impayes_global).replace(',', ' ') }}</div>
+                <div style="font-size:0.5rem; font-weight:600; opacity:0.75;">FCFA</div>
+            </div>
         </div>
     </div>
 </div>
