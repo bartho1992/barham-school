@@ -217,7 +217,7 @@
             <div class="card-body">
                 <div class="section-title"><i class="bi bi-building"></i> Effectifs par Classe</div>
                 {% set max_eff = classes_stats[0].nb if classes_stats else 1 %}
-                {% for cs in classes_stats[:8] %}
+                {% for cs in classes_stats %}
                 <div class="bar-item">
                     <div class="label">{{ cs.nom }}</div>
                     <div class="bar-wrap">
