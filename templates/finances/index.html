@@ -6,31 +6,31 @@
     <a href="{{ url_for('paiement_ajouter') }}" class="btn btn-success btn-sm"><i class="bi bi-plus-circle"></i> Nouveau Paiement</a>
 </div>
 
-<div class="row mb-4">
+<div class="row mb-2 g-1">
     <div class="col-md-4">
         <div class="card bg-primary text-white shadow-sm border-0">
-            <div class="card-body p-3">
-                <h6 class="card-title opacity-75 small">Encaissement Total</h6>
-                <h4 class="fw-bold mb-0">{{ "{:,.0f}".format(total_encaisse).replace(',', ' ') }} FCFA</h4>
-                <small><i class="bi bi-calendar-check"></i> {{ current_annee }}</small>
+            <div class="card-body p-1 text-center">
+                <small style="font-size:0.6rem;opacity:0.8;">Encaissement Total</small>
+                <div class="fw-bold" style="font-size:0.8rem;">{{ "{:,.0f}".format(total_encaisse).replace(',', ' ') }} FCFA</div>
+                <small style="font-size:0.5rem;"><i class="bi bi-calendar-check"></i> {{ current_annee }}</small>
             </div>
         </div>
     </div>
     <div class="col-md-4">
         <div class="card bg-info text-white shadow-sm border-0">
-            <div class="card-body p-3">
-                <h6 class="card-title opacity-75 small">Encaissement du Jour</h6>
-                <h4 class="fw-bold mb-0">{{ "{:,.0f}".format(today_encaisse).replace(',', ' ') }} FCFA</h4>
-                <small><i class="bi bi-clock"></i> Aujourd'hui</small>
+            <div class="card-body p-1 text-center">
+                <small style="font-size:0.6rem;opacity:0.8;">Encaissement du Jour</small>
+                <div class="fw-bold" style="font-size:0.8rem;">{{ "{:,.0f}".format(today_encaisse).replace(',', ' ') }} FCFA</div>
+                <small style="font-size:0.5rem;"><i class="bi bi-clock"></i> Aujourd'hui</small>
             </div>
         </div>
     </div>
     <div class="col-md-4">
         <a href="{{ url_for('impayes') }}" class="card bg-danger text-white shadow-sm border-0 text-decoration-none h-100">
-            <div class="card-body p-3">
-                <h6 class="card-title opacity-75 small">Impayés</h6>
-                <h4 class="fw-bold mb-0">{{ "{:,.0f}".format(total_encaisse).replace(',', ' ') }} FCFA</h4>
-                <small><i class="bi bi-exclamation-triangle"></i> Voir les impayés</small>
+            <div class="card-body p-1 text-center">
+                <small style="font-size:0.6rem;opacity:0.8;">Impayés</small>
+                <div class="fw-bold" style="font-size:0.8rem;">{{ "{:,.0f}".format(total_encaisse).replace(',', ' ') }} FCFA</div>
+                <small style="font-size:0.5rem;"><i class="bi bi-exclamation-triangle"></i> Voir les impayés</small>
             </div>
         </a>
     </div>
