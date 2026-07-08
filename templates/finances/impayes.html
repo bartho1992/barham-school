@@ -17,26 +17,25 @@
 </div>
 
 <!-- Resume -->
-<!-- Total RESTE dans la premiere carte -->
-<div class="row mb-2 g-1">
+<div class="row mb-1 g-1">
     <div class="col-3">
         <div class="card bg-danger text-white border-0 shadow-sm">
-            <div class="card-body text-center py-1"><h5 class="mb-0 fw-bold" id="total-impayes-card">{{ "{:,.0f}".format(total_impayes_global).replace(',', ' ') }}</h5><small>FCFA Impayes</small></div>
+            <div class="card-body text-center py-0 px-1" style="font-size:0.6rem;"><strong style="font-size:0.7rem;" id="total-impayes-card">{{ "{:,.0f}".format(total_impayes_global).replace(',', ' ') }}</strong><br>FCFA Impayés</div>
         </div>
     </div>
     <div class="col-3">
         <div class="card bg-warning text-dark border-0 shadow-sm">
-            <div class="card-body text-center py-1"><h5 class="mb-0 fw-bold">{{ nb_eleves }}</h5><small>Eleves</small></div>
+            <div class="card-body text-center py-0 px-1" style="font-size:0.6rem;"><strong style="font-size:0.7rem;">{{ nb_eleves }}</strong><br>Élèves</div>
         </div>
     </div>
     <div class="col-3">
         <div class="card bg-info text-white border-0 shadow-sm">
-            <div class="card-body text-center py-1"><h5 class="mb-0 fw-bold">{{ categories|length }}</h5><small>Categories</small></div>
+            <div class="card-body text-center py-0 px-1" style="font-size:0.6rem;"><strong style="font-size:0.7rem;">{{ categories|length }}</strong><br>Catégories</div>
         </div>
     </div>
     <div class="col-3">
         <div class="card bg-success text-white border-0 shadow-sm">
-            <div class="card-body text-center py-1"><h5 class="mb-0 fw-bold">{{ '{:,.0f}'.format(total_impayes_global).replace(',', ' ') }}</h5><small>Total Restant</small></div>
+            <div class="card-body text-center py-0 px-1" style="font-size:0.6rem;"><strong style="font-size:0.7rem;">{{ '{:,.0f}'.format(total_impayes_global).replace(',', ' ') }}</strong><br>Total Restant</div>
         </div>
     </div>
 </div>
