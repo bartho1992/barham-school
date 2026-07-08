@@ -9,28 +9,28 @@
 <div class="row mb-2 g-2">
     <div class="col-md-4">
         <div class="card bg-primary text-white shadow-sm border-0">
-            <div class="card-body text-center" style="padding:0.3rem 0.5rem;">
-                <div style="font-size:0.6rem; opacity:0.85; font-weight:700;">ENCAISSEMENT TOTAL</div>
-                <div style="font-size:0.8rem; font-weight:800;">{{ "{:,.0f}".format(total_encaisse).replace(',', ' ') }} FCFA</div>
-                <div style="font-size:0.55rem; font-weight:600; opacity:0.8;">{{ current_annee }}</div>
+            <div class="card-body text-center d-flex flex-column align-items-center justify-content-center" style="padding:0.4rem; aspect-ratio:1; max-height:100px;">
+                <div style="font-size:0.55rem; opacity:0.85; font-weight:700; line-height:1.1;">ENCAISSEMENT<br>TOTAL</div>
+                <div style="font-size:0.8rem; font-weight:800; line-height:1.1;">{{ "{:,.0f}".format(total_encaisse).replace(',', ' ') }}</div>
+                <div style="font-size:0.5rem; font-weight:600; opacity:0.75;">FCFA</div>
             </div>
         </div>
     </div>
     <div class="col-md-4">
         <div class="card bg-info text-white shadow-sm border-0">
-            <div class="card-body text-center" style="padding:0.3rem 0.5rem;">
-                <div style="font-size:0.6rem; opacity:0.85; font-weight:700;">ENCAISSEMENT DU JOUR</div>
-                <div style="font-size:0.8rem; font-weight:800;">{{ "{:,.0f}".format(today_encaisse).replace(',', ' ') }} FCFA</div>
-                <div style="font-size:0.55rem; font-weight:600; opacity:0.8;">Aujourd'hui</div>
+            <div class="card-body text-center d-flex flex-column align-items-center justify-content-center" style="padding:0.4rem; aspect-ratio:1; max-height:100px;">
+                <div style="font-size:0.55rem; opacity:0.85; font-weight:700; line-height:1.1;">ENCAISSEMENT<br>DU JOUR</div>
+                <div style="font-size:0.8rem; font-weight:800; line-height:1.1;">{{ "{:,.0f}".format(today_encaisse).replace(',', ' ') }}</div>
+                <div style="font-size:0.5rem; font-weight:600; opacity:0.75;">FCFA</div>
             </div>
         </div>
     </div>
     <div class="col-md-4">
         <a href="{{ url_for('impayes') }}" class="card bg-danger text-white shadow-sm border-0 text-decoration-none h-100">
-            <div class="card-body text-center" style="padding:0.3rem 0.5rem;">
-                <div style="font-size:0.6rem; opacity:0.85; font-weight:700;">IMPAYÉS</div>
-                <div style="font-size:0.8rem; font-weight:800;">{{ "{:,.0f}".format(total_encaisse).replace(',', ' ') }} FCFA</div>
-                <div style="font-size:0.55rem; font-weight:600; opacity:0.8;">Voir les impayés</div>
+            <div class="card-body text-center d-flex flex-column align-items-center justify-content-center" style="padding:0.4rem; aspect-ratio:1; max-height:100px;">
+                <div style="font-size:0.55rem; opacity:0.85; font-weight:700; line-height:1.1;">IMPAYÉS</div>
+                <div style="font-size:0.8rem; font-weight:800; line-height:1.1;">{{ "{:,.0f}".format(total_encaisse).replace(',', ' ') }}</div>
+                <div style="font-size:0.5rem; font-weight:600; opacity:0.75;">FCFA</div>
             </div>
         </a>
     </div>
