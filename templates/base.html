@@ -12,6 +12,19 @@
     <style>
         /* ===== STYLE EXCEL GLOBAL POUR TOUS LES TABLEAUX ===== */
         
+        /* Animations notifications */
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(80px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes slideOutRight {
+            from { opacity: 1; transform: translateX(0); }
+            to   { opacity: 0; transform: translateX(80px); }
+        }
+        .toast-flash.removing {
+            animation: slideOutRight 0.3s ease forwards;
+        }
+        
         /* Flash messages ameliores */
         .alert {
             border: none;
@@ -301,18 +314,21 @@
             </div>
             {% endif %}
             <div class="container-fluid" style="margin-top:0 !important; padding-top:0 !important;">
+                {% block content %}{% endblock %}
+            </div>
+
+            <!-- Notifications flottantes -->
+            <div id="toast-container" style="position:fixed; top:12px; right:12px; z-index:9999; display:flex; flex-direction:column; gap:6px; max-width:400px;">
                 {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                 {% for category, message in messages %}
-                <div class="alert alert-{{ category }} alert-dismissible fade show">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                <div class="toast-flash show" role="alert" style="background:{% if category == 'success' %}#d4edda;color:#155724;border-left:4px solid #28a745{% elif category == 'danger' %}#fce4e4;color:#721c24;border-left:4px solid #dc3545{% elif category == 'warning' %}#fff3cd;color:#856404;border-left:4px solid #ffc107{% else %}#d1ecf1;color:#0c5460;border-left:4px solid #17a2b8{% endif %}; padding:10px 14px; border-radius:8px; font-size:0.75rem; box-shadow:0 8px 24px rgba(0,0,0,0.15); animation:slideInRight 0.35s ease; display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                    <span>{{ message }}</span>
+                    <button type="button" class="btn-close" style="font-size:0.5rem;" onclick="this.parentElement.remove()"></button>
                 </div>
                 {% endfor %}
                 {% endif %}
                 {% endwith %}
-
-                {% block content %}{% endblock %}
             </div>
             
             <footer class="text-center text-muted py-2 mt-auto border-top small">
@@ -324,6 +340,16 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script>
+        // Auto-disparition des notifications flottantes apres 5s
+        (function() {
+            document.querySelectorAll('.toast-flash').forEach(function(toast) {
+                setTimeout(function() {
+                    toast.classList.add('removing');
+                    setTimeout(function() { toast.remove(); }, 300);
+                }, 5000);
+            });
+        })();
+        
         // Sidebar toggle pour mobile/tablette
         (function() {
             var toggle = document.getElementById('sidebarToggle');
