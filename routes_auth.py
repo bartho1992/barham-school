@@ -170,19 +170,121 @@ def logout(): logout_user(); return redirect(url_for('login'))
 @app.route('/')
 @login_required
 def dashboard():
-    from models import Eleve, Classe, Personnel, Paiement
+    from models import Eleve, Classe, Personnel, Paiement, Scolarite
     from app import get_current_ecole_id
+    from datetime import datetime
     ecole_id = get_current_ecole_id()
     e = Ecole.query.get(ecole_id); annee = _annee_courante(e)
-
+    
+    # Stats de base
+    total_eleves = Eleve.query.filter_by(ecole_id=ecole_id).filter(
+        db.or_(Eleve.annee_scolaire == annee, Eleve.annee_scolaire == None, Eleve.annee_scolaire == '')
+    ).count()
+    total_classes = Classe.query.filter_by(ecole_id=ecole_id).count()
+    total_personnel = Personnel.query.filter_by(ecole_id=ecole_id).count()
+    
+    # Paiements
+    total_paiements = db.session.query(db.func.sum(Paiement.montant)).filter_by(annee_scolaire=annee).scalar() or 0
+    today_encaisse = db.session.query(db.func.sum(Paiement.montant)).filter(
+        db.func.date(Paiement.date_paiement) == datetime.now().date(),
+        Paiement.annee_scolaire == annee
+    ).scalar() or 0
+    
+    # Impayés : calcul réel (scolarité due - payée + services)
+    scolarites = Scolarite.query.filter_by(annee_scolaire=annee).all()
+    scolarite_map = {s.classe_id: s for s in scolarites}
+    mois_scolaires = ['Inscription','Octobre','Novembre','Decembre','Janvier','Fevrier','Mars','Avril','Mai','Juin']
+    paiements_map = {}
+    for p in Paiement.query.filter_by(annee_scolaire=annee).all():
+        if p.eleve_id not in paiements_map:
+            paiements_map[p.eleve_id] = {}
+        key = p.type_paiement or ''
+        paiements_map[p.eleve_id][key] = paiements_map[p.eleve_id].get(key, 0) + p.montant
+    
+    from models import CategorieTarif, TarifService, AbonnementService
+    categories = CategorieTarif.query.all()
+    tarifs_map = {}
+    for t in TarifService.query.filter_by(annee_scolaire=annee).all():
+        tarifs_map[(t.classe_id, t.categorie_id)] = t
+    abos_map = {}
+    for a in AbonnementService.query.filter_by(actif=True).all():
+        if a.eleve_id not in abos_map:
+            abos_map[a.eleve_id] = set()
+        abos_map[a.eleve_id].add(a.categorie_id)
+    
+    total_impayes = 0
+    nb_eleves_impayes = 0
+    for eleve in Eleve.query.filter_by(ecole_id=ecole_id).filter(
+        db.or_(Eleve.annee_scolaire == annee, Eleve.annee_scolaire == None, Eleve.annee_scolaire == '')
+    ).all():
+        if not eleve.classe: continue
+        scol = scolarite_map.get(eleve.classe_id)
+        payes = paiements_map.get(eleve.id, {})
+        abos = abos_map.get(eleve.id, set())
+        scolarite_due = scol.total_annuel if scol else 0
+        scolarite_paye = sum(payes.get(m, 0) for m in mois_scolaires)
+        services_due = 0
+        services_paye = 0
+        for cat in categories:
+            tarif = tarifs_map.get((eleve.classe_id, cat.id))
+            if not tarif or cat.id not in abos: continue
+            services_due += tarif.total_annuel
+            services_paye += payes.get(cat.nom, 0)
+        reste = max(scolarite_due + services_due - scolarite_paye - services_paye, 0)
+        total_impayes += reste
+        if reste > 0: nb_eleves_impayes += 1
+    
+    # Répartition filles/garçons
+    garcons = Eleve.query.filter_by(sexe='M', ecole_id=ecole_id).filter(
+        db.or_(Eleve.annee_scolaire == annee, Eleve.annee_scolaire == None, Eleve.annee_scolaire == '')
+    ).count()
+    filles = Eleve.query.filter_by(sexe='F', ecole_id=ecole_id).filter(
+        db.or_(Eleve.annee_scolaire == annee, Eleve.annee_scolaire == None, Eleve.annee_scolaire == '')
+    ).count()
+    
+    # Top classes par effectif
+    classes_stats = []
+    for c in Classe.query.filter_by(ecole_id=ecole_id).order_by(Classe.nom).all():
+        nb = Eleve.query.filter_by(classe_id=c.id, ecole_id=ecole_id).filter(
+            db.or_(Eleve.annee_scolaire == annee, Eleve.annee_scolaire == None, Eleve.annee_scolaire == '')
+        ).count()
+        classes_stats.append({'nom': c.nom, 'nb': nb})
+    classes_stats.sort(key=lambda x: x['nb'], reverse=True)
+    
+    # Paiements par mois pour graphique
+    paiements_mois = {}
+    for m in mois_scolaires:
+        total_m = db.session.query(db.func.sum(Paiement.montant)).filter_by(
+            type_paiement=m, annee_scolaire=annee
+        ).scalar() or 0
+        paiements_mois[m] = int(total_m)
+    
+    # Derniers paiements
+    recent_paiements = Paiement.query.filter_by(annee_scolaire=annee).order_by(Paiement.date_paiement.desc()).limit(10).all()
+    
+    # Taux de recouvrement
+    total_du = 0
+    for eleve in Eleve.query.filter_by(ecole_id=ecole_id).filter(
+        db.or_(Eleve.annee_scolaire == annee, Eleve.annee_scolaire == None, Eleve.annee_scolaire == '')
+    ).all():
+        if not eleve.classe: continue
+        scol = scolarite_map.get(eleve.classe_id)
+        due = scol.total_annuel if scol else 0
+        abos = abos_map.get(eleve.id, set())
+        for cat in categories:
+            tarif = tarifs_map.get((eleve.classe_id, cat.id))
+            if tarif and cat.id in abos:
+                due += tarif.total_annuel
+        total_du += due
+    taux_recouvrement = round((total_paiements / total_du * 100) if total_du > 0 else 0, 1)
+    
     return render_template('dashboard.html', ecole=e,
-        total_eleves=Eleve.query.filter_by(annee_scolaire=annee, ecole_id=ecole_id).count(), 
-        total_classes=Classe.query.filter_by(ecole_id=ecole_id).count(),
-        total_personnel=Personnel.query.filter_by(ecole_id=ecole_id).count(),
-        total_paiements=db.session.query(db.func.sum(Paiement.montant)).filter_by(annee_scolaire=annee, ecole_id=ecole_id).scalar() or 0,
-        total_impayes=db.session.query(db.func.sum(Paiement.montant_restant)).filter_by(annee_scolaire=annee, ecole_id=ecole_id).scalar() or 0,
-        recent_paiements=Paiement.query.filter_by(annee_scolaire=annee, ecole_id=ecole_id).order_by(Paiement.date_paiement.desc()).limit(5).all(),
-        garcons=Eleve.query.filter_by(sexe='M', annee_scolaire=annee, ecole_id=ecole_id).count(),
-        filles=Eleve.query.filter_by(sexe='F', annee_scolaire=annee, ecole_id=ecole_id).count())
+        total_eleves=total_eleves, total_classes=total_classes,
+        total_personnel=total_personnel, total_paiements=total_paiements,
+        total_impayes=total_impayes, nb_eleves_impayes=nb_eleves_impayes,
+        today_encaisse=today_encaisse, taux_recouvrement=taux_recouvrement,
+        recent_paiements=recent_paiements, garcons=garcons, filles=filles,
+        classes_stats=classes_stats, paiements_mois=paiements_mois,
+        mois_scolaires=mois_scolaires)
 
 from models import Classe, Matiere

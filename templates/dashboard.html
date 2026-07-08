@@ -1,21 +1,101 @@
 {% extends "base.html" %}
 {% block title %}Tableau de bord - {{ ecole.nom }}{% endblock %}
 {% block content %}
+
+<style>
+:root {
+    --card-radius: 10px;
+}
+.db-card {
+    border: none;
+    border-radius: var(--card-radius);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    overflow: hidden;
+}
+.db-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.10);
+}
+.db-card .card-body { padding: 12px 14px; }
+.db-stat-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem;
+}
+.db-stat-value { font-size: 1.4rem; font-weight: 700; line-height: 1.1; }
+.db-stat-label { font-size: 0.65rem; opacity: 0.75; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* Barres de progression */
+.progress-thin { height: 5px; border-radius: 3px; }
+.bar-item {
+    display: flex; align-items: center; gap: 6px; margin-bottom: 6px;
+}
+.bar-item .label { font-size: 0.65rem; width: 60px; text-align: right; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar-item .bar-wrap { flex: 1; background: #f0f0f0; border-radius: 4px; height: 12px; overflow: hidden; }
+.bar-item .bar-fill { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
+.bar-item .bar-val { font-size: 0.6rem; font-weight: 700; width: 45px; text-align: right; flex-shrink: 0; }
+
+/* KPI row */
+.kpi-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+.kpi-item {
+    flex: 1; min-width: 110px;
+    background: #fff; border-radius: 8px;
+    padding: 8px 10px; text-align: center;
+    border: 1px solid #e8e8e8;
+}
+.kpi-item .val { font-size: 1rem; font-weight: 700; }
+.kpi-item .lbl { font-size: 0.55rem; color: #888; text-transform: uppercase; }
+
+/* Section headers */
+.section-title {
+    font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+    color: #444; margin-bottom: 6px; display: flex; align-items: center; gap: 5px;
+    border-bottom: 2px solid #e0e0e0; padding-bottom: 4px;
+}
+.section-title i { font-size: 0.75rem; }
+
+/* Widget flottant */
+.widget-paiements {
+    position: fixed; bottom: 60px; right: 15px; width: 380px; max-width: 94vw;
+    z-index: 1050; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    border-radius: 10px; overflow: hidden;
+}
+.widget-paiements .card-header {
+    cursor: pointer; user-select: none;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 14px;
+}
+.widget-paiements .toggle-icon { transition: transform 0.3s ease; }
+.widget-paiements.collapsed .toggle-icon { transform: rotate(-90deg); }
+.widget-paiements.collapsed .widget-body { display: none; }
+.widget-body { max-height: 280px; overflow-y: auto; }
+
+@media (max-width: 768px) {
+    .kpi-item { min-width: 70px; padding: 6px 6px; }
+    .kpi-item .val { font-size: 0.85rem; }
+    .widget-paiements { bottom: 8px; right: 4px; left: 4px; width: auto; max-width: none; }
+    .widget-body { max-height: 200px; }
+}
+</style>
+
+<!-- Alertes essai / licence -->
 {% if est_essai and jours_restants <= 7 and jours_restants > 0 %}
 <div class="alert alert-warning border-0 shadow-sm mb-2 py-2 small d-flex justify-content-between align-items-center">
-    <span><i class="bi bi-exclamation-triangle-fill me-1"></i> <strong>Votre essai gratuit expire dans {{ jours_restants }} jour{{ 's' if jours_restants != 1 }} !</strong></span>
+    <span><i class="bi bi-exclamation-triangle-fill me-1"></i> <strong>Essai gratuit expire dans {{ jours_restants }} jour{{ 's' if jours_restants != 1 }} !</strong></span>
     <a href="{{ url_for('abonnement') }}" class="btn btn-warning btn-sm py-0 px-2 fw-bold">Souscrire</a>
 </div>
-{% endif %}
-{% if est_essai and jours_restants > 7 %}
+{% elif est_essai and jours_restants > 7 %}
 <div class="alert alert-info border-0 shadow-sm mb-2 py-2 small d-flex justify-content-between align-items-center">
     <span><i class="bi bi-clock-history me-1"></i> <strong>Essai gratuit</strong> — {{ jours_restants }} jours restants</span>
     <a href="{{ url_for('abonnement') }}" class="btn btn-outline-primary btn-sm py-0 px-2">Voir les plans</a>
 </div>
 {% endif %}
 
+<!-- En-tête -->
 <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap">
-    <div class="section-header"><i class="bi bi-speedometer2 me-1"></i> Tableau de bord — {{ ecole.nom }} | Annee : {{ current_annee }}</div>
+    <div class="section-header"><i class="bi bi-speedometer2 me-1"></i> Tableau de bord — {{ ecole.nom }} | Année : {{ current_annee }}</div>
     <form method="GET" action="{{ url_for('changer_annee') }}" class="d-flex align-items-center gap-1">
         <label class="small fw-bold"><i class="bi bi-calendar3"></i></label>
         <select name="annee" class="form-select form-select-sm" style="width: auto; min-width: 140px;" onchange="this.form.submit()">
@@ -26,189 +106,202 @@
     </form>
 </div>
 
-<!-- Stats cards compactes -->
+<!-- KPI row : mini cartes -->
+<div class="kpi-row">
+    <div class="kpi-item" style="border-left: 3px solid #0d6efd;">
+        <div class="val text-primary">{{ total_eleves }}</div>
+        <div class="lbl">Élèves</div>
+    </div>
+    <div class="kpi-item" style="border-left: 3px solid #198754;">
+        <div class="val text-success">{{ total_classes }}</div>
+        <div class="lbl">Classes</div>
+    </div>
+    <div class="kpi-item" style="border-left: 3px solid #6f42c1;">
+        <div class="val" style="color:#6f42c1;">{{ total_personnel }}</div>
+        <div class="lbl">Personnel</div>
+    </div>
+    <div class="kpi-item" style="border-left: 3px solid #fd7e14;">
+        <div class="val" style="color:#fd7e14;">{{ garcons }}</div>
+        <div class="lbl">Garçons</div>
+    </div>
+    <div class="kpi-item" style="border-left: 3px solid #d63384;">
+        <div class="val" style="color:#d63384;">{{ filles }}</div>
+        <div class="lbl">Filles</div>
+    </div>
+    <div class="kpi-item" style="border-left: 3px solid #dc3545;">
+        <div class="val text-danger">{{ nb_eleves_impayes }}</div>
+        <div class="lbl">Él. Impayés</div>
+    </div>
+</div>
+
+<!-- Cartes principales -->
 <div class="row g-2 mb-2">
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm bg-info text-white h-100">
-            <div class="card-body text-center py-2">
-                <i class="bi bi-people-fill fs-3"></i>
-                <h4 class="mt-1 mb-0">{{ total_eleves }}</h4>
-                <small>Eleves</small>
-                <a href="{{ url_for('eleves') }}" class="btn btn-light btn-sm mt-1 py-0 px-2">Voir</a>
+    <!-- Encaissement total -->
+    <div class="col-lg-3 col-md-6">
+        <div class="card db-card bg-white">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="db-stat-icon bg-primary bg-opacity-10 text-primary"><i class="bi bi-cash-stack"></i></div>
+                <div>
+                    <div class="db-stat-label">Encaissement Total</div>
+                    <div class="db-stat-value text-primary">{{ "{:,.0f}".format(total_paiements).replace(',', ' ') }} F</div>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm bg-success text-white h-100">
-            <div class="card-body text-center py-2">
-                <i class="bi bi-building fs-3"></i>
-                <h4 class="mt-1 mb-0">{{ total_classes }}</h4>
-                <small>Classes</small>
-                <a href="{{ url_for('classes') }}" class="btn btn-light btn-sm mt-1 py-0 px-2">Voir</a>
+    <!-- Encaissement du jour -->
+    <div class="col-lg-3 col-md-6">
+        <div class="card db-card bg-white">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="db-stat-icon bg-success bg-opacity-10 text-success"><i class="bi bi-calendar-check"></i></div>
+                <div>
+                    <div class="db-stat-label">Encaissement Aujourd'hui</div>
+                    <div class="db-stat-value text-success">{{ "{:,.0f}".format(today_encaisse).replace(',', ' ') }} F</div>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm bg-warning text-white h-100">
-            <div class="card-body text-center py-2">
-                <i class="bi bi-person-badge fs-3"></i>
-                <h4 class="mt-1 mb-0">{{ total_personnel }}</h4>
-                <small>Personnel</small>
-                <a href="{{ url_for('personnel') }}" class="btn btn-light btn-sm mt-1 py-0 px-2">Voir</a>
+    <!-- Impayés -->
+    <div class="col-lg-3 col-md-6">
+        <div class="card db-card bg-white">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="db-stat-icon bg-danger bg-opacity-10 text-danger"><i class="bi bi-exclamation-triangle"></i></div>
+                <div>
+                    <div class="db-stat-label">Total Impayés</div>
+                    <div class="db-stat-value text-danger">{{ "{:,.0f}".format(total_impayes).replace(',', ' ') }} F</div>
+                    <a href="{{ url_for('impayes') }}" class="small">Voir détails <i class="bi bi-arrow-right"></i></a>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm bg-primary text-white h-100">
-            <div class="card-body text-center py-2">
-                <i class="bi bi-cash-stack fs-3"></i>
-                <h4 class="mt-1 mb-0">{{ "{:,.0f}".format(total_paiements) }}</h4>
-                <small>Paiements (FCFA)</small>
-                <a href="{{ url_for('finances') }}" class="btn btn-light btn-sm mt-1 py-0 px-2">Voir</a>
+    <!-- Taux recouvrement -->
+    <div class="col-lg-3 col-md-6">
+        <div class="card db-card bg-white">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="db-stat-icon bg-info bg-opacity-10 text-info"><i class="bi bi-graph-up"></i></div>
+                <div>
+                    <div class="db-stat-label">Taux Recouvrement</div>
+                    <div class="db-stat-value text-info">{{ taux_recouvrement }}%</div>
+                    <div class="progress progress-thin mt-1">
+                        <div class="progress-bar bg-info" style="width:{{ taux_recouvrement }}%"></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Actions + Stats rapides -->
+<!-- Rangée 2 : Répartition + Effectifs par classe + Paiements/mois -->
 <div class="row g-2 mb-2">
-    <div class="col-md-4">
-        <div class="card shadow-sm h-100">
-            <div class="card-header bg-primary text-white py-1 px-2"><small><i class="bi bi-lightning"></i> Actions rapides</small></div>
-            <div class="card-body py-2">
-                <div class="d-grid gap-1">
-                    <a href="{{ url_for('eleve_ajouter') }}" class="btn btn-outline-primary btn-sm py-0"><i class="bi bi-person-plus"></i> Inscrire</a>
-                    <a href="{{ url_for('notes') }}" class="btn btn-outline-success btn-sm py-0"><i class="bi bi-pencil-square"></i> Notes</a>
-                    <a href="{{ url_for('paiement_ajouter') }}" class="btn btn-outline-warning btn-sm py-0"><i class="bi bi-cash"></i> Paiement</a>
-                    <a href="{{ url_for('bulletins') }}" class="btn btn-outline-info btn-sm py-0"><i class="bi bi-file-text"></i> Bulletins</a>
+    <!-- Répartition filles/garçons -->
+    <div class="col-lg-3 col-md-6">
+        <div class="card db-card">
+            <div class="card-body">
+                <div class="section-title"><i class="bi bi-pie-chart"></i> Répartition</div>
+                {% set total_genre = garcons + filles %}
+                <div style="display:flex; height:20px; border-radius:6px; overflow:hidden; margin-bottom:8px;">
+                    <div style="background:#0d6efd; width:{{ (garcons/total_genre*100) if total_genre>0 else 50 }}%; display:flex; align-items:center; justify-content:center; font-size:0.55rem; color:#fff; font-weight:700;">{{ garcons }} G</div>
+                    <div style="background:#d63384; width:{{ (filles/total_genre*100) if total_genre>0 else 50 }}%; display:flex; align-items:center; justify-content:center; font-size:0.55rem; color:#fff; font-weight:700;">{{ filles }} F</div>
+                </div>
+                <div class="d-flex justify-content-between small">
+                    <span><span class="badge bg-primary" style="display:inline-block;width:8px;height:8px;border-radius:50%;vertical-align:middle;"></span> Garçons: {{ garcons }}</span>
+                    <span><span class="badge" style="display:inline-block;width:8px;height:8px;border-radius:50%;vertical-align:middle;background:#d63384;"></span> Filles: {{ filles }}</span>
+                    <span class="text-muted">{{ total_genre }} total</span>
                 </div>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card shadow-sm h-100">
-            <div class="card-header bg-info text-white py-1 px-2"><small><i class="bi bi-pie-chart"></i> Répartition</small></div>
-            <div class="card-body py-2 d-flex align-items-center justify-content-around">
-                <div class="text-center">
-                    <h4 class="text-info mb-0">{{ garcons }}</h4>
-                    <small class="text-muted">Garçons</small>
+
+    <!-- Effectifs par classe -->
+    <div class="col-lg-5 col-md-6">
+        <div class="card db-card">
+            <div class="card-body">
+                <div class="section-title"><i class="bi bi-building"></i> Effectifs par Classe</div>
+                {% set max_eff = classes_stats[0].nb if classes_stats else 1 %}
+                {% for cs in classes_stats[:8] %}
+                <div class="bar-item">
+                    <div class="label">{{ cs.nom }}</div>
+                    <div class="bar-wrap">
+                        <div class="bar-fill" style="width:{{ (cs.nb/max_eff*100) if max_eff>0 else 0 }}%; background: linear-gradient(90deg, #0d6efd, #6610f2);"></div>
+                    </div>
+                    <div class="bar-val" style="color:#0d6efd;">{{ cs.nb }}</div>
                 </div>
-                <div class="text-center">
-                    <h4 class="text-danger mb-0">{{ filles }}</h4>
-                    <small class="text-muted">Filles</small>
-                </div>
+                {% endfor %}
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card shadow-sm h-100">
-            <div class="card-header bg-danger text-white py-1 px-2"><small><i class="bi bi-exclamation-triangle"></i> Impayes</small></div>
-            <div class="card-body py-2 text-center">
-                <h4 class="text-danger mb-0">{{ "{:,.0f}".format(total_impayes) }} FCFA</h4>
-                <small class="text-muted">Total impayés</small>
-                <a href="{{ url_for('impayes') }}" class="btn btn-danger btn-sm py-0 px-2 mt-1">Voir</a>
+
+    <!-- Paiements par mois -->
+    <div class="col-lg-4 col-md-12">
+        <div class="card db-card">
+            <div class="card-body">
+                <div class="section-title"><i class="bi bi-bar-chart"></i> Paiements par Mois</div>
+                {% set max_pm = paiements_mois.values()|max if paiements_mois.values()|list|length > 0 else 1 %}
+                {% for m in mois_scolaires %}
+                <div class="bar-item">
+                    <div class="label" style="width:65px;">{{ m }}</div>
+                    <div class="bar-wrap">
+                        <div class="bar-fill" style="width:{{ (paiements_mois.get(m,0)/max_pm*100) if max_pm>0 else 0 }}%; background: linear-gradient(90deg, #198754, #20c997);"></div>
+                    </div>
+                    <div class="bar-val" style="color:#198754; font-size:0.55rem;">{{ "{:,.0f}".format(paiements_mois.get(m,0)).replace(',',' ') }}</div>
+                </div>
+                {% endfor %}
             </div>
         </div>
     </div>
 </div>
 
-<!-- Widget Flottant Derniers Paiements -->
-<style>
-.widget-paiements {
-    position: fixed;
-    bottom: 60px;
-    right: 15px;
-    width: 380px;
-    max-width: 94vw;
-    z-index: 1050;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    transition: all 0.3s ease;
-}
-.widget-paiements .card-header {
-    cursor: pointer;
-    user-select: none;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-.widget-paiements .card-header:hover {
-    background-color: #23272b !important;
-}
-.widget-paiements .toggle-icon {
-    transition: transform 0.3s ease;
-}
-.widget-paiements.collapsed .toggle-icon {
-    transform: rotate(-90deg);
-}
-.widget-paiements.collapsed .widget-body {
-    display: none;
-}
-.widget-body {
-    max-height: 250px;
-    overflow-y: auto;
-}
-@media (max-width: 480px) {
-    .widget-paiements {
-        bottom: 8px;
-        right: 4px;
-        left: 4px;
-        width: auto;
-        max-width: none;
-    }
-    .widget-body {
-        max-height: 180px;
-    }
-}
-</style>
-
-<div class="card widget-paiements shadow" id="widgetPaiements">
-    <div class="card-header bg-dark text-white py-2 px-3" onclick="toggleWidget()">
-        <span><small><i class="bi bi-clock-history"></i> Derniers Paiements</small></span>
-        <i class="bi bi-chevron-down toggle-icon" id="widgetToggleIcon"></i>
+<!-- Rangée 3 : Derniers paiements + Actions rapides -->
+<div class="row g-2 mb-2">
+    <!-- Derniers paiements -->
+    <div class="col-lg-8">
+        <div class="card db-card">
+            <div class="card-body p-2">
+                <div class="section-title px-2"><i class="bi bi-clock-history"></i> Derniers Paiements</div>
+                <div style="max-height:240px;overflow:auto;">
+                    <table class="table table-sm table-borderless mb-0" style="font-size:0.65rem;">
+                        <thead style="background:#f8f9fa;">
+                            <tr>
+                                <th class="ps-2">Date</th>
+                                <th>Élève</th>
+                                <th>Mois</th>
+                                <th class="text-end">Montant</th>
+                                <th class="text-end pe-2">Caissier</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in recent_paiements %}
+                            <tr>
+                                <td class="ps-2">{{ p.date_paiement.strftime('%d/%m/%Y') }}</td>
+                                <td>{{ p.eleve.prenom }} {{ p.eleve.nom }}</td>
+                                <td><span class="badge bg-light text-dark border" style="font-size:0.55rem;">{{ p.type_paiement }}</span></td>
+                                <td class="text-end fw-bold text-success">{{ "{:,.0f}".format(p.montant).replace(',',' ') }}</td>
+                                <td class="text-end pe-2 text-muted">{{ p.caissier }}</td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="5" class="text-center py-3 text-muted">Aucun paiement</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="widget-body card-body p-0">
-        <div style="max-height:65vh;overflow-y:auto;overflow-x:hidden;">
-            <table class="table table-sm mb-0">
-                <thead>
-                    <tr>
-                        <th><small>Date</small></th>
-                        <th><small>Eleve</small></th>
-                        <th><small>Type</small></th>
-                        <th><small>Montant</small></th>
-                        <th><small>Caissier</small></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for p in recent_paiements %}
-                    <tr>
-                        <td><small>{{ p.date_paiement.strftime('%d/%m/%Y') }}</small></td>
-                        <td><small>{{ p.eleve.prenom }} {{ p.eleve.nom }}</small></td>
-                        <td><span class="badge bg-light text-dark" style="font-size: 0.7rem;">{{ p.type_paiement }}</span></td>
-                        <td class="fw-bold"><small>{{ "{:,.0f}".format(p.montant) }}</small></td>
-                        <td><small>{{ p.caissier }}</small></td>
-                    </tr>
-                    {% else %}
-                    <tr><td colspan="5" class="text-center text-muted py-3"><small>Aucun paiement</small></td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+
+    <!-- Actions rapides -->
+    <div class="col-lg-4">
+        <div class="card db-card">
+            <div class="card-body">
+                <div class="section-title"><i class="bi bi-lightning"></i> Actions Rapides</div>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('eleve_ajouter') }}" class="btn btn-primary btn-sm"><i class="bi bi-person-plus me-1"></i> Inscrire un élève</a>
+                    <a href="{{ url_for('notes') }}" class="btn btn-success btn-sm"><i class="bi bi-pencil-square me-1"></i> Saisir les notes</a>
+                    <a href="{{ url_for('paiement_ajouter') }}" class="btn btn-warning btn-sm"><i class="bi bi-cash me-1"></i> Nouveau Paiement</a>
+                    <a href="{{ url_for('bulletins') }}" class="btn btn-info btn-sm text-white"><i class="bi bi-file-text me-1"></i> Bulletins</a>
+                    <a href="{{ url_for('impayes') }}" class="btn btn-danger btn-sm"><i class="bi bi-exclamation-triangle me-1"></i> Voir les Impayés</a>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
-<script>
-function toggleWidget() {
-    const widget = document.getElementById('widgetPaiements');
-    widget.classList.toggle('collapsed');
-    localStorage.setItem('widgetPaiementsCollapsed', widget.classList.contains('collapsed'));
-}
-
-// Restaurer l'etat au chargement
-document.addEventListener('DOMContentLoaded', function() {
-    const widget = document.getElementById('widgetPaiements');
-    if (localStorage.getItem('widgetPaiementsCollapsed') === 'true') {
-        widget.classList.add('collapsed');
-    }
-});
-</script>
 {% endblock %}
