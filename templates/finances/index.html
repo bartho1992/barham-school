@@ -149,9 +149,20 @@
     </div>
 </div>
 
-<style>
-#table-suivi-paiement tbody tr:hover { background: #e8f0fe !important; background-color: #e8f0fe !important; cursor: pointer; }
-</style>
+<script>
+// Survol des lignes
+(function() {
+    document.querySelectorAll('#table-suivi-paiement tbody tr').forEach(function(tr) {
+        tr.style.cursor = 'pointer';
+        tr.addEventListener('mouseenter', function() {
+            this.style.backgroundColor = '#e8f0fe';
+        });
+        tr.addEventListener('mouseleave', function() {
+            this.style.backgroundColor = '';
+        });
+    });
+})();
+</script>
 <script>
 function sauvegarderOrigines() {
     // Sauvegarder les valeurs des lignes
