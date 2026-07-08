@@ -149,20 +149,14 @@
     </div>
 </div>
 
-<script>
-// Survol des lignes
-(function() {
-    document.querySelectorAll('#table-suivi-paiement tbody tr').forEach(function(tr) {
-        tr.style.cursor = 'pointer';
-        tr.addEventListener('mouseenter', function() {
-            this.style.backgroundColor = '#e8f0fe';
-        });
-        tr.addEventListener('mouseleave', function() {
-            this.style.backgroundColor = '';
-        });
-    });
-})();
-</script>
+<style>
+#table-suivi-paiement tbody tr:hover td {
+    background-color: #e8f0fe !important;
+}
+#table-suivi-paiement tbody tr {
+    cursor: pointer;
+}
+</style>
 <script>
 function sauvegarderOrigines() {
     // Sauvegarder les valeurs des lignes
