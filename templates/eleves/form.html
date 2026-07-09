@@ -3,7 +3,7 @@
 {% block content %}
 <h3 class="mb-3"><i class="bi bi-person-plus"></i> {{ 'Modifier' if eleve else 'Inscrire' }} un eleve</h3>
 <div class="card shadow-sm">
-    <div class="card-body">
+    <div class="card-body" style="padding-bottom:70px;">
         <form method="POST">
             <div class="row g-3">
                 <div class="col-md-3">
@@ -76,12 +76,16 @@
                     <textarea name="observations" class="form-control" rows="2">{{ eleve.observations if eleve }}</textarea>
                 </div>
             </div>
-            <hr>
-            <div class="d-flex gap-2">
-                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Enregistrer</button>
-                <a href="{{ url_for('eleves') }}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Retour</a>
+            <!-- Boutons fixes en bas sur mobile -->
+            <div class="d-flex gap-2 mt-3" style="position:fixed; bottom:0; left:0; right:0; z-index:1000; background:#fff; border-top:2px solid #dee2e6; padding:10px; box-shadow:0 -4px 12px rgba(0,0,0,0.1);">
+                <button type="submit" class="btn btn-primary flex-grow-1"><i class="bi bi-check-lg"></i> Enregistrer</button>
+                <a href="{{ url_for('eleves') }}" class="btn btn-secondary flex-grow-1"><i class="bi bi-arrow-left"></i> Retour</a>
             </div>
         </form>
     </div>
 </div>
+
+<!-- Espace pour compenser la barre fixe en bas -->
+<div style="height:60px;"></div>
+
 {% endblock %}
