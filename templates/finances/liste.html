@@ -1,14 +1,12 @@
 {% extends "base.html" %}
 {% block title %}Liste des Paiements - {{ ecole.nom }}{% endblock %}
 {% block content %}
-<div class="row mb-4">
-    <div class="col-md-8">
-        <h2><i class="bi bi-list-ul text-primary"></i> Liste complète des paiements</h2>
-    </div>
-    <div class="col-md-4 text-end">
-        <a href="{{ url_for('impayes') }}" class="btn btn-danger btn-sm me-1"><i class="bi bi-exclamation-triangle"></i> Impayés</a>
-        <a href="{{ url_for('finances') }}" class="btn btn-primary btn-sm me-1"><i class="bi bi-cash-stack"></i> Finances</a>
-        <button class="btn btn-outline-dark btn-sm me-1" onclick="imprimerTableau()"><i class="bi bi-printer"></i> Imprimer</button>
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <h2 class="mb-0"><i class="bi bi-list-ul text-primary"></i> Liste complète des paiements</h2>
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{{ url_for('impayes') }}" class="btn btn-danger btn-sm"><i class="bi bi-exclamation-triangle"></i> Impayés</a>
+        <a href="{{ url_for('finances') }}" class="btn btn-primary btn-sm"><i class="bi bi-cash-stack"></i> Finances</a>
+        <button class="btn btn-outline-dark btn-sm" onclick="imprimerTableau()"><i class="bi bi-printer"></i> Imprimer</button>
         <a href="{{ url_for('paiement_ajouter') }}" class="btn btn-success btn-sm shadow-sm"><i class="bi bi-plus-circle"></i> Nouveau Paiement</a>
     </div>
 </div>
