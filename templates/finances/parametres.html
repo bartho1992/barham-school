@@ -297,8 +297,15 @@
 
             <hr class="my-2">
             <h6 class="fw-bold small">Abonnements actifs</h6>
+            <style>
+            #table-abonnements { font-size: 0.68rem; }
+            #table-abonnements tbody td { padding: 1px 6px !important; line-height: 1.2; }
+            #table-abonnements thead th { padding: 3px 6px !important; }
+            #table-abonnements .badge { font-size: 0.6rem; padding: 2px 5px; }
+            #table-abonnements .btn-sm { padding: 0 5px; font-size: 0.65rem; line-height: 1.3; }
+            </style>
             <div style="max-height:65vh;overflow-y:auto;overflow-x:hidden;">
-                <table class="table table-sm table-bordered table-striped">
+                <table class="table table-sm table-bordered table-striped" id="table-abonnements">
                     <thead class="table-dark">
                         <tr>
                             <th>Élève</th>
