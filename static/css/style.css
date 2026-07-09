@@ -8,7 +8,7 @@
     --warning-color: #f59e0b;
     --info-color: #0ea5e9;
     --dark-color: #0f172a;
-    --light-bg: #f8fafc;
+    --light-bg: #e3f2fd;
     --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
     --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
