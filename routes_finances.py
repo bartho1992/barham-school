@@ -585,7 +585,7 @@ def finances_liste():
     q = Paiement.query.filter_by(annee_scolaire=annee)
     type_p = request.args.get('type_paiement')
     if type_p: q = q.filter_by(type_paiement=type_p)
-    ps = q.order_by(Paiement.date_paiement.desc()).all()
+    ps = q.join(Paiement.eleve).order_by(Eleve.nom.asc(), Paiement.date_paiement.desc()).all()
     classes = Classe.query.filter_by(ecole_id=ecole_id).order_by(Classe.nom).all()
     return render_template('finances/liste.html', paiements=ps, ecole=e, classes=classes)
 

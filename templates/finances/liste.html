@@ -47,7 +47,8 @@
                         <th>#</th>
                         <th>Date & Heure</th>
                         <th>Code Élève</th>
-                        <th>Nom Complet</th>
+                        <th>Prénom</th>
+                        <th>Nom</th>
                         <th>Type de Paiement</th>
                         <th class="text-end">Montant (FCFA)</th>
                         <th class="text-center">Caissier</th>
@@ -60,7 +61,8 @@
                         <td><small class="text-muted">{{ p.id }}</small></td>
                         <td>{{ p.date_paiement.strftime('%d/%m/%Y %H:%M') }}</td>
                         <td><code>{{ p.eleve.code }}</code></td>
-                        <td><strong>{{ p.eleve.prenom }} {{ p.eleve.nom }}</strong></td>
+                        <td>{{ p.eleve.prenom }}</td>
+                        <td><strong>{{ p.eleve.nom }}</strong></td>
                         <td><span class="badge rounded-pill bg-info text-dark">{{ p.type_paiement }}</span></td>
                         <td class="text-end fw-bold text-success">{{ "{:,.0f}".format(p.montant).replace(',', ' ') }}</td>
                         <td class="text-center"><small>{{ p.caissier }}</small></td>
@@ -73,7 +75,7 @@
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="8" class="text-center py-5 text-muted">Aucun enregistrement trouvé.</td>
+                        <td colspan="9" class="text-center py-5 text-muted">Aucun enregistrement trouvé.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -121,22 +123,22 @@ function imprimerTableau() {
     var tbodyHTML = '';
     document.querySelectorAll('#table-liste tbody tr').forEach(function(tr, idx) {
         var cells = tr.querySelectorAll('td');
-        if (cells.length < 7) return;
+        if (cells.length < 8) return;
         var date = cells[1].textContent.trim();
         var code = cells[2].textContent.trim();
-        var nom = cells[3].textContent.replace(/\s+/g, ' ').trim();
-        var type = cells[4].textContent.trim();
-        var mode = cells[5].textContent.trim();
+        var prenom = cells[3].textContent.trim();
+        var nom = cells[4].textContent.trim();
+        var type = cells[5].textContent.trim();
         var montant = cells[6].textContent.trim();
         var caissier = cells[7].textContent.trim();
         var bg = idx % 2 === 0 ? '#fff' : '#f2f2f2';
         tbodyHTML += '<tr style="background:' + bg + ';"><td style="text-align:center;">' + (idx + 1) + '</td>' +
-            '<td>' + date + '</td><td>' + code + '</td><td>' + nom + '</td>' +
-            '<td>' + type + '</td><td>' + mode + '</td>' +
+            '<td>' + date + '</td><td>' + code + '</td><td>' + prenom + '</td><td>' + nom + '</td>' +
+            '<td>' + type + '</td>' +
             '<td style="text-align:right;font-weight:bold;">' + montant + '</td><td style="text-align:center;">' + caissier + '</td></tr>';
     });
     var total = document.querySelectorAll('#table-liste tbody tr:not(:has(td[colspan]))').length;
-    var thead = '<tr><th>N°</th><th>Date Heure</th><th>Code</th><th>Nom</th><th>Type</th><th>Mode</th><th>Montant</th><th>Caissier</th></tr>';
+    var thead = '<tr><th>N°</th><th>Date Heure</th><th>Code</th><th>Prenom</th><th>Nom</th><th>Type</th><th>Montant</th><th>Caissier</th></tr>';
     var dateImpr = new Date().toLocaleDateString('fr-FR');
     var w = window.open('', '_blank', 'width=1000,height=600');
     w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Paiements</title>' +
