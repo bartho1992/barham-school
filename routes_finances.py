@@ -587,7 +587,8 @@ def finances_liste():
     if type_p: q = q.filter_by(type_paiement=type_p)
     ps = q.join(Paiement.eleve).order_by(Eleve.nom.asc(), Paiement.date_paiement.desc()).all()
     classes = Classe.query.filter_by(ecole_id=ecole_id).order_by(Classe.nom).all()
-    return render_template('finances/liste.html', paiements=ps, ecole=e, classes=classes)
+    eleves_list = Eleve.query.filter_by(ecole_id=ecole_id).order_by(Eleve.nom, Eleve.prenom).all()
+    return render_template('finances/liste.html', paiements=ps, ecole=e, classes=classes, eleves_list=eleves_list)
 
 @app.route('/finances/impayes')
 @login_required
