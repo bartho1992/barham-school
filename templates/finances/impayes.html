@@ -80,7 +80,12 @@
         <option value="{{ cat.nom }}">{{ cat.nom }}</option>
         {% endfor %}
     </select>
-    <input type="text" id="filtre-nom" class="form-control form-control-sm" style="width:170px;height:28px;font-size:0.7rem;" placeholder="Nom ou prenom..." oninput="filtrer()">
+    <input list="eleves-list" id="filtre-nom" class="form-control form-control-sm" style="width:auto;min-width:180px;height:28px;font-size:0.7rem;" placeholder="Nom ou prenom..." oninput="filtrer()">
+    <datalist id="eleves-list">
+        {% for e in eleves_list %}
+        <option value="{{ e.prenom }} {{ e.nom }}">{{ e.classe.nom if e.classe else '' }}</option>
+        {% endfor %}
+    </datalist>
     <button class="btn btn-outline-secondary btn-sm py-0" onclick="document.getElementById('filtre-classe').value='';document.getElementById('filtre-mois').value='';document.getElementById('filtre-categorie').value='';document.getElementById('filtre-nom').value='';filtrer();"><i class="bi bi-x"></i> Reinit.</button>
 </div>
 <div id="filtre-count" class="small text-muted mb-1" style="display:none;"></div>
