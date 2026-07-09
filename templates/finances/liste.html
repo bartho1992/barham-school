@@ -11,6 +11,33 @@
     </div>
 </div>
 
+<!-- FILTRES -->
+<div class="d-flex gap-1 align-items-center mb-2 flex-wrap">
+    <span class="fw-bold small me-1"><i class="bi bi-funnel"></i> Filtrer :</span>
+    <select id="filtre-classe" class="form-select form-select-sm" style="width:auto;min-width:110px;font-size:0.7rem;height:28px;" onchange="filtrerListe()">
+        <option value="">Toutes classes</option>
+        {% for c in classes %}
+        <option value="{{ c.nom }}">{{ c.nom }}</option>
+        {% endfor %}
+    </select>
+    <select id="filtre-mois" class="form-select form-select-sm" style="width:auto;min-width:110px;font-size:0.7rem;height:28px;" onchange="filtrerListe()">
+        <option value="">Tous les mois</option>
+        <option value="Inscription">Inscription</option>
+        <option value="Octobre">Octobre</option>
+        <option value="Novembre">Novembre</option>
+        <option value="Decembre">Decembre</option>
+        <option value="Janvier">Janvier</option>
+        <option value="Fevrier">Fevrier</option>
+        <option value="Mars">Mars</option>
+        <option value="Avril">Avril</option>
+        <option value="Mai">Mai</option>
+        <option value="Juin">Juin</option>
+    </select>
+    <input type="text" id="filtre-nom" class="form-control form-control-sm" placeholder="Nom ou prenom..." style="width:150px;font-size:0.7rem;height:28px;" oninput="filtrerListe()">
+    <button class="btn btn-sm btn-outline-secondary" style="font-size:0.65rem;height:28px;" onclick="reinitFiltres()">Reinit.</button>
+    <span id="filtre-count" class="small text-muted ms-1" style="display:none;"></span>
+</div>
+
 <div class="card shadow-sm border-0">
     <div class="card-body p-0">
         <div style="max-height:65vh;overflow-y:auto;overflow-x:hidden;">
@@ -29,7 +56,7 @@
                 </thead>
                 <tbody>
                     {% for p in paiements %}
-                    <tr>
+                    <tr data-classe="{{ p.eleve.classe.nom if p.eleve.classe else '' }}" data-mois="{{ p.type_paiement }}" data-nom="{{ p.eleve.prenom }} {{ p.eleve.nom }}">
                         <td><small class="text-muted">{{ p.id }}</small></td>
                         <td>{{ p.date_paiement.strftime('%d/%m/%Y %H:%M') }}</td>
                         <td><code>{{ p.eleve.code }}</code></td>
@@ -56,6 +83,40 @@
 </div>
 
 <script>
+function filtrerListe() {
+    var classe = (document.getElementById('filtre-classe').value || '').toLowerCase().trim();
+    var mois = (document.getElementById('filtre-mois').value || '').trim();
+    var nom = (document.getElementById('filtre-nom').value || '').toLowerCase().trim();
+    var rows = document.querySelectorAll('#table-liste tbody tr');
+    var visible = 0;
+    rows.forEach(function(tr) {
+        var show = true;
+        var dataClasse = (tr.getAttribute('data-classe') || '').toLowerCase().trim();
+        var dataMois = (tr.getAttribute('data-mois') || '').trim();
+        var dataNom = (tr.getAttribute('data-nom') || '').toLowerCase().trim();
+        if (classe && dataClasse.indexOf(classe) === -1) show = false;
+        if (mois && dataMois !== mois) show = false;
+        if (nom && dataNom.indexOf(nom) === -1) show = false;
+        tr.style.display = show ? '' : 'none';
+        if (show) visible++;
+    });
+    var el = document.getElementById('filtre-count');
+    var total = rows.length;
+    if (visible !== total) {
+        el.style.display = '';
+        el.textContent = visible + '/' + total + ' paiement(s) affiche(s)';
+    } else {
+        el.style.display = 'none';
+    }
+}
+
+function reinitFiltres() {
+    document.getElementById('filtre-classe').value = '';
+    document.getElementById('filtre-mois').value = '';
+    document.getElementById('filtre-nom').value = '';
+    filtrerListe();
+}
+
 function imprimerTableau() {
     var tbodyHTML = '';
     document.querySelectorAll('#table-liste tbody tr').forEach(function(tr, idx) {

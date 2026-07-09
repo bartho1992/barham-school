@@ -586,7 +586,8 @@ def finances_liste():
     type_p = request.args.get('type_paiement')
     if type_p: q = q.filter_by(type_paiement=type_p)
     ps = q.order_by(Paiement.date_paiement.desc()).all()
-    return render_template('finances/liste.html', paiements=ps, ecole=e)
+    classes = Classe.query.filter_by(ecole_id=ecole_id).order_by(Classe.nom).all()
+    return render_template('finances/liste.html', paiements=ps, ecole=e, classes=classes)
 
 @app.route('/finances/impayes')
 @login_required
