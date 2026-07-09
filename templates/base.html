@@ -307,9 +307,23 @@
                     <i class="bi bi-person-circle text-white" style="font-size:1rem;"></i>
                     <span class="text-white fw-bold" style="font-size:0.75rem;">{{ current_user.username }}</span>
                 </div>
-                <a href="{{ url_for('logout') }}" class="btn btn-sm btn-light py-0 px-2 rounded-pill text-danger fw-bold" style="font-size:0.7rem;">
-                    <i class="bi bi-box-arrow-right"></i> Quitter
-                </a>
+                <div class="d-flex align-items-center gap-1">
+                    {% if current_user.role == 'dev' and all_ecoles %}
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-warning text-dark dropdown-toggle fw-bold py-0 px-1" type="button" data-bs-toggle="dropdown" style="font-size:0.6rem;">
+                            <i class="bi bi-building"></i> {{ ecole.nom if ecole else 'École' }}
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow" style="max-height:200px;overflow-y:auto;min-width:160px;">
+                            {% for ec in all_ecoles %}
+                            <li><a class="dropdown-item small {{ 'active fw-bold' if ecole and ec.id == ecole.id }}" href="{{ url_for('changer_ecole', id=ec.id) }}" style="font-size:0.7rem;">{{ ec.nom }}{% if ecole and ec.id == ecole.id %} <i class="bi bi-check2"></i>{% endif %}</a></li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                    <a href="{{ url_for('logout') }}" class="btn btn-sm btn-light py-0 px-2 rounded-pill text-danger fw-bold" style="font-size:0.7rem;">
+                        <i class="bi bi-box-arrow-right"></i> Quitter
+                    </a>
+                </div>
             </div>
             {% endif %}
             <div class="container-fluid" style="margin-top:0 !important; padding-top:0 !important;">
