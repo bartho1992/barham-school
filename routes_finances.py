@@ -525,6 +525,7 @@ def paiement_recu(id):
 @login_required
 def paiement_annuler(id):
     """Annule un paiement (reserve aux super_users)"""
+    ecole_id = get_current_ecole_id()
     check = _check_parametres_access(ecole_id)
     if check: return check
     p = Paiement.query.get_or_404(id)
@@ -796,6 +797,7 @@ def categorie_supprimer(id):
 @app.route('/finances/parametres/abonnement/ajouter', methods=['POST'])
 @login_required
 def abonnement_ajouter():
+    ecole_id = get_current_ecole_id()
     check = _check_parametres_access(ecole_id)
     if check: return check
     eleve_id = request.form.get('eleve_id')
