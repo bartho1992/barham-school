@@ -1,6 +1,67 @@
 {% extends "base.html" %}
 {% block title %}Finances - {{ ecole.nom }}{% endblock %}
 {% block content %}
+<style>
+/* ===== STYLE EXCEL POUR LE TABLEAU FINANCES ===== */
+#table-suivi-paiement {
+    border-collapse: collapse !important;
+    font-family: 'Calibri', 'Segoe UI', Arial, sans-serif;
+    font-variant-numeric: tabular-nums;
+}
+/* Quadrillage net facon Excel */
+#table-suivi-paiement td,
+#table-suivi-paiement th {
+    border: 1px solid #c6c6c6 !important;
+}
+/* Chiffres alignes et police tabulaire */
+#table-suivi-paiement td {
+    font-variant-numeric: tabular-nums;
+}
+/* Survol Excel (bleu clair) */
+#table-suivi-paiement tbody tr:hover td {
+    background-color: #d4e6f7 !important;
+}
+/* En-tete gris Excel + bordure marquee */
+#table-suivi-paiement thead th {
+    border: 1px solid #9e9e9e !important;
+    box-shadow: inset 0 -1px 0 #7f7f7f;
+}
+/* Colonnes figees (freeze panes) : CODE, PRENOM, NOM */
+#table-suivi-paiement th:nth-child(1),
+#table-suivi-paiement td:nth-child(1) {
+    position: sticky; left: 0; z-index: 3;
+}
+#table-suivi-paiement th:nth-child(2),
+#table-suivi-paiement td:nth-child(2) {
+    position: sticky; left: 22px; z-index: 3;
+}
+#table-suivi-paiement tbody td:nth-child(1),
+#table-suivi-paiement tbody td:nth-child(2) {
+    background-color: #ffffff;
+}
+/* Colonnes figees vertes pour les lignes payees */
+#table-suivi-paiement tbody tr[style*="f0fff0"] td:nth-child(1),
+#table-suivi-paiement tbody tr[style*="f0fff0"] td:nth-child(2) {
+    background-color: #f0fff0;
+}
+/* En-tete des colonnes figees au-dessus des autres */
+#table-suivi-paiement thead th:nth-child(1),
+#table-suivi-paiement thead th:nth-child(2) {
+    z-index: 5;
+}
+/* Coins arrondis retires pour un rendu tableur */
+#table-suivi-paiement { border-radius: 0 !important; }
+/* En-tete de colonnes facon Excel (lettres) */
+.excel-colhead td {
+    background: #e6e6e6 !important;
+    color: #333 !important;
+    text-align: center !important;
+    font-size: 0.55rem !important;
+    font-weight: 700 !important;
+    border: 1px solid #b0b0b0 !important;
+    padding: 1px !important;
+}
+</style>
 <div class="d-flex justify-content-between align-items-center mb-2">
     <div class="section-header"><i class="bi bi-wallet2"></i> Gestion Financiere</div>
     <div>
