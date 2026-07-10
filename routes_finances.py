@@ -31,6 +31,14 @@ def _check_parametres_access_json(ecole_id):
             return jsonify({'error': 'Licence expiree', 'redirect': url_for('abonnement')}), 403
     return None
 
+@app.route('/finances/gestion')
+@login_required
+def finances_hub():
+    """Page unique avec onglets : Finances, Impayes, Paiements, Nouveau paiement, Inscription"""
+    ecole_id = get_current_ecole_id()
+    e = Ecole.query.get(ecole_id)
+    return render_template('finances/hub.html', ecole=e)
+
 @app.route('/finances')
 @login_required
 def finances():

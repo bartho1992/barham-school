@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Gestion Financière - {{ ecole.nom }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.hub-nav { display: flex; gap: 2px; border-bottom: 2px solid #dee2e6; margin-bottom: 0; }
+.hub-btn { 
+    padding: 5px 14px; border: none; background: transparent; color: #6c757d; 
+    font-weight: 700; font-size: 0.75rem; cursor: pointer; 
+    border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all 0.2s;
+    white-space: nowrap;
+}
+.hub-btn:hover { color: #0d6efd; background: #f0f6ff; }
+.hub-btn.active { color: #0d6efd; border-bottom-color: #0d6efd; background: transparent; }
+.hub-frame { width: 100%; height: calc(100vh - 100px); border: none; display: none; }
+.hub-frame.active { display: block; }
+.hub-frame.loading { background: #f8f9fa; display: flex; align-items: center; justify-content: center; color: #999; font-size: 0.8rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-1 flex-wrap gap-2">
+    <h6 class="mb-0"><i class="bi bi-wallet2 text-primary"></i> Gestion Financière</h6>
+    <a href="{{ url_for('parametres_financiers') }}" class="btn btn-sm btn-outline-success"><i class="bi bi-gear"></i> Paramètres</a>
+</div>
+
+<div class="hub-nav">
+    <button class="hub-btn active" onclick="showHub('finances')" id="btn-finances">
+        <i class="bi bi-bar-chart"></i> Finances
+    </button>
+    <button class="hub-btn" onclick="showHub('impayes')" id="btn-impayes">
+        <i class="bi bi-exclamation-triangle"></i> Impayés
+    </button>
+    <button class="hub-btn" onclick="showHub('paiements')" id="btn-paiements">
+        <i class="bi bi-list-ul"></i> Paiements
+    </button>
+    <button class="hub-btn" onclick="showHub('nouveau')" id="btn-nouveau">
+        <i class="bi bi-plus-circle"></i> Nouveau Paiement
+    </button>
+    <button class="hub-btn" onclick="showHub('inscription')" id="btn-inscription">
+        <i class="bi bi-person-plus"></i> Inscription
+    </button>
+</div>
+
+<div style="background:#fff;">
+    <iframe id="frame-finances" class="hub-frame active" data-src="{{ url_for('finances', embed='1') }}"></iframe>
+    <iframe id="frame-impayes" class="hub-frame" data-src="{{ url_for('impayes', embed='1') }}"></iframe>
+    <iframe id="frame-paiements" class="hub-frame" data-src="{{ url_for('finances_liste', embed='1') }}"></iframe>
+    <iframe id="frame-nouveau" class="hub-frame" data-src="{{ url_for('paiement_ajouter', embed='1') }}"></iframe>
+    <iframe id="frame-inscription" class="hub-frame" data-src="{{ url_for('eleve_ajouter', embed='1') }}"></iframe>
+</div>
+
+<script>
+// Lazy load : charge l'iframe uniquement quand on clique sur l'onglet
+var loaded = {};
+
+function showHub(name) {
+    // Onglets actifs
+    document.querySelectorAll('.hub-btn').forEach(function(b) { b.classList.remove('active'); });
+    document.getElementById('btn-' + name).classList.add('active');
+    
+    // Frames
+    document.querySelectorAll('.hub-frame').forEach(function(f) { f.classList.remove('active'); });
+    var frame = document.getElementById('frame-' + name);
+    frame.classList.add('active');
+    
+    // Charger si pas encore fait
+    if (!loaded[name]) {
+        loaded[name] = true;
+        frame.src = frame.getAttribute('data-src');
+    }
+}
+
+// Charger le premier onglet
+loaded['finances'] = true;
+document.getElementById('frame-finances').src = document.getElementById('frame-finances').getAttribute('data-src');
+</script>
+{% endblock %}

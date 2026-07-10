@@ -146,8 +146,8 @@
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <div class="app-layout {% if not current_user.is_authenticated %}no-sidebar{% endif %}">
-        {% if current_user.is_authenticated %}
+    <div class="app-layout {% if not current_user.is_authenticated or request.args.get('embed') %}no-sidebar{% endif %}">
+        {% if current_user.is_authenticated and not request.args.get('embed') %}
         <!-- Bouton hamburger pour mobile/tablette -->
         <button class="sidebar-toggle" id="sidebarToggle" title="Menu">
             <i class="bi bi-list"></i>
@@ -180,7 +180,7 @@
                         ('bulletins', 'bi-file-text', 'Bulletins'),
                         ('personnel', 'bi-person-badge', 'Personnel'),
                         ('documents', 'bi-printer', 'Documents'),
-                        ('finances_liste', 'bi-cash-stack', 'Paiements'),
+                        ('finances_hub', 'bi-cash-stack', 'Finances'),
                     ] %}
                     
                     {% if not has_licence %}
@@ -304,7 +304,7 @@
         
         <!-- Contenu principal -->
         <main class="app-main">
-            {% if current_user.is_authenticated %}
+            {% if current_user.is_authenticated and not request.args.get('embed') %}
             <!-- Barre top mobile : user + logout + hamburger (visible uniquement sur ecrans < 769px) -->
             <div class="d-md-none d-flex align-items-center justify-content-between px-2 py-1 border-bottom" style="background: var(--primary-gradient);">
                 <div class="d-flex align-items-center gap-2">
