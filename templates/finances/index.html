@@ -127,7 +127,7 @@
     </div>
     <div id="filtre-count" class="small text-muted mb-1 px-2" style="display:none;"></div>
     <div style="max-height:55vh;overflow:auto;">
-        {% set ns = namespace(total_du=0, total_avance=0, total_reste=0, total_mois=0) %}
+        {% set ns = namespace(total_du=0, total_avance=0, total_reste=0, total_mois=0, nb_payes=0) %}
         {% set ns.cats_sums = {} %}
         {% for cat in categories %}{% set _ = ns.cats_sums.update({cat.nom: 0}) %}{% endfor %}
         {% for lp in lignes_paiements %}
@@ -135,31 +135,31 @@
             {% set ns.total_avance = ns.total_avance + lp.total_paye %}
             {% set ns.total_reste = ns.total_reste + lp.total_reste %}
             {% set ns.total_mois = ns.total_mois + lp.montant_mois %}
+            {% if lp.paye_au_moins_un %}{% set ns.nb_payes = ns.nb_payes + 1 %}{% endif %}
             {% for cl in lp.cat_lines %}
                 {% set cur = ns.cats_sums.get(cl.cat.nom, 0) %}
                 {% set _ = ns.cats_sums.update({cl.cat.nom: cur + cl.reste}) %}
             {% endfor %}
         {% endfor %}
+        <!-- Barre de badges recapitulatifs -->
+        <div class="d-flex flex-wrap gap-2 px-2 py-2" style="background:#f8f9fa;border-bottom:1px solid #dee2e6;">
+            {% set badges = [
+                ('NOMBRE PAYÉ', '{:,.0f}'.format(ns.nb_payes).replace(',', ' '), '#0d6efd'),
+                ('DÛ', '{:,.0f}'.format(ns.total_du).replace(',', ' '), '#198754'),
+                ('AVANCE', '{:,.0f}'.format(ns.total_avance).replace(',', ' '), '#20c997'),
+                ('RESTE', '{:,.0f}'.format(ns.total_reste).replace(',', ' '), '#dc3545'),
+                ('CUMUL', '{:,.0f}'.format(ns.total_reste).replace(',', ' '), '#fd7e14'),
+                ('SCOLARITÉ', '{:,.0f}'.format(ns.total_mois).replace(',', ' '), '#6f42c1')
+            ] %}
+            {% for label, valeur, couleur in badges %}
+            <div style="flex:1 1 0;min-width:90px;background:{{ couleur }};color:#fff;border-radius:6px;padding:4px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.15);">
+                <div style="font-size:0.55rem;font-weight:700;opacity:0.9;line-height:1.1;">{{ label }}</div>
+                <div style="font-size:0.8rem;font-weight:800;line-height:1.2;">{{ valeur }}</div>
+            </div>
+            {% endfor %}
+        </div>
         <table class="table table-sm table-bordered mb-0 bg-white" id="table-suivi-paiement" style="font-size:0.65rem;table-layout:auto;white-space:nowrap;">
             <thead class="bg-light" style="position:sticky;top:0;z-index:2;">
-                <!-- Ligne de rectangles colores totaux -->
-                <tr style="background:#e8f0fe;font-size:0;line-height:1;">
-                    <td style="width:22px;border:1px solid #b0c4de;padding:0;"></td>
-                    <td style="border:1px solid #b0c4de;padding:0;"></td>
-                    <td style="border:1px solid #b0c4de;padding:0;"></td>
-                    <td style="border:1px solid #b0c4de;padding:0;"></td>
-                    <td style="border:1px solid #b0c4de;padding:0;"></td>
-                    <td style="text-align:right;border:1px solid #b0c4de;padding:0;"><span style="display:inline-block;background:#198754;color:#fff;font-size:0.6rem;font-weight:bold;padding:1px 3px;line-height:1.2;border-radius:2px;">{{ '{:,.0f}'.format(ns.total_du).replace(',', ' ') }}</span></td>
-                    <td style="text-align:right;border:1px solid #b0c4de;padding:0;"><span style="display:inline-block;background:#198754;color:#fff;font-size:0.6rem;font-weight:bold;padding:1px 3px;line-height:1.2;border-radius:2px;">{{ '{:,.0f}'.format(ns.total_avance).replace(',', ' ') }}</span></td>
-                    <td style="text-align:right;border:1px solid #b0c4de;padding:0;"><span style="display:inline-block;background:#dc3545;color:#fff;font-size:0.6rem;font-weight:bold;padding:1px 3px;line-height:1.2;border-radius:2px;">{{ '{:,.0f}'.format(ns.total_reste).replace(',', ' ') }}</span></td>
-                    <td style="text-align:right;border:1px solid #b0c4de;padding:0;"><span style="display:inline-block;background:#fd7e14;color:#fff;font-size:0.6rem;font-weight:bold;padding:1px 3px;line-height:1.2;border-radius:2px;">{{ '{:,.0f}'.format(ns.total_reste).replace(',', ' ') }}</span></td>
-                    <td style="border:1px solid #b0c4de;padding:0;"></td>
-                    <td style="border:1px solid #b0c4de;padding:0;"></td>
-                    <td style="text-align:right;border:1px solid #b0c4de;padding:0;"><span style="display:inline-block;background:#0a58ca;color:#fff;font-size:0.6rem;font-weight:bold;padding:1px 3px;line-height:1.2;border-radius:2px;">{{ '{:,.0f}'.format(ns.total_mois).replace(',', ' ') }}</span></td>
-                    {% for cat in categories %}
-                    <td style="text-align:right;border:1px solid #b0c4de;padding:0;"><span style="display:inline-block;background:#0a58ca;color:#fff;font-size:0.5rem;font-weight:bold;padding:1px 2px;line-height:1.2;border-radius:2px;">{{ '{:,.0f}'.format(ns.cats_sums.get(cat.nom, 0)).replace(',', ' ') }}</span></td>
-                    {% endfor %}
-                </tr>
                 <tr>
                     <th style="width:22px;text-align:center;vertical-align:middle;background:#f8f9fa !important;"></th>
                     <th style="min-width:50px;vertical-align:middle;text-align:center;background:#6c757d !important;color:#fff;">CODE</th>
