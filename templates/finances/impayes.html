@@ -15,44 +15,20 @@
     </div>
 </div>
 
-<!-- Resume -->
-<div class="row mb-1 g-1">
-    <div class="col-md-1 col-3">
-        <div class="card bg-danger text-white shadow-sm border-0">
-            <div class="card-body text-center d-flex flex-column align-items-center justify-content-center" style="padding:0.3rem; max-height:75px;">
-                <div style="font-size:0.6rem; opacity:0.85; font-weight:700; line-height:1.1;">IMPAYÉS</div>
-                <div id="total-impayes-card" style="font-size:0.9rem; font-weight:800; line-height:1.1;">{{ "{:,.0f}".format(total_impayes_global).replace(',', ' ') }}</div>
-                <div style="font-size:0.55rem; font-weight:600; opacity:0.75;">FCFA</div>
-            </div>
-        </div>
+<!-- Resume : barre de badges alignes -->
+<div class="d-flex flex-wrap gap-2 mb-2">
+    {% set badges_top = [
+        ('IMPAYÉS', '{:,.0f}'.format(total_impayes_global).replace(',', ' '), '#dc3545', 'total-impayes-card'),
+        ('ÉLÈVES', '{:,.0f}'.format(nb_eleves).replace(',', ' '), '#fd7e14', ''),
+        ('CATÉGORIES', '{:,.0f}'.format(categories|length).replace(',', ' '), '#0dcaf0', ''),
+        ('TOTAL RESTANT', '{:,.0f}'.format(total_impayes_global).replace(',', ' '), '#198754', '')
+    ] %}
+    {% for label, valeur, couleur, elid in badges_top %}
+    <div style="flex:1 1 0;min-width:90px;background:{{ couleur }};color:#fff;border-radius:6px;padding:4px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.15);">
+        <div style="font-size:0.55rem;font-weight:700;opacity:0.9;line-height:1.1;">{{ label }}</div>
+        <div {% if elid %}id="{{ elid }}"{% endif %} style="font-size:0.8rem;font-weight:800;line-height:1.2;">{{ valeur }}</div>
     </div>
-    <div class="col-md-1 col-3">
-        <div class="card bg-warning text-dark shadow-sm border-0">
-            <div class="card-body text-center d-flex flex-column align-items-center justify-content-center" style="padding:0.3rem; max-height:75px;">
-                <div style="font-size:0.6rem; opacity:0.85; font-weight:700; line-height:1.1;">ÉLÈVES</div>
-                <div style="font-size:0.9rem; font-weight:800; line-height:1.1;">{{ nb_eleves }}</div>
-                <div style="font-size:0.55rem; font-weight:600; opacity:0.75;">&nbsp;</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-1 col-3">
-        <div class="card bg-info text-white shadow-sm border-0">
-            <div class="card-body text-center d-flex flex-column align-items-center justify-content-center" style="padding:0.3rem; max-height:75px;">
-                <div style="font-size:0.6rem; opacity:0.85; font-weight:700; line-height:1.1;">CATÉG.</div>
-                <div style="font-size:0.9rem; font-weight:800; line-height:1.1;">{{ categories|length }}</div>
-                <div style="font-size:0.55rem; font-weight:600; opacity:0.75;">&nbsp;</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-1 col-3">
-        <div class="card bg-success text-white shadow-sm border-0">
-            <div class="card-body text-center d-flex flex-column align-items-center justify-content-center" style="padding:0.3rem; max-height:75px;">
-                <div style="font-size:0.6rem; opacity:0.85; font-weight:700; line-height:1.1;">TOTAL<br>RESTANT</div>
-                <div style="font-size:0.9rem; font-weight:800; line-height:1.1;">{{ '{:,.0f}'.format(total_impayes_global).replace(',', ' ') }}</div>
-                <div style="font-size:0.55rem; font-weight:600; opacity:0.75;">FCFA</div>
-            </div>
-        </div>
-    </div>
+    {% endfor %}
 </div>
 
 <!-- FILTRES -->
