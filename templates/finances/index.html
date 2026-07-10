@@ -68,34 +68,36 @@
     </div>
 </div>
 
-<div class="row mb-1 g-1">
-    <div class="col-md-1">
-        <div class="card bg-primary text-white shadow-sm border-0">
-            <div class="card-body text-center d-flex flex-column align-items-center justify-content-center" style="padding:0.3rem; max-height:75px;">
-                <div style="font-size:0.6rem; opacity:0.85; font-weight:700; line-height:1.1;">ENCAISS.<br>TOTAL</div>
-                <div style="font-size:0.9rem; font-weight:800; line-height:1.1;">{{ "{:,.0f}".format(total_encaisse).replace(',', ' ') }}</div>
-                <div style="font-size:0.55rem; font-weight:600; opacity:0.75;">FCFA</div>
-            </div>
-        </div>
+<!-- Barre de badges recapitulatifs -->
+{% set ns = namespace(total_du=0, total_avance=0, total_reste=0, total_mois=0, nb_payes=0) %}
+{% set ns.cats_sums = {} %}
+{% for cat in categories %}{% set _ = ns.cats_sums.update({cat.nom: 0}) %}{% endfor %}
+{% for lp in lignes_paiements %}
+    {% set ns.total_du = ns.total_du + lp.total_du %}
+    {% set ns.total_avance = ns.total_avance + lp.total_paye %}
+    {% set ns.total_reste = ns.total_reste + lp.total_reste %}
+    {% set ns.total_mois = ns.total_mois + lp.montant_mois %}
+    {% if lp.paye_au_moins_un %}{% set ns.nb_payes = ns.nb_payes + 1 %}{% endif %}
+    {% for cl in lp.cat_lines %}
+        {% set cur = ns.cats_sums.get(cl.cat.nom, 0) %}
+        {% set _ = ns.cats_sums.update({cl.cat.nom: cur + cl.reste}) %}
+    {% endfor %}
+{% endfor %}
+<div class="d-flex flex-wrap gap-2 mb-2">
+    {% set badges_top = [
+        ('NOMBRE PAYÉ', '{:,.0f}'.format(ns.nb_payes).replace(',', ' '), '#0d6efd'),
+        ('DÛ', '{:,.0f}'.format(ns.total_du).replace(',', ' '), '#198754'),
+        ('AVANCE', '{:,.0f}'.format(ns.total_avance).replace(',', ' '), '#20c997'),
+        ('RESTE', '{:,.0f}'.format(ns.total_reste).replace(',', ' '), '#dc3545'),
+        ('CUMUL', '{:,.0f}'.format(ns.total_reste).replace(',', ' '), '#fd7e14'),
+        ('SCOLARITÉ', '{:,.0f}'.format(ns.total_mois).replace(',', ' '), '#6f42c1')
+    ] %}
+    {% for label, valeur, couleur in badges_top %}
+    <div style="flex:1 1 0;min-width:90px;background:{{ couleur }};color:#fff;border-radius:6px;padding:4px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.15);">
+        <div style="font-size:0.55rem;font-weight:700;opacity:0.9;line-height:1.1;">{{ label }}</div>
+        <div style="font-size:0.8rem;font-weight:800;line-height:1.2;">{{ valeur }}</div>
     </div>
-    <div class="col-md-1">
-        <div class="card bg-info text-white shadow-sm border-0">
-            <div class="card-body text-center d-flex flex-column align-items-center justify-content-center" style="padding:0.3rem; max-height:75px;">
-                <div style="font-size:0.6rem; opacity:0.85; font-weight:700; line-height:1.1;">ENCAISS.<br>JOUR</div>
-                <div style="font-size:0.9rem; font-weight:800; line-height:1.1;">{{ "{:,.0f}".format(today_encaisse).replace(',', ' ') }}</div>
-                <div style="font-size:0.55rem; font-weight:600; opacity:0.75;">FCFA</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-1">
-        <a href="{{ url_for('impayes') }}" class="card bg-danger text-white shadow-sm border-0 text-decoration-none h-100">
-            <div class="card-body text-center d-flex flex-column align-items-center justify-content-center" style="padding:0.3rem; max-height:75px;">
-                <div style="font-size:0.6rem; opacity:0.85; font-weight:700; line-height:1.1;">IMPAYÉS</div>
-                <div style="font-size:0.9rem; font-weight:800; line-height:1.1;">{{ "{:,.0f}".format(total_encaisse).replace(',', ' ') }}</div>
-                <div style="font-size:0.55rem; font-weight:600; opacity:0.75;">FCFA</div>
-            </div>
-        </a>
-    </div>
+    {% endfor %}
 </div>
 
 <div class="card shadow-sm border-0">
@@ -127,37 +129,6 @@
     </div>
     <div id="filtre-count" class="small text-muted mb-1 px-2" style="display:none;"></div>
     <div style="max-height:55vh;overflow:auto;">
-        {% set ns = namespace(total_du=0, total_avance=0, total_reste=0, total_mois=0, nb_payes=0) %}
-        {% set ns.cats_sums = {} %}
-        {% for cat in categories %}{% set _ = ns.cats_sums.update({cat.nom: 0}) %}{% endfor %}
-        {% for lp in lignes_paiements %}
-            {% set ns.total_du = ns.total_du + lp.total_du %}
-            {% set ns.total_avance = ns.total_avance + lp.total_paye %}
-            {% set ns.total_reste = ns.total_reste + lp.total_reste %}
-            {% set ns.total_mois = ns.total_mois + lp.montant_mois %}
-            {% if lp.paye_au_moins_un %}{% set ns.nb_payes = ns.nb_payes + 1 %}{% endif %}
-            {% for cl in lp.cat_lines %}
-                {% set cur = ns.cats_sums.get(cl.cat.nom, 0) %}
-                {% set _ = ns.cats_sums.update({cl.cat.nom: cur + cl.reste}) %}
-            {% endfor %}
-        {% endfor %}
-        <!-- Barre de badges recapitulatifs -->
-        <div class="d-flex flex-wrap gap-2 px-2 py-2" style="background:#f8f9fa;border-bottom:1px solid #dee2e6;">
-            {% set badges = [
-                ('NOMBRE PAYÉ', '{:,.0f}'.format(ns.nb_payes).replace(',', ' '), '#0d6efd'),
-                ('DÛ', '{:,.0f}'.format(ns.total_du).replace(',', ' '), '#198754'),
-                ('AVANCE', '{:,.0f}'.format(ns.total_avance).replace(',', ' '), '#20c997'),
-                ('RESTE', '{:,.0f}'.format(ns.total_reste).replace(',', ' '), '#dc3545'),
-                ('CUMUL', '{:,.0f}'.format(ns.total_reste).replace(',', ' '), '#fd7e14'),
-                ('SCOLARITÉ', '{:,.0f}'.format(ns.total_mois).replace(',', ' '), '#6f42c1')
-            ] %}
-            {% for label, valeur, couleur in badges %}
-            <div style="flex:1 1 0;min-width:90px;background:{{ couleur }};color:#fff;border-radius:6px;padding:4px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.15);">
-                <div style="font-size:0.55rem;font-weight:700;opacity:0.9;line-height:1.1;">{{ label }}</div>
-                <div style="font-size:0.8rem;font-weight:800;line-height:1.2;">{{ valeur }}</div>
-            </div>
-            {% endfor %}
-        </div>
         <table class="table table-sm table-bordered mb-0 bg-white" id="table-suivi-paiement" style="font-size:0.65rem;table-layout:auto;white-space:nowrap;">
             <thead class="bg-light" style="position:sticky;top:0;z-index:2;">
                 <tr>
