@@ -236,77 +236,80 @@ def api_tarifs_cumules(eleve_id, mois):
     except ValueError:
         return jsonify({'error': 'Mois invalide'}), 400
     
-    mois_a_payer = []
-    for i in range(0, idx_selection + 1):
-        m = mois_scolaires[i]
-        tarif_m = scolarite.inscription if m == 'Inscription' else (getattr(scolarite, m.lower(), 0) or 0) if scolarite else 0
-        if tarif_m > 0:
-            deja = paye_par_mois.get(m, 0)
-            reste_m = tarif_m - deja
-            if reste_m > 0 or m == mois:
-                mois_a_payer.append({
-                    'mois': m,
-                    'tarif': tarif_m,
-                    'deja_paye': deja,
-                    'reste': reste_m
-                })
-    
-    total_scolarite = 0
-    total_services_global = 0
     ordre_mois = ['Janvier','Fevrier','Mars','Avril','Mai','Juin',
                   'Juillet','Aout','Septembre','Octobre','Novembre','Decembre']
     
-    for item in mois_a_payer:
-        m = item['mois']
-        is_inscr = (m == 'Inscription')
+    def _services_du_mois(m):
+        """Calcule les services (cantine, transport...) dus pour un mois donne."""
         services_mois = []
-        total_srv_mois = 0
-        
-        if is_inscr:
-            # Services inscription : toutes les categories definies dans parametres, champ vide
-            categories_insc = CategorieTarif.query.filter_by(type_categorie='inscription').all()
-            for cat in categories_insc:
+        total_srv = 0
+        if m == 'Inscription':
+            for cat in CategorieTarif.query.filter_by(type_categorie='inscription').all():
                 services_mois.append({'nom': cat.nom, 'montant': 0})
-                total_srv_mois += 0
-        else:
-            abonnements = AbonnementService.query.filter_by(
-                eleve_id=eleve_id
-            ).join(CategorieTarif).all()
-            for abo in abonnements:
-                cat = abo.categorie
-                # Inscription-type service: montant unique, seulement dans le mois Inscription
-                if cat.type_categorie == 'inscription':
-                    continue
-                # Mensuel: verifier la periode d'abonnement
-                try:
-                    idx_m = ordre_mois.index(m)
-                    idx_debut = ordre_mois.index(abo.mois_debut)
-                    idx_fin = ordre_mois.index(abo.mois_fin)
-                    if idx_debut <= idx_fin:
-                        dans_periode = idx_debut <= idx_m <= idx_fin
-                    else:
-                        dans_periode = idx_m >= idx_debut or idx_m <= idx_fin
-                except ValueError:
-                    dans_periode = True
-                if not dans_periode:
-                    continue
-                tarif = TarifService.query.filter_by(
-                    classe_id=eleve.classe_id, categorie_id=cat.id, annee_scolaire=annee
-                ).first()
-                if abo.montant_personnalise is not None:
-                    montant = abo.montant_personnalise
-                elif tarif:
-                    montant = getattr(tarif, m.lower(), 0) or 0
+            return services_mois, 0
+        abonnements = AbonnementService.query.filter_by(eleve_id=eleve_id).join(CategorieTarif).all()
+        for abo in abonnements:
+            cat = abo.categorie
+            if cat.type_categorie == 'inscription':
+                continue
+            try:
+                idx_m = ordre_mois.index(m)
+                idx_debut = ordre_mois.index(abo.mois_debut)
+                idx_fin = ordre_mois.index(abo.mois_fin)
+                if idx_debut <= idx_fin:
+                    dans_periode = idx_debut <= idx_m <= idx_fin
                 else:
-                    montant = 0
-                if montant > 0:
-                    services_mois.append({'nom': cat.nom, 'montant': montant})
-                    total_srv_mois += montant
+                    dans_periode = idx_m >= idx_debut or idx_m <= idx_fin
+            except ValueError:
+                dans_periode = True
+            if not dans_periode:
+                continue
+            tarif = TarifService.query.filter_by(
+                classe_id=eleve.classe_id, categorie_id=cat.id, annee_scolaire=annee
+            ).first()
+            if abo.montant_personnalise is not None:
+                montant = abo.montant_personnalise
+            elif tarif:
+                montant = getattr(tarif, m.lower(), 0) or 0
+            else:
+                montant = 0
+            if montant > 0:
+                services_mois.append({'nom': cat.nom, 'montant': montant})
+                total_srv += montant
+        return services_mois, total_srv
+    
+    mois_a_payer = []
+    total_scolarite = 0
+    total_services_global = 0
+    
+    for i in range(0, idx_selection + 1):
+        m = mois_scolaires[i]
+        tarif_m = scolarite.inscription if m == 'Inscription' else (getattr(scolarite, m.lower(), 0) or 0) if scolarite else 0
+        services_mois, total_srv_mois = _services_du_mois(m)
         
-        item['services'] = services_mois
-        item['total_services'] = total_srv_mois
-        total_scolarite += item['reste']
-        total_services_global += total_srv_mois
+        du_mois = tarif_m + total_srv_mois
+        if du_mois <= 0:
+            continue
+        
+        # Paiement deja effectue pour ce mois : allocation scolarite d'abord, puis services
+        paye = paye_par_mois.get(m, 0)
+        scol_reste = max(tarif_m - paye, 0)
+        reste_pour_services = max(paye - tarif_m, 0)
+        srv_reste = max(total_srv_mois - reste_pour_services, 0)
+        reste_m = scol_reste + srv_reste
+        
+        # Inclure le mois si un reliquat existe (scolarite OU services) ou si c'est le mois selectionne
+        if reste_m > 0 or m == mois:
+            mois_a_payer.append({
+                'mois': m,
+                'tarif': tarif_m,
+                'deja_paye': paye,
+                'reste': scol_reste,
+                'services': services_mois,
+                'total_services': srv_reste
+            })
+            total_scolarite += scol_reste
+            total_services_global += srv_reste
     
     total_du = total_scolarite + total_services_global
     
