@@ -18,7 +18,7 @@
 <!-- Resume : barre de badges alignes -->
 {% set ns = namespace(nb_non_payes=0, total_du=0, total_avance=0, total_reste=0, total_mois=0) %}
 {% for lp in lignes %}
-    {% if lp.total_reste > 0 %}{% set ns.nb_non_payes = ns.nb_non_payes + 1 %}{% endif %}
+    {% if lp.total_paye <= 0 %}{% set ns.nb_non_payes = ns.nb_non_payes + 1 %}{% endif %}
     {% set ns.total_du = ns.total_du + lp.total_du %}
     {% set ns.total_avance = ns.total_avance + lp.total_paye %}
     {% set ns.total_reste = ns.total_reste + lp.total_reste %}
