@@ -4,15 +4,21 @@
 
 {% block extra_css %}
 <style>
-.hub-nav { display: flex; gap: 2px; border-bottom: 2px solid #dee2e6; margin-bottom: 0; }
+.hub-nav { display: flex; gap: 4px; border-bottom: 2px solid #dee2e6; margin-bottom: 0; flex-wrap: wrap; }
 .hub-btn { 
-    padding: 5px 14px; border: none; background: transparent; color: #6c757d; 
+    padding: 6px 16px; border: none; color: #fff; 
     font-weight: 700; font-size: 0.75rem; cursor: pointer; 
-    border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all 0.2s;
-    white-space: nowrap;
+    border-radius: 8px 8px 0 0; margin-bottom: -2px; transition: all 0.2s;
+    white-space: nowrap; opacity: 0.55;
 }
-.hub-btn:hover { color: #0d6efd; background: #f0f6ff; }
-.hub-btn.active { color: #0d6efd; border-bottom-color: #0d6efd; background: transparent; }
+.hub-btn:hover { opacity: 0.85; }
+.hub-btn.active { opacity: 1; box-shadow: 0 -2px 6px rgba(0,0,0,0.15); }
+/* Couleurs distinctes par onglet */
+#btn-finances { background: #0d6efd; }
+#btn-impayes { background: #dc3545; }
+#btn-paiements { background: #6f42c1; }
+#btn-nouveau { background: #198754; }
+#btn-inscription { background: #fd7e14; }
 .hub-frame { width: 100%; height: calc(100vh - 100px); border: none; display: none; }
 .hub-frame.active { display: block; }
 .hub-frame.loading { background: #f8f9fa; display: flex; align-items: center; justify-content: center; color: #999; font-size: 0.8rem; }
