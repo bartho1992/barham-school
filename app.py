@@ -72,7 +72,11 @@ def favicon():
 
 @app.route('/documents')
 def documents():
-    return render_template('documents/index.html')
+    from models import Document
+    ecole_id = get_current_ecole_id()
+    ecole = Ecole.query.get(ecole_id) if ecole_id else None
+    recent_docs = Document.query.filter_by(ecole_id=ecole_id).order_by(Document.date_creation.desc()).limit(10).all() if ecole_id else []
+    return render_template('documents/index.html', ecole=ecole, recent_docs=recent_docs)
 
 @app.context_processor
 def inject_globals():
@@ -100,6 +104,7 @@ from routes_notes import *
 from routes_finances import *
 from routes_personnel import *
 from routes_admin import *
+from routes_documents import *
 from routes_licence import *
 from routes_saas import *
 
