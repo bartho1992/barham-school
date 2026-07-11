@@ -48,14 +48,19 @@
 .scol-table tr.drag-hover td { background: #d4edda !important; }
 .scol-table tr.drag-source td { opacity: 0.5; }
 
-.tab-nav { display: flex; gap: 4px; margin-top: 4px; border-bottom: 2px solid #dee2e6; }
+.tab-nav { display: flex; gap: 4px; margin-top: 4px; border-bottom: 2px solid #dee2e6; flex-wrap: wrap; }
 .tab-btn { 
-    padding: 4px 12px; border: none; background: transparent; color: #6c757d; 
-    font-weight: 600; font-size: 0.78rem; cursor: pointer; 
-    border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all 0.2s;
+    padding: 6px 16px; border: none; color: #fff; 
+    font-weight: 700; font-size: 0.78rem; cursor: pointer; 
+    border-radius: 8px 8px 0 0; margin-bottom: -2px; transition: all 0.2s;
+    white-space: nowrap; opacity: 0.55;
 }
-.tab-btn:hover { color: #495057; background: #f8f9fa; }
-.tab-btn.active { color: #198754; border-bottom-color: #198754; background: transparent; }
+.tab-btn:hover { opacity: 0.85; }
+.tab-btn.active { opacity: 1; box-shadow: 0 -2px 6px rgba(0,0,0,0.15); }
+/* Couleurs distinctes par onglet */
+#btn-scolarite { background: #198754; }
+#btn-categories { background: #0d6efd; }
+#btn-abonnements { background: #fd7e14; }
 </style>
 {% endblock %}
 
