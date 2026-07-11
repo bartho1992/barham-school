@@ -85,17 +85,17 @@
 {% endfor %}
 <div class="d-flex flex-wrap gap-2 mb-2">
     {% set badges_top = [
-        ('NOMBRE PAYÉ', '{:,.0f}'.format(ns.nb_payes).replace(',', ' '), '#0d6efd'),
-        ('DÛ', '{:,.0f}'.format(ns.total_du).replace(',', ' '), '#198754'),
-        ('AVANCE', '{:,.0f}'.format(ns.total_avance).replace(',', ' '), '#20c997'),
-        ('RESTE', '{:,.0f}'.format(ns.total_reste).replace(',', ' '), '#dc3545'),
-        ('CUMUL', '{:,.0f}'.format(ns.total_reste).replace(',', ' '), '#fd7e14'),
-        ('SCOLARITÉ', '{:,.0f}'.format(ns.total_mois).replace(',', ' '), '#6f42c1')
+        ('NOMBRE PAYÉ', '{:,.0f}'.format(ns.nb_payes).replace(',', ' '), '#0d6efd', 'badge-nbpaye'),
+        ('DÛ', '{:,.0f}'.format(ns.total_du).replace(',', ' '), '#198754', 'badge-du'),
+        ('AVANCE', '{:,.0f}'.format(ns.total_avance).replace(',', ' '), '#20c997', 'badge-avance'),
+        ('RESTE', '{:,.0f}'.format(ns.total_reste).replace(',', ' '), '#dc3545', 'badge-reste'),
+        ('CUMUL', '{:,.0f}'.format(ns.total_reste).replace(',', ' '), '#fd7e14', 'badge-cumul'),
+        ('SCOLARITÉ', '{:,.0f}'.format(ns.total_mois).replace(',', ' '), '#6f42c1', 'badge-scolarite')
     ] %}
-    {% for label, valeur, couleur in badges_top %}
+    {% for label, valeur, couleur, elid in badges_top %}
     <div style="flex:1 1 0;min-width:90px;background:{{ couleur }};color:#fff;border-radius:6px;padding:4px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.15);">
         <div style="font-size:0.55rem;font-weight:700;opacity:0.9;line-height:1.1;">{{ label }}</div>
-        <div style="font-size:0.8rem;font-weight:800;line-height:1.2;">{{ valeur }}</div>
+        <div id="{{ elid }}" style="font-size:0.8rem;font-weight:800;line-height:1.2;">{{ valeur }}</div>
     </div>
     {% endfor %}
 </div>
@@ -297,38 +297,34 @@ function filtrerSuivi() {
         row.style.display = show ? '' : 'none';
         if (show) visible++;
     });
-    // Mettre a jour les badges totaux
-    var badgeRow = document.querySelector('#table-suivi-paiement thead tr:first-child');
-    if (!badgeRow) return;
-    if (mois) {
-        var totalDu = 0, totalAv = 0, totalRe = 0, totalMois = 0;
-        document.querySelectorAll('#table-suivi-paiement tbody tr:not(:has(td[colspan]))').forEach(function(row) {
-            if (row.style.display === 'none') return;
-            var details = null;
-            try { details = JSON.parse(row.getAttribute('data-mois-details') || '{}'); } catch(e) {}
-            if (details && details[mois]) {
-                totalDu += details[mois].due;
-                totalAv += details[mois].paye;
-                totalRe += details[mois].reste;
-                totalMois += details[mois].due;
-            }
-        });
-        var spans = badgeRow.querySelectorAll('span');
-        if (spans.length >= 5) {
-            var fmt = function(n) { return Number(n).toLocaleString('fr-FR'); };
-            spans[0].textContent = fmt(totalDu);
-            spans[1].textContent = fmt(totalAv);
-            spans[2].textContent = fmt(totalRe);
-            spans[3].textContent = fmt(totalRe);
-            spans[4].textContent = fmt(totalMois);
-        }
-    } else {
-        // Restaurer les valeurs originales des badges
-        badgeRow.querySelectorAll('span').forEach(function(sp) {
-            var orig = sp.parentElement.getAttribute('data-orig-badge');
-            if (orig !== null) sp.textContent = orig;
-        });
-    }
+    // Mettre a jour les badges totaux selon les lignes visibles
+    var bNbPaye = 0, bDU = 0, bAV = 0, bRE = 0, bMOIS = 0;
+    document.querySelectorAll('#table-suivi-paiement tbody tr:not(:has(td[colspan]))').forEach(function(row) {
+        if (row.style.display === 'none') return;
+        var cells = row.querySelectorAll('td');
+        if (cells.length < 12) return;
+        var toNum = function(txt) {
+            var v = (txt || '').replace(/[^\d]/g, '');
+            return v ? parseInt(v, 10) : 0;
+        };
+        var du = toNum(cells[5].textContent);
+        var av = toNum(cells[6].textContent);
+        var re = toNum(cells[7].textContent);
+        var mo = toNum(cells[11].textContent);
+        bDU += du; bAV += av; bRE += re; bMOIS += mo;
+        if (av > 0) bNbPaye++;
+    });
+    var fmt = function(n) { return Number(n).toLocaleString('fr-FR'); };
+    var setBadge = function(id, val) {
+        var elb = document.getElementById(id);
+        if (elb) elb.textContent = fmt(val);
+    };
+    setBadge('badge-nbpaye', bNbPaye);
+    setBadge('badge-du', bDU);
+    setBadge('badge-avance', bAV);
+    setBadge('badge-reste', bRE);
+    setBadge('badge-cumul', bRE);
+    setBadge('badge-scolarite', bMOIS);
     console.log('Rows updated with mois data (suivi):', nbRowsUpdated, '/', rows.length);
     var el = document.getElementById('filtre-count');
     if (el) { el.style.display = visible < rows.length || nom || classe || mois ? '' : 'none'; el.textContent = visible + '/' + rows.length + ' eleve(s) affiche(s)'; }
