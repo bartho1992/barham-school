@@ -73,6 +73,7 @@ class Eleve(db.Model):
     prenom = db.Column(db.String(100), nullable=False)
     nom = db.Column(db.String(100), nullable=False)
     sexe = db.Column(db.String(1), default='M')
+    photo = db.Column(db.String(300))
     classe_id = db.Column(db.Integer, db.ForeignKey('classe.id'))
     ecole_id = db.Column(db.Integer, db.ForeignKey('ecole.id'), nullable=False, default=1)
     tel = db.Column(db.String(50))

@@ -56,6 +56,17 @@ def eleve_ajouter():
             date_entree=request.form.get('date_entree'), observations=request.form.get('observations'),
             situation=request.form.get('situation','Inscrit'), annee_scolaire=annee, ecole_id=ecole_id)
         db.session.add(el); db.session.commit()
+        # Gérer la photo
+        photo_file = request.files.get('photo')
+        if photo_file and photo_file.filename:
+            ext = photo_file.filename.rsplit('.', 1)[-1].lower() if '.' in photo_file.filename else 'jpg'
+            if ext in ('jpg','jpeg','png','gif','bmp','webp'):
+                filename = f"eleve_{el.id}_{datetime.now().strftime('%Y%m%d%H%M%S')}.{ext}"
+                upload_dir = os.path.join(os.path.dirname(__file__), 'static', 'photos')
+                os.makedirs(upload_dir, exist_ok=True)
+                photo_file.save(os.path.join(upload_dir, filename))
+                el.photo = filename
+                db.session.commit()
         # Mettre à jour l'effectif de la classe
         if el.classe_id:
             cls = Classe.query.get(el.classe_id)
@@ -72,11 +83,23 @@ def eleve_modifier(id):
     if el.ecole_id != ecole_id: flash('Accès non autorisé','danger'); return redirect(url_for('eleves'))
     
     if request.method == 'POST':
+        from datetime import datetime
         for f in ['code','prenom','nom','sexe','tel','date_naissance','lieu_naissance','tuteur','adresse','precedente_ecole','date_entree','observations','situation']:
             setattr(el, f, request.form.get(f))
         old_classe_id = el.classe_id
         el.classe_id = request.form.get('classe_id') or None
         db.session.commit()
+        # Gérer la photo
+        photo_file = request.files.get('photo')
+        if photo_file and photo_file.filename:
+            ext = photo_file.filename.rsplit('.', 1)[-1].lower() if '.' in photo_file.filename else 'jpg'
+            if ext in ('jpg','jpeg','png','gif','bmp','webp'):
+                filename = f"eleve_{el.id}_{datetime.now().strftime('%Y%m%d%H%M%S')}.{ext}"
+                upload_dir = os.path.join(os.path.dirname(__file__), 'static', 'photos')
+                os.makedirs(upload_dir, exist_ok=True)
+                photo_file.save(os.path.join(upload_dir, filename))
+                el.photo = filename
+                db.session.commit()
         # Mettre à jour l'effectif des classes concernées
         for cid in set(filter(None, [old_classe_id, el.classe_id])):
             cls = Classe.query.get(cid)

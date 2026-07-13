@@ -133,6 +133,16 @@ with app.app_context():
                 except Exception as e:
                     print(f"[SaaS] Erreur {nom}: {e}")
         db.session.commit()
+    # Migration — Ajouter colonne photo à la table eleve
+    if 'eleve' in inspector.get_table_names():
+        cols_eleve = [c['name'] for c in inspector.get_columns('eleve')]
+        if 'photo' not in cols_eleve:
+            try:
+                db.session.execute(text("ALTER TABLE eleve ADD COLUMN photo VARCHAR(300)"))
+                print("[Migration] Colonne eleve.photo ajoutee")
+            except Exception as e:
+                print(f"[Migration] Erreur photo: {e}")
+        db.session.commit()
     init_data()
 
 # Injecte has_licence dans tous les templates (pour la sidebar)

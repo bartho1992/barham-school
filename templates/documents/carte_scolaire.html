@@ -50,8 +50,12 @@
         </div>
         <div class="carte-body">
             <div class="carte-photo">
+                {% if eleve.photo %}
+                <img src="{{ url_for('static', filename='photos/' + eleve.photo) }}" style="width:100%;height:100%;object-fit:cover;border-radius:5px;" alt="Photo">
+                {% else %}
                 <i class="bi bi-person" style="font-size:2rem;"></i><br>
                 Photo
+                {% endif %}
             </div>
             <div class="carte-infos">
                 <p><strong>Nom :</strong> {{ eleve.nom }}</p>
