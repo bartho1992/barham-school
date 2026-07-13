@@ -37,8 +37,8 @@
     <div class="doc-titre">{{ titre }}</div>
 
     <div class="doc-ligne"><strong>Nom & Prénom :</strong> <span class="doc-valeur">{{ eleve.prenom }} {{ eleve.nom }}</span></div>
-    <div class="doc-ligne"><strong>Date de naissance :</strong> <span class="doc-valeur">{{ eleve.date_naissance.strftime('%d/%m/%Y') if eleve.date_naissance else 'N/A' }}</span></div>
-    <div class="doc-ligne"><strong>Lieu de naissance :</strong> <span class="doc-valeur">{{ eleve.lieu if eleve.lieu else '.....................................................' }}</span></div>
+    <div class="doc-ligne"><strong>Date de naissance :</strong> <span class="doc-valeur">{{ eleve.date_naissance if eleve.date_naissance else 'N/A' }}</span></div>
+    <div class="doc-ligne"><strong>Lieu de naissance :</strong> <span class="doc-valeur">.....................................................</span></div>
     <div class="doc-ligne"><strong>Classe :</strong> <span class="doc-valeur">{{ eleve.classe.nom if eleve.classe else '—' }}</span></div>
     <div class="doc-ligne"><strong>Code élève :</strong> <span class="doc-valeur">{{ eleve.code }}</span></div>
 

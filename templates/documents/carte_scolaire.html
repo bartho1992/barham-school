@@ -56,7 +56,7 @@
             <div class="carte-infos">
                 <p><strong>Nom :</strong> {{ eleve.nom }}</p>
                 <p><strong>Prénom :</strong> {{ eleve.prenom }}</p>
-                <p><strong>Né(e) le :</strong> {{ eleve.date_naissance.strftime('%d/%m/%Y') if eleve.date_naissance else 'N/A' }}</p>
+                <p><strong>Né(e) le :</strong> {{ eleve.date_naissance if eleve.date_naissance else 'N/A' }}</p>
                 <p><strong>Classe :</strong> {{ eleve.classe.nom if eleve.classe else '—' }}</p>
                 <p><strong>Code :</strong> {{ eleve.code }}</p>
             </div>
