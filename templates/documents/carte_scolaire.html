@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Carte Scolaire - {{ eleve.prenom }} {{ eleve.nom }}{% endblock %}
+{% block content %}
+<style>
+@media print {
+    .no-print { display: none !important; }
+    body { background: #fff !important; }
+    .carte-wrapper { box-shadow: none !important; }
+}
+.carte-wrapper {
+    display: flex; justify-content: center; margin-top: 10px;
+}
+.carte {
+    width: 500px; background: #fff; border-radius: 14px; overflow: hidden;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.18); font-family: 'Segoe UI', Arial, sans-serif;
+}
+.carte-top {
+    background: linear-gradient(135deg, #0d6efd, #6f42c1);
+    color: #fff; padding: 18px; text-align: center;
+}
+.carte-top h5 { font-weight: 800; margin: 0 0 4px 0; text-transform: uppercase; }
+.carte-top small { opacity: 0.85; }
+.carte-body { padding: 18px; display: flex; gap: 16px; }
+.carte-photo {
+    width: 100px; height: 120px; border: 3px solid #dee2e6; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    background: #f8f9fa; flex-shrink: 0;
+    font-size: 0.65rem; color: #aaa; text-align: center;
+}
+.carte-infos { flex: 1; font-size: 0.85rem; }
+.carte-infos p { margin: 3px 0; }
+.carte-infos strong { color: #333; }
+.carte-footer {
+    background: #f8f9fa; padding: 10px 18px; font-size: 0.7rem;
+    border-top: 1px solid #dee2e6; display: flex; justify-content: space-between;
+    color: #777;
+}
+</style>
+
+<div class="no-print mb-3 text-center">
+    <button onclick="window.print()" class="btn btn-primary btn-sm"><i class="bi bi-printer"></i> Imprimer</button>
+    <a href="{{ url_for('documents') }}" class="btn btn-secondary btn-sm"><i class="bi bi-arrow-left"></i> Retour</a>
+</div>
+
+<div class="carte-wrapper">
+    <div class="carte">
+        <div class="carte-top">
+            <h5>{{ ecole.nom }}</h5>
+            <small>{{ ecole.adresse }}</small>
+        </div>
+        <div class="carte-body">
+            <div class="carte-photo">
+                <i class="bi bi-person" style="font-size:2rem;"></i><br>
+                Photo
+            </div>
+            <div class="carte-infos">
+                <p><strong>Nom :</strong> {{ eleve.nom }}</p>
+                <p><strong>Prénom :</strong> {{ eleve.prenom }}</p>
+                <p><strong>Né(e) le :</strong> {{ eleve.date_naissance.strftime('%d/%m/%Y') if eleve.date_naissance else 'N/A' }}</p>
+                <p><strong>Classe :</strong> {{ eleve.classe.nom if eleve.classe else '—' }}</p>
+                <p><strong>Code :</strong> {{ eleve.code }}</p>
+            </div>
+        </div>
+        <div class="carte-footer">
+            <span>Année : {{ ecole.annee_scolaire or '2025-2026' }}</span>
+            <span>Tél : {{ ecole.tel }}</span>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}{{ titre }} - {{ eleve.prenom }} {{ eleve.nom }}{% endblock %}
+{% block content %}
+<style>
+@media print {
+    .no-print { display: none !important; }
+    body { background: #fff !important; }
+    .document { box-shadow: none !important; border: 2px solid #000 !important; }
+}
+.document {
+    max-width: 750px; margin: 0 auto; background: #fff;
+    border: 2px solid {{ couleur }}; border-radius: 10px; padding: 30px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.12); font-family: 'Segoe UI', Arial, sans-serif;
+}
+.doc-header { text-align: center; border-bottom: 2px solid {{ couleur }}; padding-bottom: 14px; margin-bottom: 20px; }
+.doc-titre { font-size: 1.5rem; font-weight: 800; color: {{ couleur }}; letter-spacing: 2px; text-transform: uppercase; margin: 14px 0; text-align: center; }
+.doc-ligne { margin: 10px 0; font-size: 1rem; }
+.doc-ligne strong { display: inline-block; min-width: 180px; color: #333; }
+.doc-valeur { border-bottom: 1px dotted #999; padding: 0 6px; font-weight: 600; }
+.doc-signature { margin-top: 50px; display: flex; justify-content: space-between; }
+.doc-texte { margin: 20px 0; font-size: 1rem; line-height: 1.7; text-align: justify; }
+</style>
+
+<div class="no-print mb-3 text-center">
+    <button onclick="window.print()" class="btn btn-primary btn-sm"><i class="bi bi-printer"></i> Imprimer</button>
+    <a href="{{ url_for('documents') }}" class="btn btn-secondary btn-sm"><i class="bi bi-arrow-left"></i> Retour</a>
+</div>
+
+<div class="document">
+    <div class="doc-header">
+        <div style="font-size:1.2rem; font-weight:800;">{{ ecole.nom }}</div>
+        <div style="font-size:0.8rem; color:#555;">{{ ecole.adresse }}</div>
+        <div style="font-size:0.8rem; color:#555;">Tél : {{ ecole.tel }}</div>
+        {% if ecole.annee_scolaire %}<div style="font-size:0.75rem; color:#777;">Année scolaire : {{ ecole.annee_scolaire }}</div>{% endif %}
+    </div>
+
+    <div class="doc-titre">{{ titre }}</div>
+
+    <div class="doc-ligne"><strong>Nom & Prénom :</strong> <span class="doc-valeur">{{ eleve.prenom }} {{ eleve.nom }}</span></div>
+    <div class="doc-ligne"><strong>Date de naissance :</strong> <span class="doc-valeur">{{ eleve.date_naissance.strftime('%d/%m/%Y') if eleve.date_naissance else 'N/A' }}</span></div>
+    <div class="doc-ligne"><strong>Lieu de naissance :</strong> <span class="doc-valeur">{{ eleve.lieu if eleve.lieu else '.....................................................' }}</span></div>
+    <div class="doc-ligne"><strong>Classe :</strong> <span class="doc-valeur">{{ eleve.classe.nom if eleve.classe else '—' }}</span></div>
+    <div class="doc-ligne"><strong>Code élève :</strong> <span class="doc-valeur">{{ eleve.code }}</span></div>
+
+    <div class="doc-texte">{{ texte|safe }}</div>
+
+    <div class="doc-signature">
+        <div style="text-align:center;">
+            <div style="border-top:1px solid #333; padding-top:5px; min-width:180px;">{{ signataire }}</div>
+        </div>
+        <div style="text-align:center;">
+            <div style="border-top:1px solid #333; padding-top:5px; min-width:180px;">Cachet / Signature</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
