@@ -68,10 +68,6 @@
     background: transparent; color: #666;
 }
 .db-tab:hover { background: #e9ecef; color: #333; }
-.db-tab.active {
-    background: #fff; color: #2E7D32;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.10);
-}
 .db-tab i { margin-right: 4px; }
 .tab-pane { display: none; }
 .tab-pane.active { display: block; }
@@ -112,10 +108,10 @@
 
 <!-- Onglets Dashboard -->
 <div class="db-tabs" id="dashboardTabs">
-    <button class="db-tab active" data-tab="synthese"><i class="bi bi-house"></i> Synthèse</button>
-    <button class="db-tab" data-tab="statistiques"><i class="bi bi-bar-chart"></i> Statistiques</button>
-    <button class="db-tab" data-tab="paiements"><i class="bi bi-cash"></i> Paiements</button>
-    <button class="db-tab" data-tab="actions"><i class="bi bi-lightning"></i> Actions</button>
+    <button class="db-tab active" data-tab="synthese" data-color="#0d6efd"><i class="bi bi-house"></i> Synthèse</button>
+    <button class="db-tab" data-tab="statistiques" data-color="#6f42c1"><i class="bi bi-bar-chart"></i> Statistiques</button>
+    <button class="db-tab" data-tab="paiements" data-color="#198754"><i class="bi bi-cash"></i> Paiements</button>
+    <button class="db-tab" data-tab="actions" data-color="#fd7e14"><i class="bi bi-lightning"></i> Actions</button>
 </div>
 
 <!-- ===== TAB 1 : SYNTHÈSE ===== -->
@@ -361,24 +357,37 @@
     var tabs = document.querySelectorAll('.db-tab');
     var panes = document.querySelectorAll('.tab-pane');
     
-    tabs.forEach(function(tab) {
-        tab.addEventListener('click', function() {
-            tabs.forEach(function(t) { t.classList.remove('active'); });
-            panes.forEach(function(p) { p.classList.remove('active'); });
-            
-            this.classList.add('active');
-            var target = document.getElementById('tab-' + this.getAttribute('data-tab'));
-            if (target) target.classList.add('active');
-            
-            try { localStorage.setItem('dashboardTab', this.getAttribute('data-tab')); } catch(e) {}
+    function setActiveTab(tab) {
+        var color = tab.getAttribute('data-color') || '#2E7D32';
+        tabs.forEach(function(t) {
+            t.classList.remove('active');
+            t.style.background = 'transparent';
+            t.style.color = '#666';
+            t.style.boxShadow = 'none';
         });
+        panes.forEach(function(p) { p.classList.remove('active'); });
+        
+        tab.classList.add('active');
+        tab.style.background = '#fff';
+        tab.style.color = color;
+        tab.style.boxShadow = '0 2px 8px rgba(0,0,0,0.12)';
+        
+        var target = document.getElementById('tab-' + tab.getAttribute('data-tab'));
+        if (target) target.classList.add('active');
+        
+        try { localStorage.setItem('dashboardTab', tab.getAttribute('data-tab')); } catch(e) {}
+    }
+    
+    tabs.forEach(function(tab) {
+        tab.addEventListener('click', function() { setActiveTab(this); });
     });
     
+    // Restaurer le dernier onglet ouvert
     try {
         var saved = localStorage.getItem('dashboardTab');
         if (saved) {
             var found = document.querySelector('.db-tab[data-tab="' + saved + '"]');
-            if (found) found.click();
+            if (found) setActiveTab(found);
         }
     } catch(e) {}
 })();
