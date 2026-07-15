@@ -1,5 +1,6 @@
 {% extends "base.html" %}
-{% block title %}Tableau de bord - {{ ecole.nom }}{% endblock %}{% block content %}
+{% block title %}Tableau de bord - {{ ecole.nom }}{% endblock %}
+{% block content %}
 
 <style>
 :root {
@@ -55,27 +56,31 @@
 }
 .section-title i { font-size: 0.75rem; }
 
-/* Widget flottant */
-.widget-paiements {
-    position: fixed; bottom: 60px; right: 15px; width: 380px; max-width: 94vw;
-    z-index: 1050; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    border-radius: 10px; overflow: hidden;
+/* Onglets Dashboard */
+.db-tabs {
+    display: flex; gap: 4px; margin-bottom: 12px; flex-wrap: wrap;
+    background: #f8f9fa; padding: 4px; border-radius: 10px;
 }
-.widget-paiements .card-header {
-    cursor: pointer; user-select: none;
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 8px 14px;
+.db-tab {
+    padding: 6px 16px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.4px; border: none; border-radius: 8px;
+    cursor: pointer; transition: all 0.2s ease;
+    background: transparent; color: #666;
 }
-.widget-paiements .toggle-icon { transition: transform 0.3s ease; }
-.widget-paiements.collapsed .toggle-icon { transform: rotate(-90deg); }
-.widget-paiements.collapsed .widget-body { display: none; }
-.widget-body { max-height: 280px; overflow-y: auto; }
+.db-tab:hover { background: #e9ecef; color: #333; }
+.db-tab.active {
+    background: #fff; color: #2E7D32;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+}
+.db-tab i { margin-right: 4px; }
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
 
 @media (max-width: 768px) {
     .kpi-item { min-width: 70px; padding: 6px 6px; }
     .kpi-item .val { font-size: 0.85rem; }
-    .widget-paiements { bottom: 8px; right: 4px; left: 4px; width: auto; max-width: none; }
-    .widget-body { max-height: 200px; }
+    .db-tabs { gap: 2px; }
+    .db-tab { padding: 5px 10px; font-size: 0.6rem; }
 }
 </style>
 
@@ -105,83 +110,87 @@
     </form>
 </div>
 
-<!-- KPI row : mini cartes -->
-<div class="kpi-row">
-    <div class="kpi-item" style="border-left: 3px solid #0d6efd;">
-        <div class="val text-primary">{{ total_eleves }}</div>
-        <div class="lbl">Élèves</div>
-    </div>
-    <div class="kpi-item" style="border-left: 3px solid #198754;">
-        <div class="val text-success">{{ total_classes }}</div>
-        <div class="lbl">Classes</div>
-    </div>
-    <div class="kpi-item" style="border-left: 3px solid #6f42c1;">
-        <div class="val" style="color:#6f42c1;">{{ total_personnel }}</div>
-        <div class="lbl">Personnel</div>
-    </div>
-    <div class="kpi-item" style="border-left: 3px solid #fd7e14;">
-        <div class="val" style="color:#fd7e14;">{{ garcons }}</div>
-        <div class="lbl">Garçons</div>
-    </div>
-    <div class="kpi-item" style="border-left: 3px solid #d63384;">
-        <div class="val" style="color:#d63384;">{{ filles }}</div>
-        <div class="lbl">Filles</div>
-    </div>
-    <div class="kpi-item" style="border-left: 3px solid #dc3545;">
-        <div class="val text-danger">{{ nb_eleves_impayes }}</div>
-        <div class="lbl">Él. Impayés</div>
-    </div>
+<!-- Onglets Dashboard -->
+<div class="db-tabs" id="dashboardTabs">
+    <button class="db-tab active" data-tab="synthese"><i class="bi bi-house"></i> Synthèse</button>
+    <button class="db-tab" data-tab="statistiques"><i class="bi bi-bar-chart"></i> Statistiques</button>
+    <button class="db-tab" data-tab="paiements"><i class="bi bi-cash"></i> Paiements</button>
+    <button class="db-tab" data-tab="actions"><i class="bi bi-lightning"></i> Actions</button>
 </div>
 
-<!-- Cartes principales -->
-<div class="row g-2 mb-2">
-    <!-- Encaissement total -->
-    <div class="col-lg-3 col-md-6">
-        <div class="card db-card bg-white">
-            <div class="card-body d-flex align-items-center gap-3">
-                <div class="db-stat-icon bg-primary bg-opacity-10 text-primary"><i class="bi bi-cash-stack"></i></div>
-                <div>
-                    <div class="db-stat-label">Encaissement Total</div>
-                    <div class="db-stat-value text-primary">{{ "{:,.0f}".format(total_paiements).replace(',', ' ') }} F</div>
+<!-- ===== TAB 1 : SYNTHÈSE ===== -->
+<div class="tab-pane active" id="tab-synthese">
+    <div class="kpi-row">
+        <div class="kpi-item" style="border-left: 3px solid #0d6efd;">
+            <div class="val text-primary">{{ total_eleves }}</div>
+            <div class="lbl">Élèves</div>
+        </div>
+        <div class="kpi-item" style="border-left: 3px solid #198754;">
+            <div class="val text-success">{{ total_classes }}</div>
+            <div class="lbl">Classes</div>
+        </div>
+        <div class="kpi-item" style="border-left: 3px solid #6f42c1;">
+            <div class="val" style="color:#6f42c1;">{{ total_personnel }}</div>
+            <div class="lbl">Personnel</div>
+        </div>
+        <div class="kpi-item" style="border-left: 3px solid #fd7e14;">
+            <div class="val" style="color:#fd7e14;">{{ garcons }}</div>
+            <div class="lbl">Garçons</div>
+        </div>
+        <div class="kpi-item" style="border-left: 3px solid #d63384;">
+            <div class="val" style="color:#d63384;">{{ filles }}</div>
+            <div class="lbl">Filles</div>
+        </div>
+        <div class="kpi-item" style="border-left: 3px solid #dc3545;">
+            <div class="val text-danger">{{ nb_eleves_impayes }}</div>
+            <div class="lbl">Él. Impayés</div>
+        </div>
+    </div>
+    <div class="row g-2 mb-2">
+        <div class="col-lg-3 col-md-6">
+            <div class="card db-card bg-white">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="db-stat-icon bg-primary bg-opacity-10 text-primary"><i class="bi bi-cash-stack"></i></div>
+                    <div>
+                        <div class="db-stat-label">Encaissement Total</div>
+                        <div class="db-stat-value text-primary">{{ "{:,.0f}".format(total_paiements).replace(',', ' ') }} F</div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-    <!-- Encaissement du jour -->
-    <div class="col-lg-3 col-md-6">
-        <div class="card db-card bg-white">
-            <div class="card-body d-flex align-items-center gap-3">
-                <div class="db-stat-icon bg-success bg-opacity-10 text-success"><i class="bi bi-calendar-check"></i></div>
-                <div>
-                    <div class="db-stat-label">Encaissement Aujourd'hui</div>
-                    <div class="db-stat-value text-success">{{ "{:,.0f}".format(today_encaisse).replace(',', ' ') }} F</div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card db-card bg-white">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="db-stat-icon bg-success bg-opacity-10 text-success"><i class="bi bi-calendar-check"></i></div>
+                    <div>
+                        <div class="db-stat-label">Encaissement Aujourd'hui</div>
+                        <div class="db-stat-value text-success">{{ "{:,.0f}".format(today_encaisse).replace(',', ' ') }} F</div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-    <!-- Impayés -->
-    <div class="col-lg-3 col-md-6">
-        <div class="card db-card bg-white">
-            <div class="card-body d-flex align-items-center gap-3">
-                <div class="db-stat-icon bg-danger bg-opacity-10 text-danger"><i class="bi bi-exclamation-triangle"></i></div>
-                <div>
-                    <div class="db-stat-label">Total Impayés</div>
-                    <div class="db-stat-value text-danger">{{ "{:,.0f}".format(total_impayes).replace(',', ' ') }} F</div>
-                    <a href="{{ url_for('impayes') }}" class="small">Voir détails <i class="bi bi-arrow-right"></i></a>
+        <div class="col-lg-3 col-md-6">
+            <div class="card db-card bg-white">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="db-stat-icon bg-danger bg-opacity-10 text-danger"><i class="bi bi-exclamation-triangle"></i></div>
+                    <div>
+                        <div class="db-stat-label">Total Impayés</div>
+                        <div class="db-stat-value text-danger">{{ "{:,.0f}".format(total_impayes).replace(',', ' ') }} F</div>
+                        <a href="{{ url_for('impayes') }}" class="small">Voir détails <i class="bi bi-arrow-right"></i></a>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-    <!-- Taux recouvrement -->
-    <div class="col-lg-3 col-md-6">
-        <div class="card db-card bg-white">
-            <div class="card-body d-flex align-items-center gap-3">
-                <div class="db-stat-icon bg-info bg-opacity-10 text-info"><i class="bi bi-graph-up"></i></div>
-                <div>
-                    <div class="db-stat-label">Taux Recouvrement</div>
-                    <div class="db-stat-value text-info">{{ taux_recouvrement }}%</div>
-                    <div class="progress progress-thin mt-1">
-                        <div class="progress-bar bg-info" style="width:{{ taux_recouvrement }}%"></div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card db-card bg-white">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="db-stat-icon bg-info bg-opacity-10 text-info"><i class="bi bi-graph-up"></i></div>
+                    <div>
+                        <div class="db-stat-label">Taux Recouvrement</div>
+                        <div class="db-stat-value text-info">{{ taux_recouvrement }}%</div>
+                        <div class="progress progress-thin mt-1">
+                            <div class="progress-bar bg-info" style="width:{{ taux_recouvrement }}%"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -189,120 +198,190 @@
     </div>
 </div>
 
-<!-- Rangée 2 : Répartition + Effectifs par classe + Paiements/mois -->
-<div class="row g-2 mb-2">
-    <!-- Répartition filles/garçons -->
-    <div class="col-lg-3 col-md-6">
-        <div class="card db-card">
-            <div class="card-body">
-                <div class="section-title"><i class="bi bi-pie-chart"></i> Répartition</div>
-                {% set total_genre = garcons + filles %}
-                <div style="display:flex; height:20px; border-radius:6px; overflow:hidden; margin-bottom:8px;">
-                    <div style="background:#0d6efd; width:{{ (garcons/total_genre*100) if total_genre>0 else 50 }}%; display:flex; align-items:center; justify-content:center; font-size:0.55rem; color:#fff; font-weight:700;">{{ garcons }} G</div>
-                    <div style="background:#d63384; width:{{ (filles/total_genre*100) if total_genre>0 else 50 }}%; display:flex; align-items:center; justify-content:center; font-size:0.55rem; color:#fff; font-weight:700;">{{ filles }} F</div>
-                </div>
-                <div class="d-flex justify-content-between small">
-                    <span><span class="badge bg-primary" style="display:inline-block;width:8px;height:8px;border-radius:50%;vertical-align:middle;"></span> Garçons: {{ garcons }}</span>
-                    <span><span class="badge" style="display:inline-block;width:8px;height:8px;border-radius:50%;vertical-align:middle;background:#d63384;"></span> Filles: {{ filles }}</span>
-                    <span class="text-muted">{{ total_genre }} total</span>
+<!-- ===== TAB 2 : STATISTIQUES ===== -->
+<div class="tab-pane" id="tab-statistiques">
+    <div class="row g-2 mb-2">
+        <div class="col-lg-4 col-md-6">
+            <div class="card db-card">
+                <div class="card-body">
+                    <div class="section-title"><i class="bi bi-pie-chart"></i> Répartition G/F</div>
+                    {% set total_genre = garcons + filles %}
+                    <div style="display:flex; height:24px; border-radius:6px; overflow:hidden; margin-bottom:8px;">
+                        <div style="background:#0d6efd; width:{{ (garcons/total_genre*100) if total_genre>0 else 50 }}%; display:flex; align-items:center; justify-content:center; font-size:0.6rem; color:#fff; font-weight:700;">{{ garcons }} G</div>
+                        <div style="background:#d63384; width:{{ (filles/total_genre*100) if total_genre>0 else 50 }}%; display:flex; align-items:center; justify-content:center; font-size:0.6rem; color:#fff; font-weight:700;">{{ filles }} F</div>
+                    </div>
+                    <div class="d-flex justify-content-between small">
+                        <span><span class="badge bg-primary" style="display:inline-block;width:8px;height:8px;border-radius:50%;vertical-align:middle;"></span> Garçons: {{ garcons }}</span>
+                        <span><span class="badge" style="display:inline-block;width:8px;height:8px;border-radius:50%;vertical-align:middle;background:#d63384;"></span> Filles: {{ filles }}</span>
+                        <span class="text-muted">{{ total_genre }} total</span>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-
-    <!-- Effectifs par classe -->
-    <div class="col-lg-5 col-md-6">
-        <div class="card db-card">
-            <div class="card-body" style="padding:6px 8px;">
-                <div class="section-title" style="margin-bottom:3px; font-size:0.65rem;"><i class="bi bi-building"></i> Effectifs par Classe</div>
-                <div style="max-height:200px; overflow-y:auto; padding-right:2px;">
-                {% set max_eff = classes_stats[0].nb if classes_stats else 1 %}
-                {% for cs in classes_stats %}
-                <div class="bar-item" style="margin-bottom:2px;">
-                    <div class="label" style="font-size:0.55rem; width:36px;">{{ cs.nom }}</div>
-                    <div class="bar-wrap" style="height:7px;">
-                        <div class="bar-fill" style="width:{{ (cs.nb/max_eff*100) if max_eff>0 else 0 }}%; background: linear-gradient(90deg, #0d6efd, #6610f2);"></div>
+        <div class="col-lg-4 col-md-6">
+            <div class="card db-card">
+                <div class="card-body" style="padding:8px 10px;">
+                    <div class="section-title" style="margin-bottom:4px;"><i class="bi bi-building"></i> Effectifs par Classe</div>
+                    <div style="max-height:220px; overflow-y:auto; padding-right:2px;">
+                    {% set max_eff = classes_stats[0].nb if classes_stats else 1 %}
+                    {% for cs in classes_stats %}
+                    <div class="bar-item" style="margin-bottom:2px;">
+                        <div class="label" style="font-size:0.6rem; width:40px;">{{ cs.nom }}</div>
+                        <div class="bar-wrap" style="height:8px;">
+                            <div class="bar-fill" style="width:{{ (cs.nb/max_eff*100) if max_eff>0 else 0 }}%; background: linear-gradient(90deg, #0d6efd, #6610f2);"></div>
+                        </div>
+                        <div class="bar-val" style="color:#0d6efd; font-size:0.6rem; width:30px;">{{ cs.nb }}</div>
                     </div>
-                    <div class="bar-val" style="color:#0d6efd; font-size:0.55rem; width:26px;">{{ cs.nb }}</div>
-                </div>
-                {% endfor %}
+                    {% endfor %}
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-
-    <!-- Paiements par mois -->
-    <div class="col-lg-4 col-md-12">
-        <div class="card db-card">
-            <div class="card-body">
-                <div class="section-title"><i class="bi bi-bar-chart"></i> Paiements par Mois</div>
-                {% set max_pm = paiements_mois.values()|max if paiements_mois.values()|list|length > 0 else 1 %}
-                {% for m in mois_scolaires %}
-                <div class="bar-item">
-                    <div class="label" style="width:65px;">{{ m }}</div>
-                    <div class="bar-wrap">
-                        <div class="bar-fill" style="width:{{ (paiements_mois.get(m,0)/max_pm*100) if max_pm>0 else 0 }}%; background: linear-gradient(90deg, #198754, #20c997);"></div>
+        <div class="col-lg-4 col-md-12">
+            <div class="card db-card">
+                <div class="card-body">
+                    <div class="section-title"><i class="bi bi-bar-chart"></i> Paiements par Mois</div>
+                    {% set max_pm = paiements_mois.values()|max if paiements_mois.values()|list|length > 0 else 1 %}
+                    {% for m in mois_scolaires %}
+                    <div class="bar-item">
+                        <div class="label" style="width:70px;">{{ m }}</div>
+                        <div class="bar-wrap">
+                            <div class="bar-fill" style="width:{{ (paiements_mois.get(m,0)/max_pm*100) if max_pm>0 else 0 }}%; background: linear-gradient(90deg, #198754, #20c997);"></div>
+                        </div>
+                        <div class="bar-val" style="color:#198754;">{{ "{:,.0f}".format(paiements_mois.get(m,0)).replace(',',' ') }}</div>
                     </div>
-                    <div class="bar-val" style="color:#198754; font-size:0.55rem;">{{ "{:,.0f}".format(paiements_mois.get(m,0)).replace(',',' ') }}</div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
             </div>
         </div>
     </div>
 </div>
 
-<!-- Rangée 3 : Derniers paiements + Actions rapides -->
-<div class="row g-2 mb-2">
-    <!-- Derniers paiements -->
-    <div class="col-lg-8">
-        <div class="card db-card">
-            <div class="card-body p-2">
-                <div class="section-title px-2"><i class="bi bi-clock-history"></i> Derniers Paiements</div>
-                <div style="max-height:240px;overflow:auto;">
-                    <table class="table table-sm table-borderless mb-0" style="font-size:0.65rem;">
-                        <thead style="background:#f8f9fa;">
-                            <tr>
-                                <th class="ps-2">Date</th>
-                                <th>Élève</th>
-                                <th>Mois</th>
-                                <th class="text-end">Montant</th>
-                                <th class="text-end pe-2">Caissier</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for p in recent_paiements %}
-                            <tr>
-                                <td class="ps-2">{{ p.date_paiement.strftime('%d/%m/%Y') }}</td>
-                                <td>{{ p.eleve.prenom }} {{ p.eleve.nom }}</td>
-                                <td><span class="badge bg-light text-dark border" style="font-size:0.55rem;">{{ p.type_paiement }}</span></td>
-                                <td class="text-end fw-bold text-success">{{ "{:,.0f}".format(p.montant).replace(',',' ') }}</td>
-                                <td class="text-end pe-2 text-muted">{{ p.caissier }}</td>
-                            </tr>
-                            {% else %}
-                            <tr><td colspan="5" class="text-center py-3 text-muted">Aucun paiement</td></tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Actions rapides -->
-    <div class="col-lg-4">
-        <div class="card db-card">
-            <div class="card-body">
-                <div class="section-title"><i class="bi bi-lightning"></i> Actions Rapides</div>
-                <div class="d-grid gap-2">
-                    <a href="{{ url_for('eleve_ajouter') }}" class="btn btn-primary btn-sm"><i class="bi bi-person-plus me-1"></i> Inscrire un élève</a>
-                    <a href="{{ url_for('notes') }}" class="btn btn-success btn-sm"><i class="bi bi-pencil-square me-1"></i> Saisir les notes</a>
-                    <a href="{{ url_for('paiement_ajouter') }}" class="btn btn-warning btn-sm"><i class="bi bi-cash me-1"></i> Nouveau Paiement</a>
-                    <a href="{{ url_for('bulletins') }}" class="btn btn-info btn-sm text-white"><i class="bi bi-file-text me-1"></i> Bulletins</a>
-                    <a href="{{ url_for('impayes') }}" class="btn btn-danger btn-sm"><i class="bi bi-exclamation-triangle me-1"></i> Voir les Impayés</a>
+<!-- ===== TAB 3 : PAIEMENTS ===== -->
+<div class="tab-pane" id="tab-paiements">
+    <div class="row g-2 mb-2">
+        <div class="col-12">
+            <div class="card db-card">
+                <div class="card-body p-2">
+                    <div class="section-title px-2"><i class="bi bi-clock-history"></i> {{ recent_paiements|length }} Derniers Paiements</div>
+                    <div style="max-height:320px;overflow:auto;">
+                        <table class="table table-sm mb-0" style="font-size:0.65rem;">
+                            <thead style="background:#f8f9fa; position:sticky; top:0;">
+                                <tr>
+                                    <th class="ps-2">Date</th>
+                                    <th>Élève</th>
+                                    <th>Classe</th>
+                                    <th>Mois</th>
+                                    <th class="text-end">Montant</th>
+                                    <th class="text-end pe-2">Caissier</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for p in recent_paiements %}
+                                <tr>
+                                    <td class="ps-2">{{ p.date_paiement.strftime('%d/%m/%Y') if p.date_paiement else '-' }}</td>
+                                    <td>
+                                        <a href="{{ url_for('eleve_fiche', id=p.eleve_id) }}" class="text-decoration-none fw-medium">{{ p.eleve.prenom }} {{ p.eleve.nom }}</a>
+                                    </td>
+                                    <td>{{ p.eleve.classe.nom if p.eleve.classe else '-' }}</td>
+                                    <td><span class="badge bg-light text-dark border" style="font-size:0.55rem;">{{ p.type_paiement }}</span></td>
+                                    <td class="text-end fw-bold text-success">{{ "{:,.0f}".format(p.montant).replace(',',' ') }}</td>
+                                    <td class="text-end pe-2 text-muted">{{ p.caissier }}</td>
+                                </tr>
+                                {% else %}
+                                <tr><td colspan="6" class="text-center py-3 text-muted">Aucun paiement pour l'instant</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="text-end mt-1">
+                        <a href="{{ url_for('finances_liste') }}" class="btn btn-outline-primary btn-sm py-0">Voir tous les paiements <i class="bi bi-arrow-right"></i></a>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- ===== TAB 4 : ACTIONS ===== -->
+<div class="tab-pane" id="tab-actions">
+    <div class="row g-2 mb-2">
+        <div class="col-lg-6">
+            <div class="card db-card">
+                <div class="card-body">
+                    <div class="section-title"><i class="bi bi-people"></i> Élèves & Classes</div>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('eleve_ajouter') }}" class="btn btn-primary btn-sm"><i class="bi bi-person-plus me-1"></i> Inscrire un élève</a>
+                        <a href="{{ url_for('eleves') }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-people me-1"></i> Liste des élèves</a>
+                        <a href="{{ url_for('classes') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-building me-1"></i> Gérer les classes</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card db-card">
+                <div class="card-body">
+                    <div class="section-title"><i class="bi bi-cash"></i> Finances</div>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('paiement_ajouter') }}" class="btn btn-warning btn-sm"><i class="bi bi-cash me-1"></i> Nouveau Paiement</a>
+                        <a href="{{ url_for('finances_hub') }}" class="btn btn-success btn-sm"><i class="bi bi-cash-stack me-1"></i> Gestion Financière</a>
+                        <a href="{{ url_for('impayes') }}" class="btn btn-danger btn-sm"><i class="bi bi-exclamation-triangle me-1"></i> Voir les Impayés</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card db-card">
+                <div class="card-body">
+                    <div class="section-title"><i class="bi bi-pencil-square"></i> Notes & Bulletins</div>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('notes') }}" class="btn btn-success btn-sm"><i class="bi bi-pencil-square me-1"></i> Saisir les notes</a>
+                        <a href="{{ url_for('bulletins') }}" class="btn btn-info btn-sm text-white"><i class="bi bi-file-text me-1"></i> Bulletins</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card db-card">
+                <div class="card-body">
+                    <div class="section-title"><i class="bi bi-printer"></i> Documents & Personnel</div>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('documents') }}" class="btn btn-secondary btn-sm"><i class="bi bi-printer me-1"></i> Documents</a>
+                        <a href="{{ url_for('personnel') }}" class="btn btn-outline-dark btn-sm"><i class="bi bi-person-badge me-1"></i> Personnel</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Gestion des onglets Dashboard
+(function() {
+    var tabs = document.querySelectorAll('.db-tab');
+    var panes = document.querySelectorAll('.tab-pane');
+    
+    tabs.forEach(function(tab) {
+        tab.addEventListener('click', function() {
+            tabs.forEach(function(t) { t.classList.remove('active'); });
+            panes.forEach(function(p) { p.classList.remove('active'); });
+            
+            this.classList.add('active');
+            var target = document.getElementById('tab-' + this.getAttribute('data-tab'));
+            if (target) target.classList.add('active');
+            
+            try { localStorage.setItem('dashboardTab', this.getAttribute('data-tab')); } catch(e) {}
+        });
+    });
+    
+    try {
+        var saved = localStorage.getItem('dashboardTab');
+        if (saved) {
+            var found = document.querySelector('.db-tab[data-tab="' + saved + '"]');
+            if (found) found.click();
+        }
+    } catch(e) {}
+})();
+</script>
 
 {% endblock %}
