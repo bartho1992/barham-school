@@ -61,6 +61,7 @@
 #btn-scolarite { background: #198754; }
 #btn-categories { background: #0d6efd; }
 #btn-abonnements { background: #fd7e14; }
+#btn-classes { background: #6f42c1; }
 </style>
 {% endblock %}
 
@@ -73,6 +74,7 @@
     <button class="tab-btn active" onclick="showTab('scolarite')" id="btn-scolarite">SCOLARITÉ</button>
     <button class="tab-btn" onclick="showTab('categories')" id="btn-categories">CATÉGORIES DE SERVICES</button>
     <button class="tab-btn" onclick="showTab('abonnements')" id="btn-abonnements">ABONNEMENT DES ÉLÈVES AUX SERVICES</button>
+    <button class="tab-btn" onclick="showTab('classes')" id="btn-classes">CLASSES</button>
 </div>
 
 <!-- Section Scolarité -->
@@ -348,6 +350,11 @@
             </div>
         </div>
     </div>
+    </div>
+
+    <!-- Section Classes -->
+    <div id="tab-classes" class="tab-panel d-none">
+        <iframe src="{{ url_for('classes', embed='1') }}" style="width:100%;height:80vh;border:none;border-radius:8px;" loading="lazy"></iframe>
     </div>
 
 <script>
