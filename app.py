@@ -1,5 +1,6 @@
 import os
 from flask import Flask, session, request, redirect, url_for, send_from_directory, render_template
+from flask_login import login_required
 from models import db, init_data, Ecole, AnneeScolaire
 
 from datetime import timedelta, datetime
@@ -77,6 +78,13 @@ def documents():
     ecole = Ecole.query.get(ecole_id) if ecole_id else None
     recent_docs = Document.query.filter_by(ecole_id=ecole_id).order_by(Document.date_creation.desc()).limit(10).all() if ecole_id else []
     return render_template('documents/index.html', ecole=ecole, recent_docs=recent_docs)
+
+@app.route('/administration')
+@login_required
+def administration():
+    ecole_id = get_current_ecole_id()
+    ecole = Ecole.query.get(ecole_id) if ecole_id else None
+    return render_template('administration/hub.html', ecole=ecole)
 
 @app.context_processor
 def inject_globals():

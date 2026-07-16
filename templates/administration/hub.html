@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Administration - {{ ecole.nom }}{% endblock %}
+{% block extra_css %}
+<style>
+.admin-tabs {
+    display: flex; gap: 4px; margin-bottom: 12px; flex-wrap: wrap;
+    background: #f8f9fa; padding: 4px; border-radius: 10px;
+}
+.admin-tab {
+    padding: 6px 16px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.4px; border: none; border-radius: 8px;
+    cursor: pointer; transition: all 0.2s ease;
+    background: transparent; color: #666;
+}
+.admin-tab:hover { background: #e9ecef; color: #333; }
+.admin-tab i { margin-right: 4px; }
+.admin-tab.active {
+    background: #fff; color: #0d6efd;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+}
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+.admin-frame { width:100%; height:85vh; border:none; border-radius:8px; background:#fff; }
+@media (max-width: 768px) {
+    .admin-tab { padding: 5px 10px; font-size: 0.6rem; }
+    .admin-frame { height:90vh; }
+}
+</style>
+{% endblock %}
+{% block content %}
+<div class="section-header mb-2"><i class="bi bi-gear-wide"></i> Administration</div>
+
+<div class="admin-tabs" id="adminTabs">
+    <button class="admin-tab active" data-tab="matieres" data-color="#0d6efd"><i class="bi bi-book"></i> Matières</button>
+    <button class="admin-tab" data-tab="notes" data-color="#198754"><i class="bi bi-pencil-square"></i> Notes</button>
+    <button class="admin-tab" data-tab="bulletins" data-color="#6f42c1"><i class="bi bi-file-text"></i> Bulletins</button>
+    <button class="admin-tab" data-tab="personnel" data-color="#fd7e14"><i class="bi bi-person-badge"></i> Personnel</button>
+</div>
+
+<div class="tab-pane active" id="tab-matieres">
+    <iframe class="admin-frame" src="{{ url_for('matieres', embed='1') }}" loading="lazy"></iframe>
+</div>
+<div class="tab-pane" id="tab-notes">
+    <iframe class="admin-frame" src="{{ url_for('notes', embed='1') }}" loading="lazy"></iframe>
+</div>
+<div class="tab-pane" id="tab-bulletins">
+    <iframe class="admin-frame" src="{{ url_for('bulletins', embed='1') }}" loading="lazy"></iframe>
+</div>
+<div class="tab-pane" id="tab-personnel">
+    <iframe class="admin-frame" src="{{ url_for('personnel', embed='1') }}" loading="lazy"></iframe>
+</div>
+
+<script>
+(function() {
+    var tabs = document.querySelectorAll('.admin-tab');
+    var panes = document.querySelectorAll('.tab-pane');
+    
+    function setActiveTab(tab) {
+        var color = tab.getAttribute('data-color') || '#0d6efd';
+        tabs.forEach(function(t) {
+            t.classList.remove('active');
+            t.style.background = 'transparent'; t.style.color = '#666'; t.style.boxShadow = 'none';
+        });
+        panes.forEach(function(p) { p.classList.remove('active'); });
+        tab.classList.add('active');
+        tab.style.background = '#fff'; tab.style.color = color; tab.style.boxShadow = '0 2px 8px rgba(0,0,0,0.12)';
+        var target = document.getElementById('tab-' + tab.getAttribute('data-tab'));
+        if (target) target.classList.add('active');
+        try { localStorage.setItem('adminTab', tab.getAttribute('data-tab')); } catch(e) {}
+    }
+    
+    tabs.forEach(function(tab) { tab.addEventListener('click', function() { setActiveTab(this); }); });
+    
+    try {
+        var saved = localStorage.getItem('adminTab');
+        if (saved) { var found = document.querySelector('.admin-tab[data-tab="' + saved + '"]'); if (found) setActiveTab(found); }
+    } catch(e) {}
+})();
+</script>
+{% endblock %}
