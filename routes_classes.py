@@ -153,3 +153,25 @@ def matiere_supprimer(id):
     Note.query.filter_by(matiere_id=id).delete()
     db.session.delete(m); db.session.commit(); flash('Matière supprimée','success')
     return redirect(url_for('matieres', embed=request.args.get('embed')))
+
+@app.route('/matieres/supprimer-bulk', methods=['POST'])
+@login_required
+def matiere_supprimer_bulk():
+    ecole_id = get_current_ecole_id()
+    ids = request.form.getlist('matiere_ids[]')
+    if not ids:
+        flash('Aucune matière sélectionnée', 'warning')
+        return redirect(url_for('matieres', embed=request.args.get('embed')))
+    ids_int = [int(i) for i in ids]
+    from models import Note
+    count = 0
+    for mid in ids_int:
+        m = Matiere.query.filter_by(id=mid, ecole_id=ecole_id).first()
+        if not m:
+            continue
+        Note.query.filter_by(matiere_id=mid).delete()
+        db.session.delete(m)
+        count += 1
+    db.session.commit()
+    flash(f'{count} matière(s) supprimée(s)', 'success')
+    return redirect(url_for('matieres', embed=request.args.get('embed')))

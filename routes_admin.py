@@ -251,6 +251,31 @@ def admin_user_supprimer(id):
         flash('Utilisateur supprimé', 'success')
     return redirect(url_for('admin_users'))
 
+@app.route('/admin/users/supprimer-bulk', methods=['POST'])
+@login_required
+def admin_users_supprimer_bulk():
+    if current_user.role != 'dev': return redirect(url_for('dashboard'))
+    from models import User
+    ids = request.form.getlist('user_ids[]')
+    if not ids:
+        flash('Aucun utilisateur sélectionné', 'warning')
+        return redirect(url_for('admin_users'))
+    count = 0
+    for uid in ids:
+        try:
+            uid_int = int(uid)
+        except ValueError:
+            continue
+        if uid_int == current_user.id:
+            continue
+        u = User.query.get(uid_int)
+        if u:
+            db.session.delete(u)
+            count += 1
+    db.session.commit()
+    flash(f'{count} utilisateur(s) supprimé(s)', 'success')
+    return redirect(url_for('admin_users'))
+
 @app.route('/admin/ecole/supprimer/<int:id>', methods=['POST'])
 @login_required
 def admin_ecole_supprimer(id):

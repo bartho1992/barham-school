@@ -9,20 +9,32 @@
 <div class="container py-3">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h4 class="mb-0"><i class="bi bi-shield-check text-success"></i> Paiements & Transactions</h4>
-        {% if count_attente > 0 %}
-        <span class="badge bg-danger fs-6">{{ count_attente }} en attente</span>
-        {% endif %}
+        <div class="d-flex align-items-center gap-2">
+            {% if count_attente > 0 %}
+            <span class="badge bg-danger fs-6">{{ count_attente }} en attente</span>
+            {% endif %}
+            <button class="btn btn-outline-danger btn-sm d-none" id="btnSupprimerBulk" onclick="supprimerSelection()">
+                <i class="bi bi-trash me-1"></i>Supprimer la sélection
+            </button>
+        </div>
     </div>
+
+    <!-- Formulaire caché pour la suppression groupée (les checkboxes y réfèrent via form="formBulk") -->
+    <form id="formBulk" method="POST" action="{{ url_for('admin_paiements_supprimer_bulk') }}"></form>
 
     <!-- PAIEMENTS EN ATTENTE -->
     <div class="section-title text-warning fw-bold mb-1"><i class="bi bi-hourglass-split"></i> En attente de validation</div>
     {% if paiements %}
     <div class="table-responsive mb-4">
         <table class="table table-hover align-middle small">
-            <thead class="table-warning"><tr><th>Facture</th><th>Ecole</th><th>Plan</th><th>Montant</th><th>Paiement</th><th>Date</th><th class="text-end">Actions</th></tr></thead>
+            <thead class="table-warning"><tr>
+                <th style="width:40px"><input type="checkbox" id="selectAll_attente" onchange="toggleAll(this, 'attente')" title="Tout sélectionner"></th>
+                <th>Facture</th><th>Ecole</th><th>Plan</th><th>Montant</th><th>Paiement</th><th>Date</th><th class="text-end">Actions</th>
+            </tr></thead>
             <tbody>
                 {% for p in paiements %}
                 <tr>
+                    <td><input type="checkbox" name="facture_ids[]" value="{{ p.id }}" form="formBulk" class="cb-attente" onchange="updateBouton()"></td>
                     <td><code>{{ p.numero }}</code></td>
                     <td class="fw-bold">{{ p.ecole.nom if p.ecole else 'École supprimée' }}</td>
                     <td>{{ plans[p.plan].nom if p.plan in plans else p.plan }} ({{ p.duree_mois }}m)</td>
@@ -54,10 +66,14 @@
     {% if paiements_valides %}
     <div class="table-responsive mb-4">
         <table class="table table-hover align-middle small">
-            <thead class="table-light"><tr><th>Facture</th><th>Ecole</th><th>Plan</th><th>Montant</th><th>Paiement</th><th>Valide le</th><th></th></tr></thead>
+            <thead class="table-light"><tr>
+                <th style="width:40px"><input type="checkbox" id="selectAll_valide" onchange="toggleAll(this, 'valide')" title="Tout sélectionner"></th>
+                <th>Facture</th><th>Ecole</th><th>Plan</th><th>Montant</th><th>Paiement</th><th>Valide le</th><th></th>
+            </tr></thead>
             <tbody>
                 {% for p in paiements_valides %}
                 <tr>
+                    <td><input type="checkbox" name="facture_ids[]" value="{{ p.id }}" form="formBulk" class="cb-valide" onchange="updateBouton()"></td>
                     <td><code>{{ p.numero }}</code></td>
                     <td>{{ p.ecole.nom if p.ecole else '—' }}</td>
                     <td>{{ plans[p.plan].nom if p.plan in plans else p.plan }}</td>
@@ -83,10 +99,14 @@
     {% if paiements_annules %}
     <div class="table-responsive mb-4">
         <table class="table table-hover align-middle small">
-            <thead class="table-light"><tr><th>Facture</th><th>Ecole</th><th>Plan</th><th>Montant</th><th>Date</th><th></th></tr></thead>
+            <thead class="table-light"><tr>
+                <th style="width:40px"><input type="checkbox" id="selectAll_annule" onchange="toggleAll(this, 'annule')" title="Tout sélectionner"></th>
+                <th>Facture</th><th>Ecole</th><th>Plan</th><th>Montant</th><th>Date</th><th></th>
+            </tr></thead>
             <tbody>
                 {% for p in paiements_annules %}
                 <tr>
+                    <td><input type="checkbox" name="facture_ids[]" value="{{ p.id }}" form="formBulk" class="cb-annule" onchange="updateBouton()"></td>
                     <td><code>{{ p.numero }}</code></td>
                     <td>{{ p.ecole.nom if p.ecole else '—' }}</td>
                     <td>{{ plans[p.plan].nom if p.plan in plans else p.plan }}</td>
@@ -174,4 +194,35 @@
     <p class="text-muted small">Aucune transaction.</p>
     {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleAll(master, group) {
+    var checkboxes = document.querySelectorAll('.cb-' + group);
+    for (var i = 0; i < checkboxes.length; i++) {
+        checkboxes[i].checked = master.checked;
+    }
+    updateBouton();
+}
+
+function updateBouton() {
+    var checked = document.querySelectorAll('input[name="facture_ids[]"]:checked');
+    var btn = document.getElementById('btnSupprimerBulk');
+    if (checked.length > 0) {
+        btn.classList.remove('d-none');
+        btn.innerHTML = '<i class="bi bi-trash me-1"></i>Supprimer la sélection (' + checked.length + ')';
+    } else {
+        btn.classList.add('d-none');
+    }
+}
+
+function supprimerSelection() {
+    var checked = document.querySelectorAll('input[name="facture_ids[]"]:checked');
+    if (checked.length === 0) return;
+    if (confirm('Supprimer ' + checked.length + ' facture(s) définitivement ?')) {
+        document.getElementById('formBulk').submit();
+    }
+}
+</script>
 {% endblock %}

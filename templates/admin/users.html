@@ -8,6 +8,7 @@
     </div>
     <div class="col-md-4 text-end">
         <button class="btn btn-outline-dark btn-sm me-1" onclick="imprimerTableau()"><i class="bi bi-printer"></i> Imprimer</button>
+        <button class="btn btn-outline-danger btn-sm d-none me-1" id="btnSupprimerBulk" onclick="supprimerSelection()"><i class="bi bi-trash"></i> Supprimer la sélection</button>
         <a href="{{ url_for('admin_user_ajouter') }}" class="btn btn-primary btn-sm"><i class="bi bi-person-plus"></i> Nouvel Utilisateur</a>
         <a href="{{ url_for('admin') }}" class="btn btn-outline-secondary ms-2">Retour</a>
     </div>
@@ -15,9 +16,11 @@
 
 <div class="card shadow-sm border-0">
     <div style="max-height:65vh;overflow-y:auto;overflow-x:hidden;">
+        <form id="formBulk" method="POST" action="{{ url_for('admin_users_supprimer_bulk') }}">
         <table class="table table-sm align-middle mb-0" id="table-users">
             <thead class="table-dark">
                 <tr>
+                    <th style="width:40px;"><input type="checkbox" onchange="toggleAll(this)" title="Tout sélectionner"></th>
                     <th>Utilisateur</th>
                     <th>Clé ID</th>
                     <th>Établissement</th>
@@ -30,6 +33,7 @@
             <tbody>
                 {% for u in users %}
                 <tr>
+                    <td><input type="checkbox" name="user_ids[]" value="{{ u.id }}" onchange="updateBouton()" {% if u.id == current_user.id %}disabled{% endif %}></td>
                     <td>
                         <div class="d-flex align-items-center">
                             <div class="bg-light rounded-circle p-2 me-3">
@@ -86,21 +90,49 @@
                 {% endfor %}
             </tbody>
         </table>
+        </form>
     </div>
 </div>
 
 <script>
+function toggleAll(source) {
+    var checkboxes = document.querySelectorAll('#table-users tbody input[name="user_ids[]"]');
+    checkboxes.forEach(function(cb) {
+        if (!cb.disabled) {
+            cb.checked = source.checked;
+        }
+    });
+    updateBouton();
+}
+
+function updateBouton() {
+    var checkboxes = document.querySelectorAll('#table-users tbody input[name="user_ids[]"]:checked');
+    var btn = document.getElementById('btnSupprimerBulk');
+    if (checkboxes.length > 0) {
+        btn.classList.remove('d-none');
+    } else {
+        btn.classList.add('d-none');
+    }
+}
+
+function supprimerSelection() {
+    var checkboxes = document.querySelectorAll('#table-users tbody input[name="user_ids[]"]:checked');
+    if (checkboxes.length === 0) return;
+    if (!confirm('Supprimer ' + checkboxes.length + ' utilisateur(s) sélectionné(s) ?')) return;
+    document.getElementById('formBulk').submit();
+}
+
 function imprimerTableau() {
     var tbodyHTML = '';
     document.querySelectorAll('#table-users tbody tr').forEach(function(tr, idx) {
         var cells = tr.querySelectorAll('td');
         if (cells.length < 5) return;
-        var username = cells[0].textContent.replace(/\s+/g, ' ').trim();
-        var identifiant = cells[1].textContent.trim();
-        var ecole = cells[2].textContent.trim();
-        var role = cells[3].textContent.trim();
-        var created = cells[4].textContent.trim();
-        var lastLogin = cells[5].textContent.trim();
+        var username = cells[1].textContent.replace(/\s+/g, ' ').trim();
+        var identifiant = cells[2].textContent.trim();
+        var ecole = cells[3].textContent.trim();
+        var role = cells[4].textContent.trim();
+        var created = cells[5].textContent.trim();
+        var lastLogin = cells[6].textContent.trim();
         var bg = idx % 2 === 0 ? '#fff' : '#f2f2f2';
         tbodyHTML += '<tr style="background:' + bg + ';"><td style="text-align:center;">' + (idx + 1) + '</td>' +
             '<td>' + username + '</td><td>' + identifiant + '</td><td>' + ecole + '</td>' +

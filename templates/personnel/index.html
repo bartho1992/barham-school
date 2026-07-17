@@ -6,14 +6,17 @@
     <div>
         <button class="btn btn-outline-dark btn-sm me-1" onclick="imprimerTableau()"><i class="bi bi-printer"></i> Imprimer</button>
         <a href="{{ url_for('personnel_ajouter', embed=embed) }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Ajouter</a>
+        <button class="btn btn-danger btn-sm d-none" id="btnSupprimerBulk" onclick="supprimerSelection()"><i class="bi bi-trash"></i> Supprimer la sélection</button>
     </div>
 </div>
+<form id="formBulk" method="POST" action="{{ url_for('personnel_supprimer_bulk', embed=embed) }}">
 <div style="max-height:65vh;overflow:auto;">
     <table class="table table-sm table-bordered align-middle bg-white" id="table-personnel">
-        <thead><tr><th>CODE</th><th>PRENOM</th><th>NOM</th><th>FONCTION</th><th>TEL</th><th>SALAIRE FIXE</th><th>TAUX IMPOT</th><th>Actions</th></tr></thead>
+        <thead><tr><th style="width:40px;"><input type="checkbox" id="selectAll" onchange="toggleAll(this)"></th><th>CODE</th><th>PRENOM</th><th>NOM</th><th>FONCTION</th><th>TEL</th><th>SALAIRE FIXE</th><th>TAUX IMPOT</th><th>Actions</th></tr></thead>
         <tbody>
             {% for p in personnels %}
             <tr>
+                <td class="text-center"><input type="checkbox" name="personnel_ids[]" value="{{ p.id }}" class="pers-check" onchange="updateBouton()"></td>
                 <td><code>{{ p.code }}</code></td>
                 <td>{{ p.prenom }}</td>
                 <td class="fw-bold">{{ p.nom }}</td>
@@ -29,8 +32,25 @@
         </tbody>
     </table>
 </div>
+</form>
 
 <script>
+function toggleAll(source) {
+    document.querySelectorAll('.pers-check').forEach(function(cb) { cb.checked = source.checked; });
+    updateBouton();
+}
+function updateBouton() {
+    var checked = document.querySelectorAll('.pers-check:checked').length;
+    var btn = document.getElementById('btnSupprimerBulk');
+    if (checked > 0) { btn.classList.remove('d-none'); } else { btn.classList.add('d-none'); }
+}
+function supprimerSelection() {
+    var checked = document.querySelectorAll('.pers-check:checked').length;
+    if (checked === 0) { return; }
+    if (confirm('Voulez-vous vraiment supprimer ' + checked + ' membre(s) du personnel ?')) {
+        document.getElementById('formBulk').submit();
+    }
+}
 function imprimerTableau() {
     var tbodyHTML = '';
     document.querySelectorAll('#table-personnel tbody tr').forEach(function(tr, idx) {

@@ -473,6 +473,31 @@ def admin_supprimer_paiement(facture_id):
     return redirect(url_for('admin_paiements'))
 
 
+@app.route('/admin/paiements/supprimer-bulk', methods=['POST'])
+@login_required
+def admin_paiements_supprimer_bulk():
+    if current_user.role != 'super_users':
+        flash('Accès réservé au développeur.', 'danger')
+        return redirect(url_for('dashboard'))
+    
+    facture_ids = request.form.getlist('facture_ids[]')
+    if not facture_ids:
+        flash('Aucune facture sélectionnée.', 'warning')
+        return redirect(url_for('admin_paiements'))
+    
+    count = 0
+    for fid in facture_ids:
+        facture = FactureLicence.query.get(int(fid))
+        if facture:
+            TransactionLicence.query.filter_by(facture_id=facture.id).delete()
+            db.session.delete(facture)
+            count += 1
+    
+    db.session.commit()
+    flash(f'{count} facture(s) supprimée(s)', 'info')
+    return redirect(url_for('admin_paiements'))
+
+
 @app.route('/admin/transactions/supprimer/<int:tr_id>', methods=['POST'])
 @login_required
 def admin_supprimer_transaction(tr_id):

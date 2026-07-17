@@ -114,3 +114,26 @@ def admin_licence_supprimer(id):
     db.session.commit()
     flash(f'Licence {cle} supprimée', 'success')
     return redirect(url_for('admin_licences'))
+
+@app.route('/admin/licences/supprimer-bulk', methods=['POST'])
+@login_required
+def admin_licence_supprimer_bulk():
+    if current_user.role != 'super_users':
+        return redirect(url_for('dashboard'))
+    
+    licence_ids = request.form.getlist('licence_ids[]')
+    if not licence_ids:
+        flash('Aucune licence sélectionnée', 'warning')
+        return redirect(url_for('admin_licences'))
+    
+    ids = [int(id) for id in licence_ids if id.isdigit()]
+    count = 0
+    for lid in ids:
+        licence = Licence.query.get(lid)
+        if licence:
+            db.session.delete(licence)
+            count += 1
+    
+    db.session.commit()
+    flash(f'{count} licence(s) supprimée(s)', 'success')
+    return redirect(url_for('admin_licences'))

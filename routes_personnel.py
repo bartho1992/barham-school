@@ -44,3 +44,19 @@ def personnel_salaire(id):
         db.session.add(Salaire(personnel_id=id, mois=request.form.get('mois'), salaire_brut=brut, impot=impot, primes=primes, salaire_net=net, annee_scolaire=annee))
         db.session.commit(); flash('Salaire enregistré','success'); return redirect(url_for('personnel', embed=embed))
     return render_template('personnel/salaire.html', personnel=p, salaires=Salaire.query.filter_by(personnel_id=id, annee_scolaire=annee).all(), ecole=e, embed=embed)
+
+@app.route('/personnel/supprimer-bulk', methods=['POST'])
+@login_required
+def personnel_supprimer_bulk():
+    get_current_ecole_id()
+    embed = request.args.get('embed')
+    ids = request.form.getlist('personnel_ids[]')
+    if ids:
+        int_ids = [int(i) for i in ids]
+        Salaire.query.filter(Salaire.personnel_id.in_(int_ids)).delete(synchronize_session=False)
+        Personnel.query.filter(Personnel.id.in_(int_ids)).delete(synchronize_session=False)
+        db.session.commit()
+        flash(f"{len(ids)} membre(s) du personnel supprimé(s)", 'success')
+    else:
+        flash("Aucun membre sélectionné", 'warning')
+    return redirect(url_for('personnel', embed=embed))
