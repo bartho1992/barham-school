@@ -1,5 +1,5 @@
 from flask import render_template, request, redirect, url_for, flash, jsonify
-from flask_login import login_required
+from flask_login import login_required, current_user
 from models import db, Ecole, Classe, Matiere
 from app import app, get_current_ecole_id
 
@@ -75,6 +75,7 @@ def classe_supprimer(id):
 @app.route('/classes/supprimer-bulk', methods=['POST'])
 @login_required
 def classes_supprimer_bulk():
+    if current_user.role not in ('dev', 'super_users'): flash('Accès réservé','danger'); return redirect(url_for('dashboard'))
     ecole_id = get_current_ecole_id()
     ids = request.form.getlist('classe_ids[]')
     if not ids:
@@ -157,6 +158,7 @@ def matiere_supprimer(id):
 @app.route('/matieres/supprimer-bulk', methods=['POST'])
 @login_required
 def matiere_supprimer_bulk():
+    if current_user.role not in ('dev', 'super_users'): flash('Accès réservé','danger'); return redirect(url_for('dashboard'))
     ecole_id = get_current_ecole_id()
     ids = request.form.getlist('matiere_ids[]')
     if not ids:

@@ -476,8 +476,8 @@ def admin_supprimer_paiement(facture_id):
 @app.route('/admin/paiements/supprimer-bulk', methods=['POST'])
 @login_required
 def admin_paiements_supprimer_bulk():
-    if current_user.role != 'super_users':
-        flash('Accès réservé au développeur.', 'danger')
+    if current_user.role not in ('dev', 'super_users'):
+        flash('Accès réservé.', 'danger')
         return redirect(url_for('dashboard'))
     
     facture_ids = request.form.getlist('facture_ids[]')

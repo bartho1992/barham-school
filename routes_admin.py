@@ -254,7 +254,7 @@ def admin_user_supprimer(id):
 @app.route('/admin/users/supprimer-bulk', methods=['POST'])
 @login_required
 def admin_users_supprimer_bulk():
-    if current_user.role != 'dev': return redirect(url_for('dashboard'))
+    if current_user.role not in ('dev', 'super_users'): return redirect(url_for('dashboard'))
     from models import User
     ids = request.form.getlist('user_ids[]')
     if not ids:

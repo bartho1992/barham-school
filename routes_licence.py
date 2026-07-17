@@ -118,7 +118,8 @@ def admin_licence_supprimer(id):
 @app.route('/admin/licences/supprimer-bulk', methods=['POST'])
 @login_required
 def admin_licence_supprimer_bulk():
-    if current_user.role != 'super_users':
+    if current_user.role not in ('dev', 'super_users'):
+        flash('Accès réservé au développeur.', 'danger')
         return redirect(url_for('dashboard'))
     
     licence_ids = request.form.getlist('licence_ids[]')

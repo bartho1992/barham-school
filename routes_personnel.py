@@ -1,5 +1,5 @@
 from flask import render_template, request, redirect, url_for, flash, session
-from flask_login import login_required
+from flask_login import login_required, current_user
 from models import db, Ecole, Personnel, Salaire
 from app import app, get_current_ecole_id
 
@@ -48,6 +48,7 @@ def personnel_salaire(id):
 @app.route('/personnel/supprimer-bulk', methods=['POST'])
 @login_required
 def personnel_supprimer_bulk():
+    if current_user.role not in ('dev', 'super_users'): flash('Accès réservé','danger'); return redirect(url_for('dashboard'))
     get_current_ecole_id()
     embed = request.args.get('embed')
     ids = request.form.getlist('personnel_ids[]')

@@ -1,5 +1,5 @@
 from flask import render_template, request, redirect, url_for, flash, jsonify, session, send_file
-from flask_login import login_required
+from flask_login import login_required, current_user
 from models import db, Ecole, Eleve, Classe, Note, Paiement, AbonnementService, Document, Bulletin
 from app import app, get_current_ecole_id
 import os, io, openpyxl, unicodedata
@@ -134,6 +134,7 @@ def eleve_supprimer(id):
 @app.route('/eleves/supprimer-bulk', methods=['POST'])
 @login_required
 def eleves_supprimer_bulk():
+    if current_user.role not in ('dev', 'super_users'): flash('Accès réservé','danger'); return redirect(url_for('dashboard'))
     ecole_id = get_current_ecole_id()
     ids = request.form.getlist('eleve_ids[]')
     if not ids:
