@@ -44,6 +44,7 @@ def finances_hub():
 def finances():
     ecole_id = get_current_ecole_id()
     e = Ecole.query.get(ecole_id); annee = _annee_courante(e)
+    embed = request.args.get('embed')
     recent_paiements = Paiement.query.filter_by(annee_scolaire=annee).order_by(Paiement.date_paiement.desc()).limit(20).all()
     total_encaisse = db.session.query(db.func.sum(Paiement.montant)).filter_by(annee_scolaire=annee).scalar() or 0
     today_encaisse = db.session.query(db.func.sum(Paiement.montant)).filter(db.func.date(Paiement.date_paiement) == datetime.now().date(), Paiement.annee_scolaire == annee).scalar() or 0
@@ -135,7 +136,7 @@ def finances():
     eleves_list = Eleve.query.filter_by(ecole_id=ecole_id).order_by(Eleve.nom, Eleve.prenom).all()
     
     return render_template('finances/index.html', ecole=e, paiements=recent_paiements, total_encaisse=total_encaisse,
-        today_encaisse=today_encaisse, categories=categories, lignes_paiements=lignes_paiements, classes=classes, mois_list=mois_list, eleves_list=eleves_list)
+        today_encaisse=today_encaisse, categories=categories, lignes_paiements=lignes_paiements, classes=classes, mois_list=mois_list, eleves_list=eleves_list, embed=embed)
 
 @app.route('/api/tarifs/<int:eleve_id>/<mois>')
 @login_required
@@ -595,20 +596,22 @@ def api_eleve_statut_paiements(eleve_id):
 def finances_liste():
     ecole_id = get_current_ecole_id()
     e = Ecole.query.get(ecole_id); annee = _annee_courante(e)
+    embed = request.args.get('embed')
     q = Paiement.query.filter_by(annee_scolaire=annee)
     type_p = request.args.get('type_paiement')
     if type_p: q = q.filter_by(type_paiement=type_p)
     ps = q.join(Paiement.eleve).order_by(Eleve.nom.asc(), Paiement.date_paiement.desc()).all()
     classes = Classe.query.filter_by(ecole_id=ecole_id).order_by(Classe.nom).all()
     eleves_list = Eleve.query.filter_by(ecole_id=ecole_id).order_by(Eleve.nom, Eleve.prenom).all()
-    return render_template('finances/liste.html', paiements=ps, ecole=e, classes=classes, eleves_list=eleves_list)
+    return render_template('finances/liste.html', paiements=ps, ecole=e, classes=classes, eleves_list=eleves_list, embed=embed)
 
 @app.route('/finances/paiements/supprimer-bulk', methods=['POST'])
 @login_required
 def finances_paiements_supprimer_bulk():
     if current_user.role not in ('dev', 'super_users'): flash('Accès réservé','danger'); return redirect(url_for('dashboard'))
+    embed = request.args.get('embed')
     ids = request.form.getlist('paiement_ids[]')
-    if not ids: flash('Aucun paiement sélectionné', 'warning'); return redirect(url_for('finances_liste'))
+    if not ids: flash('Aucun paiement sélectionné', 'warning'); return redirect(url_for('finances_liste', embed=embed))
     from models import Paiement
     count = 0
     for pid in [int(i) for i in ids]:
@@ -616,7 +619,7 @@ def finances_paiements_supprimer_bulk():
         if p: db.session.delete(p); count += 1
     db.session.commit()
     flash(f'{count} paiement(s) supprimé(s)', 'success')
-    return redirect(url_for('finances_liste'))
+    return redirect(url_for('finances_liste', embed=embed))
 
 @app.route('/finances/impayes')
 @login_required

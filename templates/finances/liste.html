@@ -52,7 +52,7 @@
         #table-liste .badge { font-size: 0.6rem; padding: 2px 5px; }
         </style>
         <div style="max-height:65vh;overflow-y:auto;overflow-x:hidden;">
-            <form id="formBulk" method="POST" action="{{ url_for('finances_paiements_supprimer_bulk') }}">
+            <form id="formBulk" method="POST" action="{{ url_for('finances_paiements_supprimer_bulk', embed=embed) }}">
             <table class="table table-sm align-middle mb-0" id="table-liste">
                 <thead class="table-light">
                     <tr>
