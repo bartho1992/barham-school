@@ -35,7 +35,7 @@
             <div class="card-header bg-success text-white">Documents</div>
             <div class="card-body">
                 <div class="d-grid gap-2">
-                    <a href="{{ url_for('certificat', eleve_id=eleve.id) }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-award"></i> Certificat de scolarite</a>
+                    <a href="{{ url_for('certificat_scolarite', eleve_id=eleve.id) }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-award"></i> Certificat de scolarite</a>
                     <a href="{{ url_for('carte_scolaire', eleve_id=eleve.id) }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-card-text"></i> Carte scolaire</a>
                     <a href="{{ url_for('billet_entree', eleve_id=eleve.id) }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-door-open"></i> Billet d'entree</a>
                     <a href="{{ url_for('billet_sortie', eleve_id=eleve.id) }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-door-closed"></i> Billet de sortie</a>
