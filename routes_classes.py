@@ -7,13 +7,15 @@ from app import app, get_current_ecole_id
 @login_required
 def classes():
     ecole_id = get_current_ecole_id()
-    return render_template('classes/index.html', classes=Classe.query.filter_by(ecole_id=ecole_id).order_by(Classe.ordre, Classe.nom).all(), ecole=Ecole.query.get(ecole_id))
+    embed = request.args.get('embed')
+    return render_template('classes/index.html', classes=Classe.query.filter_by(ecole_id=ecole_id).order_by(Classe.ordre, Classe.nom).all(), ecole=Ecole.query.get(ecole_id), embed=embed)
 
 @app.route('/classes/ajouter', methods=['GET','POST'])
 @login_required
 def classe_ajouter():
     ecole_id = get_current_ecole_id()
     e = Ecole.query.get(ecole_id)
+    embed = request.args.get('embed')
     if request.method == 'POST':
         mode = request.form.get('mode', 'simple')
         niveau = request.form.get('niveau', '')
@@ -21,11 +23,11 @@ def classe_ajouter():
             noms_texte = request.form.get('noms', '').strip()
             if not noms_texte:
                 flash('Veuillez saisir au moins un nom de classe', 'warning')
-                return redirect(url_for('classe_ajouter'))
+                return redirect(url_for('classe_ajouter', embed=embed))
             noms = [n.strip() for n in noms_texte.replace('\r', '\n').replace(',', '\n').split('\n') if n.strip()]
             if not noms:
                 flash('Aucun nom valide saisi', 'warning')
-                return redirect(url_for('classe_ajouter'))
+                return redirect(url_for('classe_ajouter', embed=embed))
             ajoutes = 0
             ignores = []
             for nom in noms:
@@ -39,35 +41,36 @@ def classe_ajouter():
                 flash(f'{ajoutes} classe(s) ajoutee(s) avec succes', 'success')
             if ignores:
                 flash(f'{len(ignores)} deja existante(s) : {", ".join(ignores)}', 'info')
-            return redirect(url_for('classes'))
+            return redirect(url_for('classes', embed=embed))
         else:
             db.session.add(Classe(nom=request.form.get('nom'), niveau=niveau, ecole_id=ecole_id))
-            db.session.commit(); flash('Classe ajoutee','success'); return redirect(url_for('classes'))
-    return render_template('classes/form.html', ecole=e)
+            db.session.commit(); flash('Classe ajoutee','success'); return redirect(url_for('classes', embed=embed))
+    return render_template('classes/form.html', ecole=e, embed=embed)
 
 @app.route('/classes/modifier/<int:id>', methods=['GET','POST'])
 @login_required
 def classe_modifier(id):
     ecole_id = get_current_ecole_id()
     e = Ecole.query.get(ecole_id); c = Classe.query.get_or_404(id)
-    if c.ecole_id != ecole_id: flash('Accès non autorisé','danger'); return redirect(url_for('classes'))
+    embed = request.args.get('embed')
+    if c.ecole_id != ecole_id: flash('Accès non autorisé','danger'); return redirect(url_for('classes', embed=embed))
     if request.method == 'POST':
         c.nom=request.form.get('nom'); c.niveau=request.form.get('niveau')
-        db.session.commit(); flash('Classe modifiée','success'); return redirect(url_for('classes'))
-    return render_template('classes/form.html', classe=c, ecole=e)
+        db.session.commit(); flash('Classe modifiée','success'); return redirect(url_for('classes', embed=embed))
+    return render_template('classes/form.html', classe=c, ecole=e, embed=embed)
 
 @app.route('/classes/supprimer/<int:id>', methods=['POST'])
 @login_required
 def classe_supprimer(id):
     ecole_id = get_current_ecole_id()
     c = Classe.query.get_or_404(id)
-    if c.ecole_id != ecole_id: flash('Accès non autorisé','danger'); return redirect(url_for('classes'))
+    if c.ecole_id != ecole_id: flash('Accès non autorisé','danger'); return redirect(url_for('classes', embed=request.args.get('embed')))
     from models import Eleve, Note, Scolarite, TarifService
     Eleve.query.filter_by(classe_id=id).update({'classe_id': None})
     Note.query.filter_by(classe_id=id).delete()
     Scolarite.query.filter_by(classe_id=id).delete()
     TarifService.query.filter_by(classe_id=id).delete()
-    db.session.delete(c); db.session.commit(); flash('Supprimée','success'); return redirect(url_for('classes'))
+    db.session.delete(c); db.session.commit(); flash('Supprimée','success'); return redirect(url_for('classes', embed=request.args.get('embed')))
 
 @app.route('/classes/supprimer-bulk', methods=['POST'])
 @login_required
@@ -76,7 +79,7 @@ def classes_supprimer_bulk():
     ids = request.form.getlist('classe_ids[]')
     if not ids:
         flash('Aucune classe sélectionnée', 'warning')
-        return redirect(url_for('classes'))
+        return redirect(url_for('classes', embed=request.args.get('embed')))
     ids_int = [int(i) for i in ids]
     from models import Eleve, Note, Scolarite, TarifService
     count = 0
@@ -92,7 +95,7 @@ def classes_supprimer_bulk():
         count += 1
     db.session.commit()
     flash(f'{count} classe(s) supprimée(s) avec succès', 'success')
-    return redirect(url_for('classes'))
+    return redirect(url_for('classes', embed=request.args.get('embed')))
 
 @app.route('/classes/reorder', methods=['POST'])
 @login_required

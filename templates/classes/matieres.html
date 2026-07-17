@@ -23,7 +23,7 @@
                 <td class="text-center small">{{ m.coefficient }}</td>
                 <td class="text-center">
                     <a href="{{ url_for('matiere_modifier', id=m.id, embed=embed) }}" class="text-warning me-1" title="Modifier"><i class="bi bi-pencil"></i></a>
-                    <a href="#" onclick="if(confirm('Supprimer ?')){var f=document.createElement('form');f.method='POST';f.action='{{ url_for('matiere_supprimer', id=m.id) }}';document.body.appendChild(f);f.submit();}return false;" class="text-danger" title="Supprimer"><i class="bi bi-trash"></i></a>
+                    <a href="#" onclick="if(confirm('Supprimer ?')){var f=document.createElement('form');f.method='POST';f.action='{{ url_for('matiere_supprimer', id=m.id, embed=embed) }}';document.body.appendChild(f);f.submit();}return false;" class="text-danger" title="Supprimer"><i class="bi bi-trash"></i></a>
                 </td>
             </tr>
             {% endfor %}

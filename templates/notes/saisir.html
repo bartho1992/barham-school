@@ -34,7 +34,7 @@
     <i class="bi bi-exclamation-circle fs-3 d-block mb-2"></i>
     <strong>Aucun eleve dans cette classe</strong>
     <p class="mb-0 small text-muted">Ajoutez des eleves a la classe <strong>{{ classe.nom }}</strong> pour pouvoir saisir leurs notes.</p>
-    <a href="{{ url_for('eleve_ajouter') }}" class="btn btn-primary btn-sm mt-3"><i class="bi bi-person-plus"></i> Inscrire un eleve</a>
+    <a href="{{ url_for('eleve_ajouter', embed=embed) }}" class="btn btn-primary btn-sm mt-3"><i class="bi bi-person-plus"></i> Inscrire un eleve</a>
 </div>
 
 {% elif not selected_matiere_id %}

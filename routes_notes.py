@@ -19,7 +19,7 @@ def notes_saisir(classe_id, trimestre):
     ecole_id = get_current_ecole_id()
     e = Ecole.query.get(ecole_id); cl = Classe.query.get_or_404(classe_id); annee = _annee_courante(e)
     embed = request.args.get('embed')
-    if cl.ecole_id != ecole_id: flash('Accès non autorisé','danger'); return redirect(url_for('notes'))
+    if cl.ecole_id != ecole_id: flash('Accès non autorisé','danger'); return redirect(url_for('notes', embed=embed))
     
     els = Eleve.query.filter_by(classe_id=classe_id, annee_scolaire=annee, ecole_id=ecole_id).all()
     mats = Matiere.query.filter_by(ecole_id=ecole_id).all()

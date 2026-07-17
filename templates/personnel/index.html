@@ -22,7 +22,7 @@
                 <td class="text-end">{{ "{:,.0f}".format(p.salaire_fixe or 0).replace(',', ' ') }} F</td>
                 <td class="text-center">{{ p.taux_impot or 0 }}%</td>
                 <td class="text-center">
-                    <a href="{{ url_for('personnel_salaire', id=p.id) }}" class="btn btn-sm btn-outline-success"><i class="bi bi-cash"></i> Salaire</a>
+                    <a href="{{ url_for('personnel_salaire', id=p.id, embed=embed) }}" class="btn btn-sm btn-outline-success"><i class="bi bi-cash"></i> Salaire</a>
                 </td>
             </tr>
             {% endfor %}
