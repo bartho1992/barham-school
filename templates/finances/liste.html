@@ -4,6 +4,7 @@
 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
     <h2 class="mb-0"><i class="bi bi-list-ul text-primary"></i> Liste complète des paiements</h2>
     <div class="d-flex gap-2 flex-wrap">
+        <button class="btn btn-danger btn-sm d-none" id="btnSupprimerBulk" onclick="supprimerSelection()"><i class="bi bi-trash"></i> Supprimer la sélection</button>
         <button class="btn btn-outline-dark btn-sm" onclick="imprimerTableau()"><i class="bi bi-printer"></i> Imprimer</button>
     </div>
 </div>
@@ -51,9 +52,11 @@
         #table-liste .badge { font-size: 0.6rem; padding: 2px 5px; }
         </style>
         <div style="max-height:65vh;overflow-y:auto;overflow-x:hidden;">
+            <form id="formBulk" method="POST" action="{{ url_for('finances_paiements_supprimer_bulk') }}">
             <table class="table table-sm align-middle mb-0" id="table-liste">
                 <thead class="table-light">
                     <tr>
+                        <th><input type="checkbox" id="selectAll" onchange="toggleAll(this)"></th>
                         <th>#</th>
                         <th>Date & Heure</th>
                         <th>Code Élève</th>
@@ -68,6 +71,7 @@
                 <tbody>
                     {% for p in paiements %}
                     <tr data-classe="{{ p.eleve.classe.nom if p.eleve.classe else '' }}" data-mois="{{ p.type_paiement }}" data-nom="{{ p.eleve.prenom }} {{ p.eleve.nom }}" data-date="{{ p.date_paiement.strftime('%Y-%m-%d') }}">
+                        <td><input type="checkbox" name="paiement_ids[]" value="{{ p.id }}" class="paiement-check" onchange="updateBouton()"></td>
                         <td><small class="text-muted">{{ loop.index }}</small></td>
                         <td>{{ p.date_paiement.strftime('%d/%m/%Y %H:%M') }}</td>
                         <td><code>{{ p.eleve.code }}</code></td>
@@ -85,11 +89,12 @@
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="9" class="text-center py-5 text-muted">Aucun enregistrement trouvé.</td>
+                        <td colspan="10" class="text-center py-5 text-muted">Aucun enregistrement trouvé.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
+            </form>
         </div>
     </div>
 </div>
@@ -137,14 +142,14 @@ function imprimerTableau() {
     var tbodyHTML = '';
     document.querySelectorAll('#table-liste tbody tr').forEach(function(tr, idx) {
         var cells = tr.querySelectorAll('td');
-        if (cells.length < 8) return;
-        var date = cells[1].textContent.trim();
-        var code = cells[2].textContent.trim();
-        var prenom = cells[3].textContent.trim();
-        var nom = cells[4].textContent.trim();
-        var type = cells[5].textContent.trim();
-        var montant = cells[6].textContent.trim();
-        var caissier = cells[7].textContent.trim();
+        if (cells.length < 9) return;
+        var date = cells[2].textContent.trim();
+        var code = cells[3].textContent.trim();
+        var prenom = cells[4].textContent.trim();
+        var nom = cells[5].textContent.trim();
+        var type = cells[6].textContent.trim();
+        var montant = cells[7].textContent.trim();
+        var caissier = cells[8].textContent.trim();
         var bg = idx % 2 === 0 ? '#fff' : '#f2f2f2';
         tbodyHTML += '<tr style="background:' + bg + ';"><td style="text-align:center;">' + (idx + 1) + '</td>' +
             '<td>' + date + '</td><td>' + code + '</td><td>' + prenom + '</td><td>' + nom + '</td>' +
@@ -167,6 +172,23 @@ function imprimerTableau() {
         '<table><thead>' + thead + '</thead><tbody>' + tbodyHTML + '</tbody></table></body></html>');
     w.document.close();
     setTimeout(function() { w.print(); w.close(); }, 500);
+}
+
+function toggleAll(source) {
+    document.querySelectorAll('.paiement-check').forEach(function(cb) { cb.checked = source.checked; });
+    updateBouton();
+}
+function updateBouton() {
+    var n = document.querySelectorAll('.paiement-check:checked').length;
+    var btn = document.getElementById('btnSupprimerBulk');
+    if (n > 0) { btn.classList.remove('d-none'); btn.innerHTML = '<i class="bi bi-trash"></i> Supprimer (' + n + ')'; }
+    else { btn.classList.add('d-none'); }
+}
+function supprimerSelection() {
+    var n = document.querySelectorAll('.paiement-check:checked').length;
+    if (n === 0) return;
+    if (!confirm('Supprimer ' + n + ' paiement(s) ? Cette action est irreversible.')) return;
+    document.getElementById('formBulk').submit();
 }
 </script>
 {% endblock %}

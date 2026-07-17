@@ -603,6 +603,21 @@ def finances_liste():
     eleves_list = Eleve.query.filter_by(ecole_id=ecole_id).order_by(Eleve.nom, Eleve.prenom).all()
     return render_template('finances/liste.html', paiements=ps, ecole=e, classes=classes, eleves_list=eleves_list)
 
+@app.route('/finances/paiements/supprimer-bulk', methods=['POST'])
+@login_required
+def finances_paiements_supprimer_bulk():
+    if current_user.role not in ('dev', 'super_users'): flash('Accès réservé','danger'); return redirect(url_for('dashboard'))
+    ids = request.form.getlist('paiement_ids[]')
+    if not ids: flash('Aucun paiement sélectionné', 'warning'); return redirect(url_for('finances_liste'))
+    from models import Paiement
+    count = 0
+    for pid in [int(i) for i in ids]:
+        p = Paiement.query.get(pid)
+        if p: db.session.delete(p); count += 1
+    db.session.commit()
+    flash(f'{count} paiement(s) supprimé(s)', 'success')
+    return redirect(url_for('finances_liste'))
+
 @app.route('/finances/impayes')
 @login_required
 def impayes():
