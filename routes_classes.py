@@ -119,10 +119,11 @@ def matieres():
 def matiere_ajouter():
     ecole_id = get_current_ecole_id()
     e = Ecole.query.get(ecole_id)
+    embed = request.args.get('embed')
     if request.method == 'POST':
         db.session.add(Matiere(nom=request.form.get('nom'), domaine=request.form.get('domaine'), coefficient=request.form.get('coefficient',1), ecole_id=ecole_id))
-        db.session.commit(); flash('Matière ajoutée','success'); return redirect(url_for('matieres'))
-    return render_template('classes/matiere_form.html', ecole=e)
+        db.session.commit(); flash('Matière ajoutée','success'); return redirect(url_for('matieres', embed=embed))
+    return render_template('classes/matiere_form.html', ecole=e, embed=embed)
 
 @app.route('/matieres/modifier/<int:id>', methods=['GET','POST'])
 @login_required
@@ -130,21 +131,22 @@ def matiere_modifier(id):
     ecole_id = get_current_ecole_id()
     e = Ecole.query.get(ecole_id)
     m = Matiere.query.get_or_404(id)
-    if m.ecole_id != ecole_id: flash('Accès non autorisé','danger'); return redirect(url_for('matieres'))
+    embed = request.args.get('embed')
+    if m.ecole_id != ecole_id: flash('Accès non autorisé','danger'); return redirect(url_for('matieres', embed=embed))
     if request.method == 'POST':
         m.nom = request.form.get('nom')
         m.domaine = request.form.get('domaine')
         m.coefficient = request.form.get('coefficient', 1)
-        db.session.commit(); flash('Matière modifiée','success'); return redirect(url_for('matieres'))
-    return render_template('classes/matiere_form.html', matiere=m, ecole=e)
+        db.session.commit(); flash('Matière modifiée','success'); return redirect(url_for('matieres', embed=embed))
+    return render_template('classes/matiere_form.html', matiere=m, ecole=e, embed=embed)
 
 @app.route('/matieres/supprimer/<int:id>', methods=['POST'])
 @login_required
 def matiere_supprimer(id):
     ecole_id = get_current_ecole_id()
     m = Matiere.query.get_or_404(id)
-    if m.ecole_id != ecole_id: flash('Accès non autorisé','danger'); return redirect(url_for('matieres'))
+    if m.ecole_id != ecole_id: flash('Accès non autorisé','danger'); return redirect(url_for('matieres', embed=request.args.get('embed')))
     from models import Note
     Note.query.filter_by(matiere_id=id).delete()
-    db.session.delete(m)
-    db.session.commit(); flash('Matière supprimée','success'); return redirect(url_for('matieres'))
+    db.session.delete(m); db.session.commit(); flash('Matière supprimée','success')
+    return redirect(url_for('matieres', embed=request.args.get('embed')))

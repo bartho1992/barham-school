@@ -3,7 +3,7 @@
 {% block content %}
 <h3 class="mb-3"><i class="bi bi-book"></i> {{ 'Modifier' if matiere else 'Ajouter' }} une matiere</h3>
 <div class="card shadow-sm"><div class="card-body">
-<form method="POST" action="{{ url_for('matiere_modifier', id=matiere.id) if matiere else url_for('matiere_ajouter') }}">
+<form method="POST" action="{{ url_for('matiere_modifier', id=matiere.id, embed=embed) if matiere else url_for('matiere_ajouter', embed=embed) }}">
     <div class="row g-3">
         <div class="col-md-4">
             <label class="form-label fw-bold">Nom *</label>
@@ -28,7 +28,7 @@
     </div>
     <hr>
     <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> {{ 'Enregistrer' if matiere else 'Ajouter' }}</button>
-    <a href="{{ url_for('matieres') }}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Retour</a>
+    <a href="{{ url_for('matieres', embed=embed) }}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Retour</a>
 </form>
 </div></div>
 {% endblock %}
