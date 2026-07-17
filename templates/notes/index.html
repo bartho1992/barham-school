@@ -14,9 +14,9 @@
                 <h6 class="fw-bold text-primary mb-1">{{ c.nom }}</h6>
                 <small class="text-muted d-block mb-2">{{ c.niveau or '' }}</small>
                 <div class="d-flex gap-1 justify-content-center flex-wrap">
-                    <a href="{{ url_for('notes_saisir', classe_id=c.id, trimestre=1) }}" class="btn btn-outline-primary btn-sm py-0 px-1" title="1er Trimestre">T1</a>
-                    <a href="{{ url_for('notes_saisir', classe_id=c.id, trimestre=2) }}" class="btn btn-outline-primary btn-sm py-0 px-1" title="2eme Trimestre">T2</a>
-                    <a href="{{ url_for('notes_saisir', classe_id=c.id, trimestre=3) }}" class="btn btn-outline-primary btn-sm py-0 px-1" title="3eme Trimestre">T3</a>
+                    <a href="{{ url_for('notes_saisir', classe_id=c.id, trimestre=1, embed=embed) }}" class="btn btn-outline-primary btn-sm py-0 px-1" title="1er Trimestre">T1</a>
+                    <a href="{{ url_for('notes_saisir', classe_id=c.id, trimestre=2, embed=embed) }}" class="btn btn-outline-primary btn-sm py-0 px-1" title="2eme Trimestre">T2</a>
+                    <a href="{{ url_for('notes_saisir', classe_id=c.id, trimestre=3, embed=embed) }}" class="btn btn-outline-primary btn-sm py-0 px-1" title="3eme Trimestre">T3</a>
                 </div>
             </div>
         </div>

@@ -10,7 +10,8 @@ def _annee_courante(e):
 @login_required
 def personnel():
     ecole_id = get_current_ecole_id()
-    return render_template('personnel/index.html', personnels=Personnel.query.all(), ecole=Ecole.query.get(ecole_id))
+    embed = request.args.get('embed')
+    return render_template('personnel/index.html', personnels=Personnel.query.all(), ecole=Ecole.query.get(ecole_id), embed=embed)
 
 @app.route('/personnel/ajouter', methods=['GET','POST'])
 @login_required

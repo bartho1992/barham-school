@@ -5,7 +5,7 @@
     <div class="section-header"><i class="bi bi-person-badge"></i> Gestion du Personnel</div>
     <div>
         <button class="btn btn-outline-dark btn-sm me-1" onclick="imprimerTableau()"><i class="bi bi-printer"></i> Imprimer</button>
-        <a href="{{ url_for('personnel_ajouter') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Ajouter</a>
+        <a href="{{ url_for('personnel_ajouter', embed=embed) }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Ajouter</a>
     </div>
 </div>
 <div style="max-height:65vh;overflow:auto;">

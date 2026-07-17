@@ -17,15 +17,15 @@
                 <p class="small text-muted mb-4">{{ c.niveau }}</p>
                 
                 <div class="list-group list-group-flush mb-3">
-                    <a href="{{ url_for('bulletin_classe', classe_id=c.id, trimestre=1) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3">
+                    <a href="{{ url_for('bulletin_classe', classe_id=c.id, trimestre=1, embed=embed) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3">
                         <span>1er Trimestre</span>
                         <i class="bi bi-chevron-right"></i>
                     </a>
-                    <a href="{{ url_for('bulletin_classe', classe_id=c.id, trimestre=2) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3">
+                    <a href="{{ url_for('bulletin_classe', classe_id=c.id, trimestre=2, embed=embed) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3">
                         <span>2ème Trimestre</span>
                         <i class="bi bi-chevron-right"></i>
                     </a>
-                    <a href="{{ url_for('bulletin_classe', classe_id=c.id, trimestre=3) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3">
+                    <a href="{{ url_for('bulletin_classe', classe_id=c.id, trimestre=3, embed=embed) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3">
                         <span>3ème Trimestre</span>
                         <i class="bi bi-chevron-right"></i>
                     </a>
