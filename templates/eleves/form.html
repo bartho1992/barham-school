@@ -1,99 +1,175 @@
 {% extends "base.html" %}
-{% block title %}{{ 'Modifier' if eleve else 'Inscrire' }} eleve - {{ ecole.nom }}{% endblock %}
+{% block title %}{{ 'Modifier' if eleve else 'Inscrire' }} élève - {{ ecole.nom }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Styling overrides for the photo preview card and layout padding */
+    .photo-preview {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        border-radius: var(--radius-md);
+        border: 2px solid var(--neutral-200);
+        box-shadow: var(--shadow-sm);
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-    <h3 class="mb-0"><i class="bi bi-person-plus"></i> {{ 'Modifier' if eleve else 'Inscrire' }} un eleve</h3>
-    <a href="{{ url_for('eleves') }}" class="btn btn-primary btn-sm"><i class="bi bi-people"></i> Élèves</a>
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2 animate-in">
+    <h3 class="mb-0 text-gradient"><i class="bi bi-person-plus-fill"></i> {{ 'Modifier' if eleve else 'Inscrire' }} un élève</h3>
+    <a href="{{ url_for('eleves') }}" class="btn btn-outline-primary btn-sm rounded-pill px-3"><i class="bi bi-people-fill me-1"></i> Retour à la liste</a>
 </div>
-<div class="card shadow-sm">
-    <div class="card-body" style="padding-bottom:70px;">
+
+<div class="card shadow-sm mb-5 animate-in" style="animation-delay: 0.05s;">
+    <div class="card-body p-4" style="padding-bottom: 80px !important;">
         <form method="POST" enctype="multipart/form-data">
+            
+            <!-- SECTION 1 : PHOTO & IDENTITÉ -->
+            <div class="form-section-title">
+                <i class="bi bi-person-circle"></i> Photo & État Civil
+            </div>
+            
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="photo-upload-zone d-flex flex-column align-items-center justify-content-center" onclick="document.getElementById('photoInput').click()">
+                        <i class="bi bi-camera"></i>
+                        <span class="small fw-semibold text-muted" id="uploadLabel">Cliquez pour photo</span>
+                        <input type="file" name="photo" id="photoInput" class="d-none" accept="image/*" onchange="previewImage(this)">
+                        
+                        {% if eleve and eleve.photo %}
+                        <div class="mt-2">
+                            <img src="{{ url_for('static', filename='photos/' ~ eleve.photo) }}" class="photo-preview mt-1" id="imgPreview">
+                        </div>
+                        {% else %}
+                        <div class="mt-2 d-none" id="previewContainer">
+                            <img src="#" class="photo-preview mt-1" id="imgPreview">
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="col-md-9">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Code Matricule *</label>
+                            <input type="text" name="code" class="form-control" value="{{ eleve.code if eleve else auto_code }}" required>
+                            <small class="text-muted" style="font-size:0.68rem;">Généré automatiquement</small>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label">Prénom *</label>
+                            <input type="text" name="prenom" class="form-control" value="{{ eleve.prenom if eleve }}" placeholder="Ex: Fatou" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Nom *</label>
+                            <input type="text" name="nom" class="form-control" value="{{ eleve.nom if eleve }}" placeholder="Ex: DIOP" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Sexe *</label>
+                            <select name="sexe" class="form-select">
+                                <option value="M" {% if eleve and eleve.sexe=='M' %}selected{% endif %}>Masculin (M)</option>
+                                <option value="F" {% if eleve and eleve.sexe=='F' %}selected{% endif %}>Féminin (F)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Situation</label>
+                            <select name="situation" class="form-select">
+                                <option value="Inscrit" {% if eleve and eleve.situation=='Inscrit' %}selected{% endif %}>Inscrit</option>
+                                <option value="Transféré" {% if eleve and eleve.situation=='Transféré' %}selected{% endif %}>Transféré</option>
+                                <option value="Renvoyé" {% if eleve and eleve.situation=='Renvoyé' %}selected{% endif %}>Renvoyé</option>
+                                <option value="Désinscrit" {% if eleve and eleve.situation=='Désinscrit' %}selected{% endif %}>Désinscrit</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 2 : NAISSANCE & CONTACT -->
+            <div class="form-section-title">
+                <i class="bi bi-geo-alt-fill"></i> Naissance & Coordonnées
+            </div>
+            
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <label class="form-label">Date de naissance</label>
+                    <input type="date" name="date_naissance" class="form-control" value="{{ eleve.date_naissance if eleve }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Lieu de naissance</label>
+                    <input type="text" name="lieu_naissance" class="form-control" value="{{ eleve.lieu_naissance if eleve }}" placeholder="Ex: Dakar">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Téléphone parent/tuteur</label>
+                    <input type="text" name="tel" class="form-control" value="{{ eleve.tel if eleve }}" placeholder="Ex: 77 123 45 67">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Nom du Parent / Tuteur</label>
+                    <input type="text" name="tuteur" class="form-control" value="{{ eleve.tuteur if eleve }}" placeholder="Ex: Ibrahima DIOP">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Adresse de résidence</label>
+                    <input type="text" name="adresse" class="form-control" value="{{ eleve.adresse if eleve }}" placeholder="Ex: Médina Rue 22 x 15">
+                </div>
+            </div>
+
+            <!-- SECTION 3 : SCOLARITÉ & OBSERVATIONS -->
+            <div class="form-section-title">
+                <i class="bi bi-mortarboard-fill"></i> Scolarité & Antécédents
+            </div>
+            
             <div class="row g-3">
-                <div class="col-md-3">
-                    <label class="form-label fw-bold">Photo</label>
-                    <input type="file" name="photo" class="form-control" accept="image/*">
-                    {% if eleve and eleve.photo %}<small class="text-success"><i class="bi bi-check-circle"></i> Photo enregistrée</small>{% endif %}
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label fw-bold">Code *</label>
-                    <input type="text" name="code" class="form-control" value="{{ eleve.code if eleve else auto_code }}" required>
-                </div>
                 <div class="col-md-4">
-                    <label class="form-label fw-bold">Prenom *</label>
-                    <input type="text" name="prenom" class="form-control" value="{{ eleve.prenom if eleve }}" required>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label fw-bold">Nom *</label>
-                    <input type="text" name="nom" class="form-control" value="{{ eleve.nom if eleve }}" required>
-                </div>
-                <div class="col-md-1">
-                    <label class="form-label fw-bold">Sexe</label>
-                    <select name="sexe" class="form-select">
-                        <option value="M" {% if eleve and eleve.sexe=='M' %}selected{% endif %}>M</option>
-                        <option value="F" {% if eleve and eleve.sexe=='F' %}selected{% endif %}>F</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label fw-bold">Classe</label>
+                    <label class="form-label">Classe d'inscription</label>
                     <select name="classe_id" class="form-select">
-                        <option value="">-- Choisir --</option>
+                        <option value="">-- Choisir une classe --</option>
                         {% for c in classes %}
                         <option value="{{ c.id }}" {% if eleve and eleve.classe_id==c.id %}selected{% endif %}>{{ c.nom }}</option>
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-3">
-                    <label class="form-label">Telephone</label>
-                    <input type="text" name="tel" class="form-control" value="{{ eleve.tel if eleve }}">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Date de naissance</label>
-                    <input type="date" name="date_naissance" class="form-control" value="{{ eleve.date_naissance if eleve }}">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Lieu de naissance</label>
-                    <input type="text" name="lieu_naissance" class="form-control" value="{{ eleve.lieu_naissance if eleve }}">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Tuteur</label>
-                    <input type="text" name="tuteur" class="form-control" value="{{ eleve.tuteur if eleve }}">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Adresse</label>
-                    <input type="text" name="adresse" class="form-control" value="{{ eleve.adresse if eleve }}">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Ecole precedente</label>
-                    <input type="text" name="precedente_ecole" class="form-control" value="{{ eleve.precedente_ecole if eleve }}">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Date d'entree</label>
+                <div class="col-md-4">
+                    <label class="form-label">Date d'entrée</label>
                     <input type="date" name="date_entree" class="form-control" value="{{ eleve.date_entree if eleve }}">
                 </div>
-                <div class="col-md-3">
-                    <label class="form-label fw-bold">Situation</label>
-                    <select name="situation" class="form-select">
-                        <option value="Inscrit" {% if eleve and eleve.situation=='Inscrit' %}selected{% endif %}>Inscrit</option>
-                        <option value="Transfere" {% if eleve and eleve.situation=='Transfere' %}selected{% endif %}>Transfere</option>
-                        <option value="Renvoye" {% if eleve and eleve.situation=='Renvoye' %}selected{% endif %}>Renvoye</option>
-                        <option value="Desinscrit" {% if eleve and eleve.situation=='Desinscrit' %}selected{% endif %}>Desinscrit</option>
-                    </select>
+                <div class="col-md-4">
+                    <label class="form-label">École précédente (Provenance)</label>
+                    <input type="text" name="precedente_ecole" class="form-control" value="{{ eleve.precedente_ecole if eleve }}" placeholder="Nom de l'établissement d'origine">
                 </div>
-                <div class="col-md-6">
-                    <label class="form-label">Observations</label>
-                    <textarea name="observations" class="form-control" rows="2">{{ eleve.observations if eleve }}</textarea>
+                <div class="col-12">
+                    <label class="form-label">Observations / Remarques</label>
+                    <textarea name="observations" class="form-control" rows="3" placeholder="Saisir des notes internes sur l'élève (antécédents médicaux, comportement, boursier...)">{{ eleve.observations if eleve }}</textarea>
                 </div>
             </div>
-            <!-- Boutons fixes en bas sur mobile -->
-            <div class="d-flex gap-2 mt-3" style="position:fixed; bottom:0; left:0; right:0; z-index:1000; background:#fff; border-top:2px solid #dee2e6; padding:10px; box-shadow:0 -4px 12px rgba(0,0,0,0.1);">
-                <button type="submit" class="btn btn-primary flex-grow-1"><i class="bi bi-check-lg"></i> Enregistrer</button>
-                <a href="{{ url_for('eleves') }}" class="btn btn-secondary flex-grow-1"><i class="bi bi-arrow-left"></i> Retour</a>
+            
+            <!-- Fixed action bar at bottom -->
+            <div class="form-actions-bar">
+                <button type="submit" class="btn btn-primary flex-grow-1"><i class="bi bi-check-lg me-1"></i> Enregistrer</button>
+                <a href="{{ url_for('eleves') }}" class="btn btn-secondary flex-grow-1"><i class="bi bi-x-circle me-1"></i> Annuler</a>
             </div>
         </form>
     </div>
 </div>
 
-<!-- Espace pour compenser la barre fixe en bas -->
-<div style="height:60px;"></div>
+<!-- Extra height container to ensure fixed bottom bar doesn't hide form content -->
+<div style="height: 80px;"></div>
 
+<script>
+function previewImage(input) {
+    var preview = document.getElementById('imgPreview');
+    var container = document.getElementById('previewContainer');
+    var label = document.getElementById('uploadLabel');
+    
+    if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            if (container) container.classList.remove('d-none');
+            label.innerText = "Changer la photo";
+        }
+        
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+</script>
 {% endblock %}

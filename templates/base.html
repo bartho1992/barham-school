@@ -6,146 +6,18 @@
     <title>{% block title %}Barham School{% endblock %}</title>
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
     <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    <link href="{{ url_for('static', filename='css/style.css') }}?v=7" rel="stylesheet">
-    <style>
-        /* ===== STYLE EXCEL GLOBAL POUR TOUS LES TABLEAUX ===== */
-        
-        /* Animations notifications */
-        @keyframes slideInRight {
-            from { opacity: 0; transform: translateX(80px); }
-            to   { opacity: 1; transform: translateX(0); }
-        }
-        @keyframes slideOutRight {
-            from { opacity: 1; transform: translateX(0); }
-            to   { opacity: 0; transform: translateX(80px); }
-        }
-        .toast-flash.removing {
-            animation: slideOutRight 0.3s ease forwards;
-        }
-        
-        /* Flash messages ameliores */
-        .alert {
-            border: none;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            padding: 8px 14px;
-            margin-bottom: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            animation: slideDown 0.3s ease;
-        }
-        .alert-success { background: #d4edda; color: #155724; border-left: 4px solid #28a745; }
-        .alert-danger  { background: #fce4e4; color: #721c24; border-left: 4px solid #dc3545; }
-        .alert-warning { background: #fff3cd; color: #856404; border-left: 4px solid #ffc107; }
-        .alert-info    { background: #d1ecf1; color: #0c5460; border-left: 4px solid #17a2b8; }
-        .alert .btn-close { font-size: 0.6rem; }
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-10px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Style Excel pour tous les tableaux */
-        .table {
-            border-collapse: collapse !important;
-            font-size: 0.73rem;
-            width: 100%;
-            margin-bottom: 0;
-            background: #fff;
-            font-variant-numeric: tabular-nums;
-        }
-        .table thead th {
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            background: #2E7D32 !important;
-            color: #fff !important;
-            font-weight: 600;
-            letter-spacing: 0.3px;
-            padding: 6px 8px;
-            border: 1px solid #9e9e9e !important;
-            box-shadow: inset 0 -2px 0 #1B5E20;
-            font-size: 0.65rem;
-            text-transform: uppercase;
-            white-space: nowrap;
-            text-align: center;
-        }
-        .table thead th a {
-            color: #fff !important;
-            text-decoration: underline;
-        }
-        .table tbody td {
-            padding: 4px 8px;
-            border: 1px solid #c6c6c6;
-            vertical-align: middle;
-            font-variant-numeric: tabular-nums;
-        }
-        .table tbody tr:nth-child(even) {
-            background-color: #f2f7fc;
-        }
-        .table tbody tr:hover td,
-        .table tbody tr:hover th {
-            background-color: #d4e6f7 !important;
-        }
-        .table tbody tr {
-            cursor: pointer;
-        }
-        .table-striped > tbody > tr:nth-of-type(odd) {
-            --bs-table-accent-bg: #fff;
-        }
-        .table-striped > tbody > tr:nth-of-type(even) {
-            --bs-table-accent-bg: #f5faf5;
-        }
-        
-        /* Badges dans les tableaux */
-        .table .badge {
-            font-size: 0.65rem;
-            font-weight: 500;
-        }
-        
-        /* Boutons dans les tableaux */
-        .table .btn-group-sm .btn {
-            padding: 2px 6px;
-            font-size: 0.7rem;
-        }
-
-        /* En-tetes de section */
-        .section-header {
-            background: linear-gradient(135deg, #2E7D32, #43A047);
-            color: #fff;
-            padding: 8px 14px;
-            border-radius: 6px;
-            margin-bottom: 10px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            letter-spacing: 0.3px;
-        }
-        .section-header i { font-size: 0.9rem; }
-        
-        /* Cartes */
-        .card {
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-            margin-bottom: 12px;
-        }
-        .card-header {
-            background: #f8f9fa;
-            border-bottom: 1px solid #e0e0e0;
-            font-weight: 600;
-            font-size: 0.8rem;
-            padding: 8px 14px;
-        }
-    </style>
+    <link href="{{ url_for('static', filename='css/style.css') }}?v=8" rel="stylesheet">
     {% block extra_css %}{% endblock %}
 </head>
 <body>
+    <!-- Premium Page Loader -->
+    <div class="page-loader" id="pageLoader"></div>
+
     <div class="app-layout {% if not current_user.is_authenticated or request.args.get('embed') %}no-sidebar{% endif %}">
         {% if current_user.is_authenticated and not request.args.get('embed') %}
         <!-- Bouton hamburger pour mobile/tablette -->
@@ -353,6 +225,16 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script>
+        // Page loader fade out
+        window.addEventListener('load', function() {
+            var loader = document.getElementById('pageLoader');
+            if (loader) {
+                loader.style.transition = 'opacity 0.4s ease';
+                loader.style.opacity = '0';
+                setTimeout(function() { loader.style.display = 'none'; }, 400);
+            }
+        });
+        
         // Auto-disparition des notifications flottantes apres 5s
         (function() {
             document.querySelectorAll('.toast-flash').forEach(function(toast) {

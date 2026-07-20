@@ -1,5 +1,5 @@
 import os
-from flask import Flask, session, request, redirect, url_for, send_from_directory, render_template
+from flask import Flask, session, request, redirect, url_for, send_from_directory, render_template, flash
 from flask_login import login_required
 from models import db, init_data, Ecole, AnneeScolaire
 

@@ -2,102 +2,24 @@
 {% block title %}Tableau de bord - {{ ecole.nom }}{% endblock %}
 {% block content %}
 
-<style>
-:root {
-    --card-radius: 10px;
-}
-.db-card {
-    border: none;
-    border-radius: var(--card-radius);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-    overflow: hidden;
-}
-.db-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 18px rgba(0,0,0,0.10);
-}
-.db-card .card-body { padding: 12px 14px; }
-.db-stat-icon {
-    width: 40px; height: 40px;
-    border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.2rem;
-}
-.db-stat-value { font-size: 1.4rem; font-weight: 700; line-height: 1.1; }
-.db-stat-label { font-size: 0.65rem; opacity: 0.75; text-transform: uppercase; letter-spacing: 0.5px; }
-
-/* Barres de progression */
-.progress-thin { height: 5px; border-radius: 3px; }
-.bar-item {
-    display: flex; align-items: center; gap: 6px; margin-bottom: 6px;
-}
-.bar-item .label { font-size: 0.65rem; width: 60px; text-align: right; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.bar-item .bar-wrap { flex: 1; background: #f0f0f0; border-radius: 4px; height: 12px; overflow: hidden; }
-.bar-item .bar-fill { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
-.bar-item .bar-val { font-size: 0.6rem; font-weight: 700; width: 45px; text-align: right; flex-shrink: 0; }
-
-/* KPI row */
-.kpi-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
-.kpi-item {
-    flex: 1; min-width: 110px;
-    background: #fff; border-radius: 8px;
-    padding: 8px 10px; text-align: center;
-    border: 1px solid #e8e8e8;
-}
-.kpi-item .val { font-size: 1rem; font-weight: 700; }
-.kpi-item .lbl { font-size: 0.55rem; color: #888; text-transform: uppercase; }
-
-/* Section headers */
-.section-title {
-    font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
-    color: #444; margin-bottom: 6px; display: flex; align-items: center; gap: 5px;
-    border-bottom: 2px solid #e0e0e0; padding-bottom: 4px;
-}
-.section-title i { font-size: 0.75rem; }
-
-/* Onglets Dashboard */
-.db-tabs {
-    display: flex; gap: 4px; margin-bottom: 12px; flex-wrap: wrap;
-    background: #f8f9fa; padding: 4px; border-radius: 10px;
-}
-.db-tab {
-    padding: 6px 16px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase;
-    letter-spacing: 0.4px; border: none; border-radius: 8px;
-    cursor: pointer; transition: all 0.2s ease;
-    background: transparent; color: #666;
-}
-.db-tab:hover { background: #e9ecef; color: #333; }
-.db-tab i { margin-right: 4px; }
-.tab-pane { display: none; }
-.tab-pane.active { display: block; }
-
-@media (max-width: 768px) {
-    .kpi-item { min-width: 70px; padding: 6px 6px; }
-    .kpi-item .val { font-size: 0.85rem; }
-    .db-tabs { gap: 2px; }
-    .db-tab { padding: 5px 10px; font-size: 0.6rem; }
-}
-</style>
-
 <!-- Alertes essai / licence -->
 {% if est_essai and jours_restants <= 7 and jours_restants > 0 %}
-<div class="alert alert-warning border-0 shadow-sm mb-2 py-2 small d-flex justify-content-between align-items-center">
+<div class="alert alert-warning border-0 shadow-sm mb-2 py-2 small d-flex justify-content-between align-items-center animate-in">
     <span><i class="bi bi-exclamation-triangle-fill me-1"></i> <strong>Essai gratuit expire dans {{ jours_restants }} jour{{ 's' if jours_restants != 1 }} !</strong></span>
     <a href="{{ url_for('abonnement') }}" class="btn btn-warning btn-sm py-0 px-2 fw-bold">Souscrire</a>
 </div>
 {% elif est_essai and jours_restants > 7 %}
-<div class="alert alert-info border-0 shadow-sm mb-2 py-2 small d-flex justify-content-between align-items-center">
+<div class="alert alert-info border-0 shadow-sm mb-2 py-2 small d-flex justify-content-between align-items-center animate-in">
     <span><i class="bi bi-clock-history me-1"></i> <strong>Essai gratuit</strong> — {{ jours_restants }} jours restants</span>
     <a href="{{ url_for('abonnement') }}" class="btn btn-outline-primary btn-sm py-0 px-2">Voir les plans</a>
 </div>
 {% endif %}
 
 <!-- En-tête -->
-<div class="d-flex justify-content-between align-items-center mb-2 flex-wrap">
-    <div class="section-header"><i class="bi bi-speedometer2 me-1"></i> Tableau de bord — {{ ecole.nom }} | Année : {{ current_annee }}</div>
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2 animate-in">
+    <div class="section-header mb-0"><i class="bi bi-speedometer2 me-1"></i> Tableau de bord — {{ ecole.nom }} | Année : {{ current_annee }}</div>
     <form method="GET" action="{{ url_for('changer_annee') }}" class="d-flex align-items-center gap-1">
-        <label class="small fw-bold"><i class="bi bi-calendar3"></i></label>
+        <label class="small fw-bold text-muted"><i class="bi bi-calendar3"></i></label>
         <select name="annee" class="form-select form-select-sm" style="width: auto; min-width: 140px;" onchange="this.form.submit()">
             {% for an in all_annees %}
             <option value="{{ an.annee }}" {{ 'selected' if an.annee == current_annee }}>{{ an.annee }}{{ ' (active)' if an.active }}</option>
@@ -107,84 +29,85 @@
 </div>
 
 <!-- Onglets Dashboard -->
-<div class="db-tabs" id="dashboardTabs">
-    <button class="db-tab active" data-tab="synthese" data-color="#0d6efd"><i class="bi bi-house"></i> Synthèse</button>
-    <button class="db-tab" data-tab="statistiques" data-color="#6f42c1"><i class="bi bi-bar-chart"></i> Statistiques</button>
-    <button class="db-tab" data-tab="paiements" data-color="#198754"><i class="bi bi-cash"></i> Paiements</button>
-    <button class="db-tab" data-tab="actions" data-color="#fd7e14"><i class="bi bi-lightning"></i> Actions</button>
+<div class="db-tabs animate-in" id="dashboardTabs">
+    <button class="db-tab active" data-tab="synthese" data-color="var(--primary-600)"><i class="bi bi-house"></i> Synthèse</button>
+    <button class="db-tab" data-tab="statistiques" data-color="#8b5cf6"><i class="bi bi-bar-chart"></i> Statistiques</button>
+    <button class="db-tab" data-tab="paiements" data-color="#10b981"><i class="bi bi-cash"></i> Paiements</button>
+    <button class="db-tab" data-tab="actions" data-color="#f59e0b"><i class="bi bi-lightning"></i> Actions</button>
 </div>
 
 <!-- ===== TAB 1 : SYNTHÈSE ===== -->
 <div class="tab-pane active" id="tab-synthese">
     <div class="kpi-row">
-        <div class="kpi-item" style="border-left: 3px solid #0d6efd;">
-            <div class="val text-primary">{{ total_eleves }}</div>
+        <div class="kpi-item" style="border-left: 4px solid #3b82f6;">
+            <div class="val text-primary counter-value" data-target="{{ total_eleves }}">0</div>
             <div class="lbl">Élèves</div>
         </div>
-        <div class="kpi-item" style="border-left: 3px solid #198754;">
-            <div class="val text-success">{{ total_classes }}</div>
+        <div class="kpi-item" style="border-left: 4px solid #10b981;">
+            <div class="val text-success counter-value" data-target="{{ total_classes }}">0</div>
             <div class="lbl">Classes</div>
         </div>
-        <div class="kpi-item" style="border-left: 3px solid #6f42c1;">
-            <div class="val" style="color:#6f42c1;">{{ total_personnel }}</div>
+        <div class="kpi-item" style="border-left: 4px solid #8b5cf6;">
+            <div class="val counter-value" style="color:#8b5cf6;" data-target="{{ total_personnel }}">0</div>
             <div class="lbl">Personnel</div>
         </div>
-        <div class="kpi-item" style="border-left: 3px solid #fd7e14;">
-            <div class="val" style="color:#fd7e14;">{{ garcons }}</div>
+        <div class="kpi-item" style="border-left: 4px solid #f59e0b;">
+            <div class="val text-warning counter-value" data-target="{{ garcons }}">0</div>
             <div class="lbl">Garçons</div>
         </div>
-        <div class="kpi-item" style="border-left: 3px solid #d63384;">
-            <div class="val" style="color:#d63384;">{{ filles }}</div>
+        <div class="kpi-item" style="border-left: 4px solid #ec4899;">
+            <div class="val counter-value" style="color:#ec4899;" data-target="{{ filles }}">0</div>
             <div class="lbl">Filles</div>
         </div>
-        <div class="kpi-item" style="border-left: 3px solid #dc3545;">
-            <div class="val text-danger">{{ nb_eleves_impayes }}</div>
+        <div class="kpi-item" style="border-left: 4px solid #ef4444;">
+            <div class="val text-danger counter-value" data-target="{{ nb_eleves_impayes }}">0</div>
             <div class="lbl">Él. Impayés</div>
         </div>
     </div>
-    <div class="row g-2 mb-2">
-        <div class="col-lg-3 col-md-6">
-            <div class="card db-card bg-white">
+    
+    <div class="row g-3 mb-3">
+        <div class="col-lg-3 col-md-6 animate-in" style="animation-delay: 0.1s;">
+            <div class="card db-card bg-white h-100">
                 <div class="card-body d-flex align-items-center gap-3">
                     <div class="db-stat-icon bg-primary bg-opacity-10 text-primary"><i class="bi bi-cash-stack"></i></div>
                     <div>
                         <div class="db-stat-label">Encaissement Total</div>
-                        <div class="db-stat-value text-primary">{{ "{:,.0f}".format(total_paiements).replace(',', ' ') }} F</div>
+                        <div class="db-stat-value text-primary counter-value" data-target="{{ total_paiements }}" data-format="currency">0</div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-lg-3 col-md-6">
-            <div class="card db-card bg-white">
+        <div class="col-lg-3 col-md-6 animate-in" style="animation-delay: 0.15s;">
+            <div class="card db-card bg-white h-100">
                 <div class="card-body d-flex align-items-center gap-3">
                     <div class="db-stat-icon bg-success bg-opacity-10 text-success"><i class="bi bi-calendar-check"></i></div>
                     <div>
                         <div class="db-stat-label">Encaissement Aujourd'hui</div>
-                        <div class="db-stat-value text-success">{{ "{:,.0f}".format(today_encaisse).replace(',', ' ') }} F</div>
+                        <div class="db-stat-value text-success counter-value" data-target="{{ today_encaisse }}" data-format="currency">0</div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-lg-3 col-md-6">
-            <div class="card db-card bg-white">
+        <div class="col-lg-3 col-md-6 animate-in" style="animation-delay: 0.2s;">
+            <div class="card db-card bg-white h-100">
                 <div class="card-body d-flex align-items-center gap-3">
                     <div class="db-stat-icon bg-danger bg-opacity-10 text-danger"><i class="bi bi-exclamation-triangle"></i></div>
                     <div>
                         <div class="db-stat-label">Total Impayés</div>
-                        <div class="db-stat-value text-danger">{{ "{:,.0f}".format(total_impayes).replace(',', ' ') }} F</div>
-                        <a href="{{ url_for('impayes') }}" class="small">Voir détails <i class="bi bi-arrow-right"></i></a>
+                        <div class="db-stat-value text-danger counter-value" data-target="{{ total_impayes }}" data-format="currency">0</div>
+                        <a href="{{ url_for('impayes') }}" class="small text-decoration-none fw-semibold mt-1 d-block"><i class="bi bi-arrow-right-short"></i> Voir détails</a>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-lg-3 col-md-6">
-            <div class="card db-card bg-white">
+        <div class="col-lg-3 col-md-6 animate-in" style="animation-delay: 0.25s;">
+            <div class="card db-card bg-white h-100">
                 <div class="card-body d-flex align-items-center gap-3">
                     <div class="db-stat-icon bg-info bg-opacity-10 text-info"><i class="bi bi-graph-up"></i></div>
                     <div>
                         <div class="db-stat-label">Taux Recouvrement</div>
                         <div class="db-stat-value text-info">{{ taux_recouvrement }}%</div>
-                        <div class="progress progress-thin mt-1">
+                        <div class="progress progress-thin mt-2">
                             <div class="progress-bar bg-info" style="width:{{ taux_recouvrement }}%"></div>
                         </div>
                     </div>
@@ -196,57 +119,77 @@
 
 <!-- ===== TAB 2 : STATISTIQUES ===== -->
 <div class="tab-pane" id="tab-statistiques">
-    <div class="row g-2 mb-2">
+    <div class="row g-3 mb-3">
+        <!-- Genre Distribution (Donut style) -->
         <div class="col-lg-4 col-md-6">
-            <div class="card db-card">
-                <div class="card-body">
-                    <div class="section-title"><i class="bi bi-pie-chart"></i> Répartition G/F</div>
+            <div class="card db-card h-100">
+                <div class="card-body d-flex flex-column justify-content-between">
+                    <div class="section-title"><i class="bi bi-pie-chart"></i> Répartition Filles / Garçons</div>
                     {% set total_genre = garcons + filles %}
-                    <div style="display:flex; height:24px; border-radius:6px; overflow:hidden; margin-bottom:8px;">
-                        <div style="background:#0d6efd; width:{{ (garcons/total_genre*100) if total_genre>0 else 50 }}%; display:flex; align-items:center; justify-content:center; font-size:0.6rem; color:#fff; font-weight:700;">{{ garcons }} G</div>
-                        <div style="background:#d63384; width:{{ (filles/total_genre*100) if total_genre>0 else 50 }}%; display:flex; align-items:center; justify-content:center; font-size:0.6rem; color:#fff; font-weight:700;">{{ filles }} F</div>
-                    </div>
-                    <div class="d-flex justify-content-between small">
-                        <span><span class="badge bg-primary" style="display:inline-block;width:8px;height:8px;border-radius:50%;vertical-align:middle;"></span> Garçons: {{ garcons }}</span>
-                        <span><span class="badge" style="display:inline-block;width:8px;height:8px;border-radius:50%;vertical-align:middle;background:#d63384;"></span> Filles: {{ filles }}</span>
-                        <span class="text-muted">{{ total_genre }} total</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-4 col-md-6">
-            <div class="card db-card">
-                <div class="card-body" style="padding:8px 10px;">
-                    <div class="section-title" style="margin-bottom:4px;"><i class="bi bi-building"></i> Effectifs par Classe</div>
-                    <div style="max-height:220px; overflow-y:auto; padding-right:2px;">
-                    {% set max_eff = classes_stats[0].nb if classes_stats else 1 %}
-                    {% for cs in classes_stats %}
-                    <div class="bar-item" style="margin-bottom:2px;">
-                        <div class="label" style="font-size:0.6rem; width:40px;">{{ cs.nom }}</div>
-                        <div class="bar-wrap" style="height:8px;">
-                            <div class="bar-fill" style="width:{{ (cs.nb/max_eff*100) if max_eff>0 else 0 }}%; background: linear-gradient(90deg, #0d6efd, #6610f2);"></div>
+                    {% set g_pct = (garcons / total_genre * 100) if total_genre > 0 else 50 %}
+                    {% set f_pct = (filles / total_genre * 100) if total_genre > 0 else 50 %}
+                    
+                    <div class="d-flex justify-content-center align-items-center my-3">
+                        <div style="width: 140px; height: 140px; border-radius: 50%; background: conic-gradient(#3b82f6 0% {{ g_pct }}%, #ec4899 {{ g_pct }}% 100%); display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-md);">
+                            <div style="width: 100px; height: 100px; border-radius: 50%; background: white; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                                <span class="fw-bold text-dark fs-5">{{ total_genre }}</span>
+                                <span class="text-muted" style="font-size: 0.58rem; text-transform: uppercase;">Total</span>
+                            </div>
                         </div>
-                        <div class="bar-val" style="color:#0d6efd; font-size:0.6rem; width:30px;">{{ cs.nb }}</div>
                     </div>
-                    {% endfor %}
+                    
+                    <div class="d-flex justify-content-around mt-2">
+                        <div class="text-center">
+                            <span class="badge bg-primary px-2 py-1"><i class="bi bi-gender-male"></i> G</span>
+                            <div class="fw-bold mt-1 text-dark">{{ garcons }} ({{ g_pct|round|int }}%)</div>
+                        </div>
+                        <div class="text-center">
+                            <span class="badge px-2 py-1" style="background-color: #ec4899; color: white;"><i class="bi bi-gender-female"></i> F</span>
+                            <div class="fw-bold mt-1 text-dark">{{ filles }} ({{ f_pct|round|int }}%)</div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+        
+        <!-- Effectifs par Classe -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card db-card h-100">
+                <div class="card-body">
+                    <div class="section-title"><i class="bi bi-building"></i> Effectifs par Classe</div>
+                    <div style="max-height: 220px; overflow-y: auto; padding-right: 4px;">
+                        {% set max_eff = classes_stats[0].nb if classes_stats else 1 %}
+                        {% for cs in classes_stats %}
+                        <div class="bar-item mb-2">
+                            <div class="label" style="width: 50px;">{{ cs.nom }}</div>
+                            <div class="bar-wrap">
+                                <div class="bar-fill" style="width: {{ (cs.nb / max_eff * 100) if max_eff > 0 else 0 }}%; background: linear-gradient(90deg, #3b82f6, #8b5cf6);"></div>
+                            </div>
+                            <div class="bar-val text-primary" style="width: 30px;">{{ cs.nb }}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Paiements par Mois -->
         <div class="col-lg-4 col-md-12">
-            <div class="card db-card">
+            <div class="card db-card h-100">
                 <div class="card-body">
                     <div class="section-title"><i class="bi bi-bar-chart"></i> Paiements par Mois</div>
-                    {% set max_pm = paiements_mois.values()|max if paiements_mois.values()|list|length > 0 else 1 %}
-                    {% for m in mois_scolaires %}
-                    <div class="bar-item">
-                        <div class="label" style="width:70px;">{{ m }}</div>
-                        <div class="bar-wrap">
-                            <div class="bar-fill" style="width:{{ (paiements_mois.get(m,0)/max_pm*100) if max_pm>0 else 0 }}%; background: linear-gradient(90deg, #198754, #20c997);"></div>
+                    <div style="max-height: 220px; overflow-y: auto; padding-right: 4px;">
+                        {% set max_pm = paiements_mois.values()|max if paiements_mois.values()|list|length > 0 else 1 %}
+                        {% for m in mois_scolaires %}
+                        <div class="bar-item mb-2">
+                            <div class="label" style="width: 70px;">{{ m }}</div>
+                            <div class="bar-wrap">
+                                <div class="bar-fill" style="width: {{ (paiements_mois.get(m, 0) / max_pm * 100) if max_pm > 0 else 0 }}%; background: linear-gradient(90deg, #10b981, #059669);"></div>
+                            </div>
+                            <div class="bar-val text-success">{{ "{:,.0f}".format(paiements_mois.get(m, 0)).replace(',', ' ') }}</div>
                         </div>
-                        <div class="bar-val" style="color:#198754;">{{ "{:,.0f}".format(paiements_mois.get(m,0)).replace(',',' ') }}</div>
+                        {% endfor %}
                     </div>
-                    {% endfor %}
                 </div>
             </div>
         </div>
@@ -255,45 +198,41 @@
 
 <!-- ===== TAB 3 : PAIEMENTS ===== -->
 <div class="tab-pane" id="tab-paiements">
-    <div class="row g-2 mb-2">
-        <div class="col-12">
-            <div class="card db-card">
-                <div class="card-body p-2">
-                    <div class="section-title px-2"><i class="bi bi-clock-history"></i> {{ recent_paiements|length }} Derniers Paiements</div>
-                    <div style="max-height:320px;overflow:auto;">
-                        <table class="table table-sm mb-0" style="font-size:0.65rem;">
-                            <thead style="background:#f8f9fa; position:sticky; top:0;">
-                                <tr>
-                                    <th class="ps-2">Date</th>
-                                    <th>Élève</th>
-                                    <th>Classe</th>
-                                    <th>Mois</th>
-                                    <th class="text-end">Montant</th>
-                                    <th class="text-end pe-2">Caissier</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for p in recent_paiements %}
-                                <tr>
-                                    <td class="ps-2">{{ p.date_paiement.strftime('%d/%m/%Y') if p.date_paiement else '-' }}</td>
-                                    <td>
-                                        <a href="{{ url_for('eleve_fiche', id=p.eleve_id) }}" class="text-decoration-none fw-medium">{{ p.eleve.prenom }} {{ p.eleve.nom }}</a>
-                                    </td>
-                                    <td>{{ p.eleve.classe.nom if p.eleve.classe else '-' }}</td>
-                                    <td><span class="badge bg-light text-dark border" style="font-size:0.55rem;">{{ p.type_paiement }}</span></td>
-                                    <td class="text-end fw-bold text-success">{{ "{:,.0f}".format(p.montant).replace(',',' ') }}</td>
-                                    <td class="text-end pe-2 text-muted">{{ p.caissier }}</td>
-                                </tr>
-                                {% else %}
-                                <tr><td colspan="6" class="text-center py-3 text-muted">Aucun paiement pour l'instant</td></tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="text-end mt-1">
-                        <a href="{{ url_for('finances_liste') }}" class="btn btn-outline-primary btn-sm py-0">Voir tous les paiements <i class="bi bi-arrow-right"></i></a>
-                    </div>
-                </div>
+    <div class="card db-card">
+        <div class="card-body p-3">
+            <div class="section-title px-1 mb-3"><i class="bi bi-clock-history"></i> {{ recent_paiements|length }} Derniers Paiements</div>
+            <div class="table-responsive-stack" style="max-height: 320px; overflow-y: auto;">
+                <table class="table table-sm mb-0">
+                    <thead>
+                        <tr>
+                            <th class="ps-3">Date</th>
+                            <th>Élève</th>
+                            <th>Classe</th>
+                            <th>Période / Type</th>
+                            <th class="text-end">Montant</th>
+                            <th class="text-end pe-3">Caissier</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in recent_paiements %}
+                        <tr>
+                            <td class="ps-3 text-muted">{{ p.date_paiement.strftime('%d/%m/%Y') if p.date_paiement else '-' }}</td>
+                            <td>
+                                <a href="{{ url_for('eleve_fiche', id=p.eleve_id) }}" class="text-decoration-none fw-bold text-dark hover-primary">{{ p.eleve.prenom }} {{ p.eleve.nom }}</a>
+                            </td>
+                            <td><span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-20">{{ p.eleve.classe.nom if p.eleve.classe else '-' }}</span></td>
+                            <td><span class="badge bg-light text-dark border" style="font-size:0.6rem;">{{ p.type_paiement }}</span></td>
+                            <td class="text-end fw-bold text-success">{{ "{:,.0f}".format(p.montant).replace(',', ' ') }} F</td>
+                            <td class="text-end pe-3 text-muted" style="font-size: 0.65rem;">{{ p.caissier }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="6" class="text-center py-4 text-muted"><i class="bi bi-info-circle me-1"></i> Aucun paiement enregistré pour cette année</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="text-end mt-3">
+                <a href="{{ url_for('finances_liste') }}" class="btn btn-outline-primary btn-sm px-3 rounded-pill"><i class="bi bi-list-ul me-1"></i> Historique complet</a>
             </div>
         </div>
     </div>
@@ -301,49 +240,49 @@
 
 <!-- ===== TAB 4 : ACTIONS ===== -->
 <div class="tab-pane" id="tab-actions">
-    <div class="row g-2 mb-2">
-        <div class="col-lg-6">
-            <div class="card db-card">
+    <div class="row g-3">
+        <div class="col-lg-6 animate-in" style="animation-delay: 0.05s;">
+            <div class="card db-card h-100">
                 <div class="card-body">
                     <div class="section-title"><i class="bi bi-people"></i> Élèves & Classes</div>
                     <div class="d-grid gap-2">
-                        <a href="{{ url_for('eleve_ajouter') }}" class="btn btn-primary btn-sm"><i class="bi bi-person-plus me-1"></i> Inscrire un élève</a>
-                        <a href="{{ url_for('eleves') }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-people me-1"></i> Liste des élèves</a>
-                        <a href="{{ url_for('classes') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-building me-1"></i> Gérer les classes</a>
+                        <a href="{{ url_for('eleve_ajouter') }}" class="btn btn-primary btn-sm text-start py-2"><i class="bi bi-person-plus-fill me-2"></i> Inscrire un nouvel élève</a>
+                        <a href="{{ url_for('eleves') }}" class="btn btn-outline-primary btn-sm text-start py-2"><i class="bi bi-people-fill me-2"></i> Liste & Filtres des élèves</a>
+                        <a href="{{ url_for('classes') }}" class="btn btn-outline-secondary btn-sm text-start py-2"><i class="bi bi-building-fill me-2"></i> Configuration des classes</a>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-lg-6">
-            <div class="card db-card">
+        <div class="col-lg-6 animate-in" style="animation-delay: 0.1s;">
+            <div class="card db-card h-100">
                 <div class="card-body">
-                    <div class="section-title"><i class="bi bi-cash"></i> Finances</div>
+                    <div class="section-title"><i class="bi bi-cash"></i> Gestion Financière</div>
                     <div class="d-grid gap-2">
-                        <a href="{{ url_for('paiement_ajouter') }}" class="btn btn-warning btn-sm"><i class="bi bi-cash me-1"></i> Nouveau Paiement</a>
-                        <a href="{{ url_for('finances_hub') }}" class="btn btn-success btn-sm"><i class="bi bi-cash-stack me-1"></i> Gestion Financière</a>
-                        <a href="{{ url_for('impayes') }}" class="btn btn-danger btn-sm"><i class="bi bi-exclamation-triangle me-1"></i> Voir les Impayés</a>
+                        <a href="{{ url_for('paiement_ajouter') }}" class="btn btn-warning btn-sm text-dark text-start py-2"><i class="bi bi-plus-circle-fill me-2"></i> Enregistrer un encaissement</a>
+                        <a href="{{ url_for('finances_hub') }}" class="btn btn-success btn-sm text-start py-2"><i class="bi bi-wallet2 me-2"></i> Portail financier global</a>
+                        <a href="{{ url_for('impayes') }}" class="btn btn-danger btn-sm text-start py-2"><i class="bi bi-exclamation-triangle-fill me-2"></i> Suivi des élèves débiteurs</a>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-lg-6">
-            <div class="card db-card">
+        <div class="col-lg-6 animate-in" style="animation-delay: 0.15s;">
+            <div class="card db-card h-100">
                 <div class="card-body">
-                    <div class="section-title"><i class="bi bi-pencil-square"></i> Notes & Bulletins</div>
+                    <div class="section-title"><i class="bi bi-pencil-square"></i> Notes & Pédagogie</div>
                     <div class="d-grid gap-2">
-                        <a href="{{ url_for('notes') }}" class="btn btn-success btn-sm"><i class="bi bi-pencil-square me-1"></i> Saisir les notes</a>
-                        <a href="{{ url_for('bulletins') }}" class="btn btn-info btn-sm text-white"><i class="bi bi-file-text me-1"></i> Bulletins</a>
+                        <a href="{{ url_for('notes') }}" class="btn btn-success btn-sm text-start py-2"><i class="bi bi-journal-plus me-2"></i> Saisir ou modifier les notes</a>
+                        <a href="{{ url_for('bulletins') }}" class="btn btn-info btn-sm text-white text-start py-2"><i class="bi bi-file-text-fill me-2"></i> Calculer & Imprimer les bulletins</a>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-lg-6">
-            <div class="card db-card">
+        <div class="col-lg-6 animate-in" style="animation-delay: 0.2s;">
+            <div class="card db-card h-100">
                 <div class="card-body">
-                    <div class="section-title"><i class="bi bi-printer"></i> Documents & Personnel</div>
+                    <div class="section-title"><i class="bi bi-printer"></i> Services Scolaires</div>
                     <div class="d-grid gap-2">
-                        <a href="{{ url_for('documents') }}" class="btn btn-secondary btn-sm"><i class="bi bi-printer me-1"></i> Documents</a>
-                        <a href="{{ url_for('personnel') }}" class="btn btn-outline-dark btn-sm"><i class="bi bi-person-badge me-1"></i> Personnel</a>
+                        <a href="{{ url_for('documents') }}" class="btn btn-secondary btn-sm text-start py-2"><i class="bi bi-file-earmark-pdf-fill me-2"></i> Générer un certificat ou document officiel</a>
+                        <a href="{{ url_for('personnel') }}" class="btn btn-outline-dark btn-sm text-start py-2"><i class="bi bi-person-badge-fill me-2"></i> Fiches & Salaires du personnel</a>
                     </div>
                 </div>
             </div>
@@ -358,22 +297,26 @@
     var panes = document.querySelectorAll('.tab-pane');
     
     function setActiveTab(tab) {
-        var color = tab.getAttribute('data-color') || '#2E7D32';
         tabs.forEach(function(t) {
             t.classList.remove('active');
-            t.style.background = 'transparent';
-            t.style.color = '#666';
-            t.style.boxShadow = 'none';
         });
         panes.forEach(function(p) { p.classList.remove('active'); });
         
         tab.classList.add('active');
-        tab.style.background = '#fff';
-        tab.style.color = color;
-        tab.style.boxShadow = '0 2px 8px rgba(0,0,0,0.12)';
         
         var target = document.getElementById('tab-' + tab.getAttribute('data-tab'));
-        if (target) target.classList.add('active');
+        if (target) {
+            target.classList.add('active');
+            // Trigger animation on graph progress bars
+            var progressBars = target.querySelectorAll('.bar-fill');
+            progressBars.forEach(function(bar) {
+                var w = bar.style.width;
+                bar.style.width = '0';
+                setTimeout(function() {
+                    bar.style.width = w;
+                }, 50);
+            });
+        }
         
         try { localStorage.setItem('dashboardTab', tab.getAttribute('data-tab')); } catch(e) {}
     }
@@ -390,6 +333,35 @@
             if (found) setActiveTab(found);
         }
     } catch(e) {}
+
+    // CountUp Animation JS pour les statistiques
+    const counters = document.querySelectorAll('.counter-value');
+    counters.forEach(counter => {
+        const target = parseFloat(counter.getAttribute('data-target') || 0);
+        const format = counter.getAttribute('data-format');
+        const duration = 1200; // ms
+        const stepTime = 15; // ms
+        const steps = duration / stepTime;
+        const stepVal = target / steps;
+        let current = 0;
+        let count = 0;
+        
+        const timer = setInterval(() => {
+            current += stepVal;
+            count++;
+            
+            if (count >= steps) {
+                clearInterval(timer);
+                current = target;
+            }
+            
+            if (format === 'currency') {
+                counter.innerText = Math.round(current).toLocaleString('fr-FR') + ' F';
+            } else {
+                counter.innerText = Math.round(current);
+            }
+        }, stepTime);
+    });
 })();
 </script>
 

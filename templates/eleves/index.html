@@ -1,82 +1,75 @@
 {% extends "base.html" %}
 {% block title %}Eleves - {{ ecole.nom }}{% endblock %}
+
 {% block extra_css %}
 <style>
-    /* Override style.css pour le tableau eleves */
-    #table-eleves.table td, #table-eleves.table th {
-        padding: 3px 6px !important;
-        border: 1px solid #ddd !important;
-        white-space: nowrap;
-        font-size: 0.7rem;
-        vertical-align: middle;
+    /* Custom spacing and overrides for search card and modal */
+    .filter-card {
+        border-radius: var(--radius-md);
+        border: 1px solid var(--neutral-200);
+        box-shadow: var(--shadow-sm);
     }
-    #table-eleves.table thead th {
-        background: #2E7D32 !important;
-        color: #fff !important;
-        font-size: 0.62rem;
-        padding: 5px 6px !important;
+    #importModal.show-modal {
+        animation: fadeIn 0.3s ease;
     }
-    /* Colonnes larges avec troncature */
-    #table-eleves .td-long {
-        max-width: 140px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+    #importModal .modal-content {
+        animation: fadeInUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        border-radius: var(--radius-lg);
+        border: 1px solid rgba(255,255,255,0.25);
     }
-    /* Colonnes etroites */
-    #table-eleves .td-check { width: 28px; }
-    #table-eleves .td-code { width: 70px; text-align: center; }
-    #table-eleves .td-sexe { width: 40px; text-align: center; }
-    #table-eleves .td-classe { width: 80px; text-align: center; }
-    #table-eleves .td-sit { width: 70px; text-align: center; }
-    #table-eleves .td-actions { width: 110px; text-align: center; }
 </style>
 {% endblock %}
+
 {% block content %}
 
-<div class="d-flex justify-content-between align-items-center mb-2">
-    <div class="section-header"><i class="bi bi-people-fill me-1"></i> Gestion des Eleves</div>
-    <div>
-        <button id="btnSupprimerBulk" class="btn btn-danger d-none" onclick="supprimerSelection()">
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2 animate-in">
+    <div class="section-header mb-0"><i class="bi bi-people-fill me-1"></i> Gestion des Eleves</div>
+    <div class="d-flex flex-wrap gap-1">
+        <button id="btnSupprimerBulk" class="btn btn-sm btn-danger d-none animate-in" onclick="supprimerSelection()">
             <i class="bi bi-trash"></i> Supprimer la selection
         </button>
-        <button class="btn btn-sm btn-outline-dark ms-1" onclick="imprimerTableau()"><i class="bi bi-printer"></i> Imprimer</button>
-        <a href="{{ url_for('eleve_ajouter') }}" class="btn btn-sm btn-primary ms-1"><i class="bi bi-person-plus"></i> Inscrire</a>
-        <button class="btn btn-sm btn-outline-success ms-1" onclick="document.getElementById('importModal').classList.remove('d-none')"><i class="bi bi-file-earmark-excel"></i> Importer Excel</button>
-        <a href="{{ url_for('eleves_modele') }}" class="btn btn-sm btn-outline-secondary ms-1"><i class="bi bi-download"></i> Modele</a>
+        <button class="btn btn-sm btn-outline-secondary" onclick="imprimerTableau()"><i class="bi bi-printer"></i> Imprimer</button>
+        <a href="{{ url_for('eleves_modele') }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-download"></i> Modèle Excel</a>
+        <button class="btn btn-sm btn-outline-success" onclick="ouvrirImportModal()"><i class="bi bi-file-earmark-excel"></i> Importer Excel</button>
+        <a href="{{ url_for('eleve_ajouter') }}" class="btn btn-sm btn-primary"><i class="bi bi-person-plus"></i> Inscrire</a>
     </div>
 </div>
 
 <!-- MODAL IMPORT EXCEL -->
-<div id="importModal" class="d-none position-fixed top-0 start-0 w-100 h-100 no-print" style="background:rgba(0,0,0,0.5);z-index:9999;display:flex;justify-content:center;align-items:center;">
-    <div class="bg-white rounded shadow-lg p-3" style="max-width:500px;width:90%;">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-            <h6 class="mb-0"><i class="bi bi-file-earmark-excel text-success"></i> Importer des eleves</h6>
-            <button class="btn btn-sm btn-outline-danger py-0 px-1" onclick="fermerImportModal()">&times;</button>
+<div id="importModal" class="d-none position-fixed top-0 start-0 w-100 h-100 no-print" style="background:rgba(15,23,42,0.6); backdrop-filter:blur(8px); z-index:9999; display:flex; justify-content:center; align-items:center;">
+    <div class="bg-white rounded-lg shadow-xl p-4 modal-content" style="max-width:520px; width:90%;">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0 text-gradient"><i class="bi bi-file-earmark-excel text-success me-1"></i> Importer des élèves</h5>
+            <button class="btn btn-sm btn-outline-danger py-0 px-2 fs-5" onclick="fermerImportModal()">&times;</button>
         </div>
         <form id="importForm" enctype="multipart/form-data" onsubmit="importerExcel(event)">
-            <div class="mb-2">
+            <div class="mb-3">
                 <label class="form-label small fw-bold">Fichier Excel (.xlsx)</label>
                 <input type="file" name="fichier_excel" id="importFileInput" class="form-control form-control-sm" accept=".xlsx,.xls" required>
             </div>
-            <small class="text-muted d-block mb-2" style="font-size:0.65rem;">
-                Colonnes : Prenom, Nom, Sexe, Classe, Tel, Date Naissance, Lieu Naissance, Tuteur, Adresse, Precedente Ecole, Date Entree, Observations<br>
-                <a href="{{ url_for('eleves_modele') }}">Telecharger le modele</a>
-            </small>
-            <div id="importStatus" class="d-none small mb-2"></div>
+            <div class="alert alert-info py-2 px-3 mb-3" style="font-size:0.68rem;">
+                <i class="bi bi-info-circle-fill"></i>
+                <div>
+                    <strong>Colonnes attendues :</strong> Prenom, Nom, Sexe, Classe, Tel, Date Naissance, Lieu Naissance, Tuteur, Adresse, Precedente Ecole, Date Entree, Observations.
+                </div>
+            </div>
+            <div id="importStatus" class="d-none small mb-3"></div>
             <div class="d-flex gap-2">
-                <button type="submit" id="btnImportSubmit" class="btn btn-success btn-sm flex-grow-1"><i class="bi bi-upload"></i> Importer</button>
+                <button type="submit" id="btnImportSubmit" class="btn btn-success btn-sm flex-grow-1"><i class="bi bi-upload"></i> Lancer l'importation</button>
                 <button type="button" class="btn btn-outline-secondary btn-sm" onclick="fermerImportModal()">Annuler</button>
             </div>
         </form>
     </div>
 </div>
 
-<div class="card shadow-sm mb-3">
-    <div class="card-body">
-        <form method="GET" class="row g-2">
-            <div class="col-md-4">
-                <input type="text" name="search" class="form-control form-control-sm" placeholder="Rechercher (prenom, nom, code)..." value="{{ filter_search }}">
+<div class="card filter-card mb-3 animate-in" style="animation-delay:0.05s;">
+    <div class="card-body py-2">
+        <form method="GET" class="row g-2 align-items-center">
+            <div class="col-md-5">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" name="search" class="form-control form-control-sm border-start-0" placeholder="Rechercher par prénom, nom, code matricule..." value="{{ filter_search }}">
+                </div>
             </div>
             <div class="col-md-3">
                 <select name="classe" class="form-select form-select-sm">
@@ -86,21 +79,34 @@
                     {% endfor %}
                 </select>
             </div>
-            <div class="col-md-2"><button type="submit" class="btn btn-outline-primary btn-sm w-100"><i class="bi bi-search"></i> Filtrer</button></div>
-            <div class="col-md-3 text-end"><span class="badge bg-success fs-6">{{ eleves|length }} eleves</span></div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary btn-sm w-100 py-1.5"><i class="bi bi-filter"></i> Filtrer</button>
+            </div>
+            <div class="col-md-2 text-end">
+                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2 fs-7 fw-bold">{{ eleves|length }} élèves</span>
+            </div>
         </form>
     </div>
 </div>
 
-<form id="formBulk" method="POST" action="{{ url_for('eleves_supprimer_bulk') }}">
-<div style="max-height:65vh;overflow:auto;">
-    <table class="table table-sm table-bordered align-middle bg-white" id="table-eleves">
+<form id="formBulk" method="POST" action="{{ url_for('eleves_supprimer_bulk') }}" class="animate-in" style="animation-delay:0.1s;">
+<div class="table-responsive-stack" style="max-height:65vh; overflow-y:auto; border-radius:var(--radius-md); box-shadow:var(--shadow-sm);">
+    <table class="table table-sm table-hover align-middle bg-white mb-0" id="table-eleves">
         <thead>
             <tr>
                 <th style="width:32px;"><input class="form-check-input" type="checkbox" id="selectAll" onchange="toggleAll(this)"></th>
-                <th>CODE</th><th>PRENOM</th><th>NOM</th><th>SEXE</th><th>CLASSE</th><th>TEL</th>
-                <th>DATE NAISS.</th><th>LIEU NAISS.</th><th>TUTEUR</th><th>ADRESSE</th>
-                <th>PREC. ECOLE</th><th>DATE ENTREE</th><th>OBSERVATIONS</th><th>SITUATION</th><th>Actions</th>
+                <th>Code</th>
+                <th>Prénom</th>
+                <th>Nom</th>
+                <th>Sexe</th>
+                <th>Classe</th>
+                <th>Téléphone</th>
+                <th>Date naiss.</th>
+                <th>Lieu naiss.</th>
+                <th>Tuteur</th>
+                <th>Adresse</th>
+                <th>Situation</th>
+                <th class="text-center">Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -111,33 +117,34 @@
                 </td>
                 <td class="td-code"><code>{{ e.code }}</code></td>
                 <td class="td-long" title="{{ e.prenom }}">{{ e.prenom }}</td>
-                <td class="td-long fw-bold" title="{{ e.nom }}">{{ e.nom }}</td>
+                <td class="td-long fw-bold text-dark" title="{{ e.nom }}">{{ e.nom }}</td>
                 <td class="td-sexe">
-                    {% if e.sexe == 'M' %}<span class="badge bg-info">M</span>
-                    {% else %}<span class="badge bg-danger">F</span>{% endif %}
+                    {% if e.sexe == 'M' %}<span class="badge bg-primary bg-opacity-10 text-primary">M</span>
+                    {% else %}<span class="badge bg-danger bg-opacity-10 text-danger">F</span>{% endif %}
                 </td>
-                <td class="td-classe"><span class="badge bg-secondary">{{ e.classe.nom if e.classe else '-' }}</span></td>
-                <td class="td-long" title="{{ e.tel or '' }}">{{ e.tel or '-' }}</td>
-                <td class="td-long" title="{{ e.date_naissance or '' }}">{{ (e.date_naissance or '-')[:10] }}</td>
-                <td class="td-long" title="{{ e.lieu_naissance or '' }}">{{ e.lieu_naissance or '-' }}</td>
-                <td class="td-long" title="{{ e.tuteur or '' }}">{{ e.tuteur or '-' }}</td>
-                <td class="td-long" title="{{ e.adresse or '' }}">{{ e.adresse or '-' }}</td>
-                <td class="td-long" title="{{ e.precedente_ecole or '' }}">{{ e.precedente_ecole or '-' }}</td>
-                <td class="td-long" title="{{ e.date_entree or '' }}">{{ (e.date_entree or '-')[:10] }}</td>
-                <td class="td-long" title="{{ e.observations }}" data-full="{{ e.observations or '-' }}">{{ (e.observations or '-')[:20] }}{% if e.observations and e.observations|length > 20 %}...{% endif %}</td>
+                <td class="td-classe"><span class="badge bg-secondary bg-opacity-10 text-secondary">{{ e.classe.nom if e.classe else '-' }}</span></td>
+                <td class="td-long text-muted" title="{{ e.tel or '' }}">{{ e.tel or '-' }}</td>
+                <td class="td-long text-muted" title="{{ e.date_naissance or '' }}">{{ (e.date_naissance or '-')[:10] }}</td>
+                <td class="td-long text-muted" title="{{ e.lieu_naissance or '' }}">{{ e.lieu_naissance or '-' }}</td>
+                <td class="td-long text-muted" title="{{ e.tuteur or '' }}">{{ e.tuteur or '-' }}</td>
+                <td class="td-long text-muted" title="{{ e.adresse or '' }}">{{ e.adresse or '-' }}</td>
                 <td class="td-sit">
-                    {% if e.situation == 'Inscrit' %}<span class="badge bg-success">{{ e.situation }}</span>
-                    {% else %}<span class="badge bg-warning">{{ e.situation }}</span>{% endif %}
+                    {% if e.situation == 'Inscrit' %}<span class="badge bg-success bg-opacity-15 text-success">{{ e.situation }}</span>
+                    {% else %}<span class="badge bg-warning bg-opacity-15 text-warning">{{ e.situation }}</span>{% endif %}
                 </td>
                 <td class="td-actions">
                     <div class="btn-group btn-group-sm">
-                        <a href="{{ url_for('eleve_fiche', id=e.id) }}" class="btn btn-outline-info" title="Fiche"><i class="bi bi-eye"></i></a>
-                        <a href="{{ url_for('eleve_modifier', id=e.id) }}" class="btn btn-outline-warning" title="Modifier"><i class="bi bi-pencil"></i></a>
-                        <form method="POST" action="{{ url_for('eleve_supprimer', id=e.id) }}" onsubmit="return confirm('Supprimer cet eleve ? Toutes ses donnees (notes, paiements) seront supprimees.')" class="d-inline">
-                            <button class="btn btn-outline-danger" title="Supprimer"><i class="bi bi-trash"></i></button>
+                        <a href="{{ url_for('eleve_fiche', id=e.id) }}" class="btn btn-outline-info py-1 px-2" title="Fiche élève"><i class="bi bi-eye"></i></a>
+                        <a href="{{ url_for('eleve_modifier', id=e.id) }}" class="btn btn-outline-warning py-1 px-2" title="Modifier"><i class="bi bi-pencil"></i></a>
+                        <form method="POST" action="{{ url_for('eleve_supprimer', id=e.id) }}" onsubmit="return confirm('Supprimer cet élève ? Toutes ses données (notes, paiements) seront supprimées définitivement.')" class="d-inline">
+                            <button class="btn btn-outline-danger py-1 px-2" title="Supprimer"><i class="bi bi-trash"></i></button>
                         </form>
                     </div>
                 </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="13" class="text-center py-4 text-muted"><i class="bi bi-info-circle me-1"></i> Aucun élève ne correspond à la recherche</td>
             </tr>
             {% endfor %}
         </tbody>
@@ -153,109 +160,33 @@ function toggleAll(source) {
 function updateBouton() {
     var checked = document.querySelectorAll('.eleve-check:checked').length;
     var btn = document.getElementById('btnSupprimerBulk');
-    if (checked > 0) { btn.classList.remove('d-none'); btn.innerHTML = '<i class="bi bi-trash"></i> Supprimer (' + checked + ')'; }
+    if (checked > 0) { 
+        btn.classList.remove('d-none'); 
+        btn.innerHTML = '<i class="bi bi-trash"></i> Supprimer (' + checked + ')'; 
+    }
     else { btn.classList.add('d-none'); }
 }
 function supprimerSelection() {
     var checked = document.querySelectorAll('.eleve-check:checked').length;
     if (checked === 0) return;
-    if (!confirm('Supprimer ' + checked + ' eleve(s) ?\n\nATTENTION : Toutes leurs donnees seront definitivement supprimees.')) return;
+    if (!confirm('Supprimer ' + checked + ' élève(s) ?\n\nATTENTION : Toutes leurs notes et paiements seront définitivement supprimés.')) return;
     document.getElementById('formBulk').submit();
 }
 
-function imprimerTableau() {
-    // Recuperer les donnees du tableau original
-    var origTable = document.getElementById('table-eleves');
-    var rows = origTable.querySelectorAll('tbody tr');
-    
-    // Construire les lignes du tableau d'impression avec TOUTES les donnees
-    var tbodyHTML = '';
-    rows.forEach(function(row, idx) {
-        var cells = row.querySelectorAll('td');
-        if (cells.length < 15) return;
-        // Extraire le texte de chaque cellule (ignorer col 0=checkbox et col 15=actions)
-        var code = cells[1].textContent.trim();
-        var prenom = cells[2].getAttribute('title') || cells[2].textContent.trim();
-        var nom = cells[3].getAttribute('title') || cells[3].textContent.trim();
-        var sexe = cells[4].textContent.trim();
-        var classe = cells[5].textContent.trim();
-        var tel = cells[6].getAttribute('title') || cells[6].textContent.trim();
-        var dateNaiss = cells[7].getAttribute('title') || cells[7].textContent.trim();
-        var lieuNaiss = cells[8].getAttribute('title') || cells[8].textContent.trim();
-        var tuteur = cells[9].getAttribute('title') || cells[9].textContent.trim();
-        var adresse = cells[10].getAttribute('title') || cells[10].textContent.trim();
-        var precEcole = cells[11].getAttribute('title') || cells[11].textContent.trim();
-        var dateEntree = cells[12].getAttribute('title') || cells[12].textContent.trim();
-        var observations = cells[13].getAttribute('data-full') || cells[13].getAttribute('title') || cells[13].textContent.trim();
-        var situation = cells[14].textContent.trim();
-        
-        var bgColor = idx % 2 === 0 ? '#ffffff' : '#f2f2f2';
-        tbodyHTML += '<tr style="background:' + bgColor + ';">' +
-            '<td style="text-align:center;">' + (idx + 1) + '</td>' +
-            '<td style="text-align:center;">' + code + '</td>' +
-            '<td>' + prenom + '</td>' +
-            '<td style="font-weight:bold;">' + nom + '</td>' +
-            '<td style="text-align:center;">' + sexe + '</td>' +
-            '<td style="text-align:center;">' + classe + '</td>' +
-            '<td>' + tel + '</td>' +
-            '<td style="text-align:center;">' + dateNaiss + '</td>' +
-            '<td>' + lieuNaiss + '</td>' +
-            '<td>' + tuteur + '</td>' +
-            '<td>' + adresse + '</td>' +
-            '<td>' + precEcole + '</td>' +
-            '<td style="text-align:center;">' + dateEntree + '</td>' +
-            '<td>' + observations + '</td>' +
-            '<td style="text-align:center;">' + situation + '</td>' +
-            '</tr>';
-    });
-    
-    var theadHTML = '<tr>' +
-        '<th>N°</th><th>CODE</th><th>PRENOM</th><th>NOM</th><th>SEXE</th>' +
-        '<th>CLASSE</th><th>TEL</th><th>DATE NAISS.</th><th>LIEU NAISS.</th>' +
-        '<th>TUTEUR</th><th>ADRESSE</th><th>PREC. ECOLE</th><th>DATE ENTREE</th>' +
-        '<th>OBSERVATIONS</th><th>SITUATION</th>' +
-        '</tr>';
-    
-    var dateImpr = new Date().toLocaleDateString('fr-FR');
-    
-    var htmlContent = '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
-        '<title>Liste des eleves - {{ ecole.nom }}</title>' +
-        '<style>' +
-        '@page { size: A4 landscape; margin: 8mm 6mm; }' +
-        'body { font-family: Arial, Helvetica, sans-serif; margin: 0; padding: 0; color: #222; }' +
-        '.header { text-align: center; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 2px solid #1e3a8a; }' +
-        '.header h2 { margin: 0 0 2px 0; font-size: 18px; color: #1e3a8a; }' +
-        '.header p { margin: 0; font-size: 12px; color: #555; }' +
-        'table { border-collapse: collapse; width: 100%; font-size: 10px; }' +
-        'thead { display: table-header-group; }' +
-        'thead th { background: #1e3a8a; color: #fff; padding: 5px 4px; border: 1px solid #1e3a8a; ' +
-        '  font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; text-align: left; white-space: nowrap; }' +
-        'tbody td { padding: 4px 4px; border: 1px solid #ccc; font-size: 10px; ' +
-        '  white-space: normal; word-break: break-word; vertical-align: top; line-height: 1.3; }' +
-        'tbody tr:nth-child(even) { background: #f7f7f7; }' +
-        '.footer { text-align: right; font-size: 9px; color: #888; margin-top: 6px; }' +
-        '</style>' +
-        '</head><body>' +
-        '<div class="header">' +
-        '<h2>{{ ecole.nom }}</h2>' +
-        '<p>Liste des eleves inscrits &mdash; ' + rows.length + ' eleve(s) &mdash; Imprime le ' + dateImpr + '</p>' +
-        '</div>' +
-        '<table><thead>' + theadHTML + '</thead><tbody>' + tbodyHTML + '</tbody></table>' +
-        '<div class="footer">Barham School &mdash; ' + dateImpr + '</div>' +
-        '</body></html>';
-    
-    var w = window.open('', '_blank', 'width=1200,height=800');
-    w.document.write(htmlContent);
-    w.document.close();
-    setTimeout(function() { w.print(); }, 600);
+function ouvrirImportModal() {
+    var modal = document.getElementById('importModal');
+    modal.classList.remove('d-none');
+    modal.classList.add('show-modal');
 }
 
 function fermerImportModal() {
-    document.getElementById('importModal').classList.add('d-none');
+    var modal = document.getElementById('importModal');
+    modal.classList.add('d-none');
+    modal.classList.remove('show-modal');
     document.getElementById('importFileInput').value = '';
     document.getElementById('importStatus').classList.add('d-none');
     document.getElementById('btnImportSubmit').disabled = false;
-    document.getElementById('btnImportSubmit').innerHTML = '<i class="bi bi-upload"></i> Importer';
+    document.getElementById('btnImportSubmit').innerHTML = '<i class="bi bi-upload"></i> Lancer l\'importation';
 }
 
 function importerExcel(e) {
@@ -281,31 +212,106 @@ function importerExcel(e) {
     .then(function(resp) { return resp.json(); })
     .then(function(result) {
         if (result.success) {
-            statusDiv.className = 'alert alert-success small mb-2 py-1';
+            statusDiv.className = 'alert alert-success small mb-2 py-1.5';
             statusDiv.innerHTML = '<i class="bi bi-check-circle"></i> ' + result.message +
-                (result.ignores > 0 ? ' (' + result.ignores + ' doublons ignores)' : '');
+                (result.ignores > 0 ? ' (' + result.ignores + ' doublons ignorés)' : '');
             statusDiv.classList.remove('d-none');
-            btn.innerHTML = '<i class="bi bi-check-lg"></i> Termine';
-            // Fermer et recharger apres 1.5s
+            btn.innerHTML = '<i class="bi bi-check-lg"></i> Terminé';
             setTimeout(function() {
                 fermerImportModal();
                 window.location.reload();
             }, 1500);
         } else {
-            statusDiv.className = 'alert alert-danger small mb-2 py-1';
+            statusDiv.className = 'alert alert-danger small mb-2 py-1.5';
             statusDiv.innerHTML = '<i class="bi bi-exclamation-triangle"></i> ' + (result.message || 'Erreur inconnue');
             statusDiv.classList.remove('d-none');
             btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-upload"></i> Reessayer';
+            btn.innerHTML = '<i class="bi bi-upload"></i> Réessayer';
         }
     })
     .catch(function(err) {
-        statusDiv.className = 'alert alert-danger small mb-2 py-1';
-        statusDiv.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Erreur reseau : ' + err.message;
+        statusDiv.className = 'alert alert-danger small mb-2 py-1.5';
+        statusDiv.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Erreur réseau : ' + err.message;
         statusDiv.classList.remove('d-none');
         btn.disabled = false;
-        btn.innerHTML = '<i class="bi bi-upload"></i> Reessayer';
+        btn.innerHTML = '<i class="bi bi-upload"></i> Réessayer';
     });
+}
+
+function imprimerTableau() {
+    var origTable = document.getElementById('table-eleves');
+    var rows = origTable.querySelectorAll('tbody tr');
+    
+    var tbodyHTML = '';
+    var count = 0;
+    rows.forEach(function(row, idx) {
+        var cells = row.querySelectorAll('td');
+        if (cells.length < 13) return; // Skip if no real data
+        count++;
+        var code = cells[1].textContent.trim();
+        var prenom = cells[2].getAttribute('title') || cells[2].textContent.trim();
+        var nom = cells[3].getAttribute('title') || cells[3].textContent.trim();
+        var sexe = cells[4].textContent.trim();
+        var classe = cells[5].textContent.trim();
+        var tel = cells[6].getAttribute('title') || cells[6].textContent.trim();
+        var dateNaiss = cells[7].getAttribute('title') || cells[7].textContent.trim();
+        var lieuNaiss = cells[8].getAttribute('title') || cells[8].textContent.trim();
+        var tuteur = cells[9].getAttribute('title') || cells[9].textContent.trim();
+        var adresse = cells[10].getAttribute('title') || cells[10].textContent.trim();
+        var situation = cells[11].textContent.trim();
+        
+        var bgColor = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
+        tbodyHTML += '<tr style="background:' + bgColor + ';">' +
+            '<td style="text-align:center; padding: 5px;">' + count + '</td>' +
+            '<td style="text-align:center; font-family: monospace;">' + code + '</td>' +
+            '<td>' + prenom + '</td>' +
+            '<td style="font-weight:bold;">' + nom + '</td>' +
+            '<td style="text-align:center;">' + sexe + '</td>' +
+            '<td style="text-align:center;">' + classe + '</td>' +
+            '<td>' + tel + '</td>' +
+            '<td style="text-align:center;">' + dateNaiss + '</td>' +
+            '<td>' + lieuNaiss + '</td>' +
+            '<td>' + tuteur + '</td>' +
+            '<td>' + adresse + '</td>' +
+            '<td style="text-align:center;">' + situation + '</td>' +
+            '</tr>';
+    });
+    
+    var theadHTML = '<tr>' +
+        '<th style="width: 30px;">N°</th><th>CODE</th><th>PRENOM</th><th>NOM</th><th>SEXE</th>' +
+        '<th>CLASSE</th><th>TEL</th><th>DATE NAISS.</th><th>LIEU NAISS.</th>' +
+        '<th>TUTEUR</th><th>ADRESSE</th><th>SITUATION</th>' +
+        '</tr>';
+    
+    var dateImpr = new Date().toLocaleDateString('fr-FR');
+    
+    var htmlContent = '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
+        '<title>Liste des élèves - {{ ecole.nom }}</title>' +
+        '<style>' +
+        '@page { size: A4 landscape; margin: 8mm 6mm; }' +
+        'body { font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 0; color: #1e293b; }' +
+        '.header { text-align: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #4f46e5; }' +
+        '.header h2 { margin: 0 0 4px 0; font-size: 18px; color: #1e1b4b; }' +
+        '.header p { margin: 0; font-size: 11px; color: #64748b; }' +
+        'table { border-collapse: collapse; width: 100%; font-size: 9.5px; }' +
+        'thead th { background: #4f46e5; color: #fff; padding: 6px 5px; border: 1px solid #4f46e5; ' +
+        '  font-size: 9px; font-weight: 700; text-transform: uppercase; text-align: left; }' +
+        'tbody td { padding: 5px 5px; border: 1px solid #e2e8f0; vertical-align: middle; }' +
+        '.footer { text-align: right; font-size: 8.5px; color: #94a3b8; margin-top: 10px; }' +
+        '</style>' +
+        '</head><body>' +
+        '<div class="header">' +
+        '<h2>{{ ecole.nom }}</h2>' +
+        '<p>Liste des élèves inscrits &mdash; ' + count + ' élève(s) &mdash; Année Scolaire : {{ current_annee }} &mdash; Imprimé le ' + dateImpr + '</p>' +
+        '</div>' +
+        '<table><thead>' + theadHTML + '</thead><tbody>' + tbodyHTML + '</tbody></table>' +
+        '<div class="footer">Généré par Barham School App &mdash; ' + dateImpr + '</div>' +
+        '</body></html>';
+    
+    var w = window.open('', '_blank', 'width=1200,height=800');
+    w.document.write(htmlContent);
+    w.document.close();
+    setTimeout(function() { w.print(); }, 600);
 }
 </script>
 {% endblock %}

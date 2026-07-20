@@ -1,49 +1,69 @@
 {% extends "base.html" %}
 {% block title %}Connexion - Barham School{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Adjust page layout when on login page to hide sidebar defaults and footer if necessary */
+    body {
+        overflow: hidden !important;
+    }
+    .app-main {
+        background: transparent !important;
+    }
+    .container-fluid {
+        padding: 0 !important;
+        overflow: hidden !important;
+        height: 100vh;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="row justify-content-center mt-3 mt-md-5">
-    <div class="col-11 col-sm-8 col-md-6 col-lg-4 col-xl-3">
-        <div class="card shadow-lg border-0">
-            <div class="card-header bg-primary text-white text-center py-3">
-                <h4 class="mb-0"><i class="bi bi-mortarboard-fill"></i> Barham School</h4>
-            </div>
-            <div class="card-body p-4">
-                <div class="text-center mb-3 d-flex gap-2 justify-content-center">
-                    <a href="{{ url_for('pricing') }}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
-                        <i class="bi bi-tag-fill me-1"></i> Tarifs
-                    </a>
-                    <a href="{{ url_for('tutoriel') }}" class="btn btn-outline-info btn-sm rounded-pill px-3">
-                        <i class="bi bi-play-circle me-1"></i> Comment ca marche ?
-                    </a>
-                </div>
-                <form method="POST">
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Identifiant</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-person"></i></span>
-                            <input type="text" name="username" class="form-control" placeholder="Identifiant" required autofocus>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Mot de passe</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-lock"></i></span>
-                            <input type="password" name="password" id="passwordInput" class="form-control" placeholder="Mot de passe" required>
-                            <button type="button" class="btn btn-outline-secondary" id="togglePasswordBtn">👁️</button>
-                        </div>
-                    </div>
-                    <button type="submit" class="btn btn-primary w-100 py-2"><i class="bi bi-box-arrow-in-right"></i> Se connecter</button>
-                </form>
-                <hr class="my-3">
-                <div class="text-center">
-                    <small class="text-muted">Pas encore de compte ?</small><br>
-                    <a href="{{ url_for('register') }}" class="btn btn-success btn-sm mt-1">
-                        <i class="bi bi-person-plus"></i> Creer un compte gratuit
-                    </a>
+<div class="login-page">
+    <div class="login-card">
+        <div class="login-icon">
+            <i class="bi bi-mortarboard-fill"></i>
+        </div>
+        <h4>Barham School</h4>
+        <p class="login-subtitle">Gestion d'Établissement Scolaire</p>
+        
+        <div class="login-links">
+            <a href="{{ url_for('pricing') }}">
+                <i class="bi bi-tag-fill me-1"></i> Tarifs
+            </a>
+            <a href="{{ url_for('tutoriel') }}">
+                <i class="bi bi-play-circle me-1"></i> Aide
+            </a>
+        </div>
+        
+        <form method="POST">
+            <div class="mb-3">
+                <label class="form-label fw-semibold text-white-50">Identifiant</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-person"></i></span>
+                    <input type="text" name="username" class="form-control text-white" placeholder="Saisir votre identifiant" required autofocus>
                 </div>
             </div>
-            <div class="card-footer text-center text-muted">
+            
+            <div class="mb-4">
+                <label class="form-label fw-semibold text-white-50">Mot de passe</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                    <input type="password" name="password" id="passwordInput" class="form-control text-white" placeholder="Saisir votre mot de passe" required>
+                    <button type="button" class="btn text-white-50" id="togglePasswordBtn">
+                        <i class="bi bi-eye" id="eyeIcon"></i>
+                    </button>
+                </div>
             </div>
+            
+            <button type="submit" class="btn btn-login"><i class="bi bi-box-arrow-in-right me-1"></i> Se connecter</button>
+        </form>
+        
+        <div class="login-footer">
+            <span class="text-white-50">Pas encore de compte ?</span><br>
+            <a href="{{ url_for('register') }}" class="btn btn-success btn-sm mt-2 px-3 py-1.5 rounded-pill text-white fw-bold">
+                <i class="bi bi-person-plus-fill me-1"></i> Créer un compte gratuit
+            </a>
         </div>
     </div>
 </div>
@@ -52,14 +72,15 @@
 document.addEventListener('DOMContentLoaded', function() {
     const toggleBtn = document.getElementById('togglePasswordBtn');
     const passwordInput = document.getElementById('passwordInput');
+    const eyeIcon = document.getElementById('eyeIcon');
     
     toggleBtn.addEventListener('click', function() {
         if (passwordInput.type === 'password') {
             passwordInput.type = 'text';
-            toggleBtn.textContent = '🙈';
+            eyeIcon.className = 'bi bi-eye-slash';
         } else {
             passwordInput.type = 'password';
-            toggleBtn.textContent = '👁️';
+            eyeIcon.className = 'bi bi-eye';
         }
     });
 });
