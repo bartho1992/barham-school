@@ -176,12 +176,15 @@ def eleve_fiche(id):
 @login_required
 def eleves_importer():
     """Importe des eleves depuis un fichier Excel"""
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     ecole_id = get_current_ecole_id()
     e = Ecole.query.get(ecole_id); annee = _annee_courante(e)
     classes = {c.nom.lower().strip(): c for c in Classe.query.filter_by(ecole_id=ecole_id).all()}
     
     f = request.files.get('fichier_excel')
     if not f or f.filename == '':
+        if is_ajax:
+            return jsonify({'success': False, 'message': 'Aucun fichier selectionne'})
         flash('Aucun fichier selectionne', 'danger')
         return redirect(url_for('eleves'))
     
@@ -189,6 +192,8 @@ def eleves_importer():
         wb = openpyxl.load_workbook(f, data_only=True)
         ws = wb.active
     except Exception as ex:
+        if is_ajax:
+            return jsonify({'success': False, 'message': f'Erreur lecture fichier: {str(ex)}'})
         flash(f'Erreur lecture fichier: {str(ex)}', 'danger')
         return redirect(url_for('eleves'))
     
@@ -278,7 +283,10 @@ def eleves_importer():
     # Verifier les colonnes obligatoires
     if not col_prenom or not col_nom:
         cols_trouvees = ', '.join(col_names_raw[:15]) if col_names_raw else '(aucune)'
-        flash(f'Colonnes PRENOM et NOM obligatoires. Colonnes detectees: {cols_trouvees}', 'danger')
+        msg = f'Colonnes PRENOM et NOM obligatoires. Colonnes detectees: {cols_trouvees}'
+        if is_ajax:
+            return jsonify({'success': False, 'message': msg})
+        flash(msg, 'danger')
         return redirect(url_for('eleves'))
     
     from datetime import datetime
@@ -350,6 +358,9 @@ def eleves_importer():
         cl.effectif = Eleve.query.filter_by(classe_id=cl.id).count()
     db.session.commit()
     
+    if is_ajax:
+        return jsonify({'success': True, 'ajoutes': ajoutes, 'ignores': ignores,
+                        'message': f'{ajoutes} eleve(s) importes avec succes'})
     flash(f'{ajoutes} eleve(s) importes. {ignores} ignores (doublons).', 'success')
     return redirect(url_for('eleves'))
 

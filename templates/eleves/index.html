@@ -52,20 +52,21 @@
     <div class="bg-white rounded shadow-lg p-3" style="max-width:500px;width:90%;">
         <div class="d-flex justify-content-between align-items-center mb-2">
             <h6 class="mb-0"><i class="bi bi-file-earmark-excel text-success"></i> Importer des eleves</h6>
-            <button class="btn btn-sm btn-outline-danger py-0 px-1" onclick="document.getElementById('importModal').classList.add('d-none')">&times;</button>
+            <button class="btn btn-sm btn-outline-danger py-0 px-1" onclick="fermerImportModal()">&times;</button>
         </div>
-        <form action="{{ url_for('eleves_importer') }}" method="POST" enctype="multipart/form-data">
+        <form id="importForm" enctype="multipart/form-data" onsubmit="importerExcel(event)">
             <div class="mb-2">
                 <label class="form-label small fw-bold">Fichier Excel (.xlsx)</label>
-                <input type="file" name="fichier_excel" class="form-control form-control-sm" accept=".xlsx,.xls" required>
+                <input type="file" name="fichier_excel" id="importFileInput" class="form-control form-control-sm" accept=".xlsx,.xls" required>
             </div>
             <small class="text-muted d-block mb-2" style="font-size:0.65rem;">
                 Colonnes : Prenom, Nom, Sexe, Classe, Tel, Date Naissance, Lieu Naissance, Tuteur, Adresse, Precedente Ecole, Date Entree, Observations<br>
                 <a href="{{ url_for('eleves_modele') }}">Telecharger le modele</a>
             </small>
+            <div id="importStatus" class="d-none small mb-2"></div>
             <div class="d-flex gap-2">
-                <button type="submit" class="btn btn-success btn-sm flex-grow-1"><i class="bi bi-upload"></i> Importer</button>
-                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="document.getElementById('importModal').classList.add('d-none')">Annuler</button>
+                <button type="submit" id="btnImportSubmit" class="btn btn-success btn-sm flex-grow-1"><i class="bi bi-upload"></i> Importer</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="fermerImportModal()">Annuler</button>
             </div>
         </form>
     </div>
@@ -247,6 +248,64 @@ function imprimerTableau() {
     w.document.write(htmlContent);
     w.document.close();
     setTimeout(function() { w.print(); }, 600);
+}
+
+function fermerImportModal() {
+    document.getElementById('importModal').classList.add('d-none');
+    document.getElementById('importFileInput').value = '';
+    document.getElementById('importStatus').classList.add('d-none');
+    document.getElementById('btnImportSubmit').disabled = false;
+    document.getElementById('btnImportSubmit').innerHTML = '<i class="bi bi-upload"></i> Importer';
+}
+
+function importerExcel(e) {
+    e.preventDefault();
+    var form = document.getElementById('importForm');
+    var btn = document.getElementById('btnImportSubmit');
+    var statusDiv = document.getElementById('importStatus');
+    var fileInput = document.getElementById('importFileInput');
+    
+    if (!fileInput.files.length) return;
+    
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Importation...';
+    statusDiv.classList.add('d-none');
+    
+    var data = new FormData(form);
+    
+    fetch("{{ url_for('eleves_importer') }}", {
+        method: 'POST',
+        body: data,
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(function(resp) { return resp.json(); })
+    .then(function(result) {
+        if (result.success) {
+            statusDiv.className = 'alert alert-success small mb-2 py-1';
+            statusDiv.innerHTML = '<i class="bi bi-check-circle"></i> ' + result.message +
+                (result.ignores > 0 ? ' (' + result.ignores + ' doublons ignores)' : '');
+            statusDiv.classList.remove('d-none');
+            btn.innerHTML = '<i class="bi bi-check-lg"></i> Termine';
+            // Fermer et recharger apres 1.5s
+            setTimeout(function() {
+                fermerImportModal();
+                window.location.reload();
+            }, 1500);
+        } else {
+            statusDiv.className = 'alert alert-danger small mb-2 py-1';
+            statusDiv.innerHTML = '<i class="bi bi-exclamation-triangle"></i> ' + (result.message || 'Erreur inconnue');
+            statusDiv.classList.remove('d-none');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-upload"></i> Reessayer';
+        }
+    })
+    .catch(function(err) {
+        statusDiv.className = 'alert alert-danger small mb-2 py-1';
+        statusDiv.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Erreur reseau : ' + err.message;
+        statusDiv.classList.remove('d-none');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-upload"></i> Reessayer';
+    });
 }
 </script>
 {% endblock %}
