@@ -260,20 +260,20 @@ def admin_users_supprimer_bulk():
     if not ids:
         flash('Aucun utilisateur sélectionné', 'warning')
         return redirect(url_for('admin_users'))
-    count = 0
+    uid_ints = []
     for uid in ids:
         try:
             uid_int = int(uid)
+            if uid_int != current_user.id:
+                uid_ints.append(uid_int)
         except ValueError:
             continue
-        if uid_int == current_user.id:
-            continue
-        u = User.query.get(uid_int)
-        if u:
-            db.session.delete(u)
-            count += 1
-    db.session.commit()
-    flash(f'{count} utilisateur(s) supprimé(s)', 'success')
+    if uid_ints:
+        count = User.query.filter(User.id.in_(uid_ints)).delete(synchronize_session=False)
+        db.session.commit()
+        flash(f'{count} utilisateur(s) supprimé(s)', 'success')
+    else:
+        flash('Aucun utilisateur valide à supprimer', 'warning')
     return redirect(url_for('admin_users'))
 
 @app.route('/admin/ecole/supprimer/<int:id>', methods=['POST'])

@@ -485,14 +485,9 @@ def admin_paiements_supprimer_bulk():
         flash('Aucune facture sélectionnée.', 'warning')
         return redirect(url_for('admin_paiements'))
     
-    count = 0
-    for fid in facture_ids:
-        facture = FactureLicence.query.get(int(fid))
-        if facture:
-            TransactionLicence.query.filter_by(facture_id=facture.id).delete()
-            db.session.delete(facture)
-            count += 1
-    
+    fids = [int(fid) for fid in facture_ids]
+    TransactionLicence.query.filter(TransactionLicence.facture_id.in_(fids)).delete(synchronize_session=False)
+    count = FactureLicence.query.filter(FactureLicence.id.in_(fids)).delete(synchronize_session=False)
     db.session.commit()
     flash(f'{count} facture(s) supprimée(s)', 'info')
     return redirect(url_for('admin_paiements'))

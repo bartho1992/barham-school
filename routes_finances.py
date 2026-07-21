@@ -2,6 +2,7 @@ from flask import render_template, request, redirect, url_for, flash, jsonify, s
 from flask_login import login_required, current_user
 from models import db, Ecole, Eleve, Paiement, Classe, CategorieTarif, Scolarite, TarifService, AbonnementService
 from app import app, get_current_ecole_id
+from sqlalchemy.orm import joinedload
 from datetime import datetime
 # import pandas as pd  # Non necessaire, retire pour eviter dependance lourde
 
@@ -52,7 +53,7 @@ def finances():
     
     # Calculer les lignes eleves pour le suivi paiement
     mois_scolaires = ['Inscription','Octobre','Novembre','Decembre','Janvier','Fevrier','Mars','Avril','Mai','Juin']
-    eleves = Eleve.query.filter_by(ecole_id=ecole_id).filter(
+    eleves = Eleve.query.filter_by(ecole_id=ecole_id).options(joinedload(Eleve.classe)).filter(
         db.or_(Eleve.annee_scolaire == annee, Eleve.annee_scolaire == None, Eleve.annee_scolaire == '')
     ).order_by(Eleve.nom).all()
     scolarites_map = {s.classe_id: s for s in Scolarite.query.filter_by(annee_scolaire=annee).all()}
@@ -600,7 +601,7 @@ def finances_liste():
     q = Paiement.query.filter_by(annee_scolaire=annee)
     type_p = request.args.get('type_paiement')
     if type_p: q = q.filter_by(type_paiement=type_p)
-    ps = q.join(Paiement.eleve).order_by(Eleve.nom.asc(), Paiement.date_paiement.desc()).all()
+    ps = q.options(joinedload(Paiement.eleve).joinedload(Eleve.classe)).join(Paiement.eleve).order_by(Eleve.nom.asc(), Paiement.date_paiement.desc()).all()
     classes = Classe.query.filter_by(ecole_id=ecole_id).order_by(Classe.nom).all()
     eleves_list = Eleve.query.filter_by(ecole_id=ecole_id).order_by(Eleve.nom, Eleve.prenom).all()
     return render_template('finances/liste.html', paiements=ps, ecole=e, classes=classes, eleves_list=eleves_list, embed=embed)
@@ -613,10 +614,8 @@ def finances_paiements_supprimer_bulk():
     ids = request.form.getlist('paiement_ids[]')
     if not ids: flash('Aucun paiement sélectionné', 'warning'); return redirect(url_for('finances_liste', embed=embed))
     from models import Paiement
-    count = 0
-    for pid in [int(i) for i in ids]:
-        p = Paiement.query.get(pid)
-        if p: db.session.delete(p); count += 1
+    pids = [int(i) for i in ids]
+    count = Paiement.query.filter(Paiement.id.in_(pids)).delete(synchronize_session=False)
     db.session.commit()
     flash(f'{count} paiement(s) supprimé(s)', 'success')
     return redirect(url_for('finances_liste', embed=embed))

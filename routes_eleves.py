@@ -2,6 +2,7 @@ from flask import render_template, request, redirect, url_for, flash, jsonify, s
 from flask_login import login_required, current_user
 from models import db, Ecole, Eleve, Classe, Note, Paiement, AbonnementService, Document, Bulletin
 from app import app, get_current_ecole_id
+from sqlalchemy.orm import joinedload
 import os, io, openpyxl, unicodedata
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
@@ -14,7 +15,7 @@ def _annee_courante(e):
 def eleves():
     ecole_id = get_current_ecole_id()
     e = Ecole.query.get(ecole_id); classes = Classe.query.filter_by(ecole_id=ecole_id).all(); annee = _annee_courante(e)
-    q = Eleve.query.filter_by(annee_scolaire=annee, ecole_id=ecole_id)
+    q = Eleve.query.filter_by(annee_scolaire=annee, ecole_id=ecole_id).options(joinedload(Eleve.classe))
     fc = request.args.get('classe',''); fs = request.args.get('search','')
     if fc: q = q.filter_by(classe_id=fc)
     if fs: q = q.filter((Eleve.prenom.contains(fs))|(Eleve.nom.contains(fs))|(Eleve.code.contains(fs)))
@@ -26,7 +27,7 @@ def api_eleves_search():
     ecole_id = get_current_ecole_id()
     q = request.args.get('q', '')
     if not q: return jsonify([])
-    els = Eleve.query.filter_by(ecole_id=ecole_id).filter((Eleve.prenom.contains(q))|(Eleve.nom.contains(q))|(Eleve.code.contains(q))).limit(10).all()
+    els = Eleve.query.filter_by(ecole_id=ecole_id).options(joinedload(Eleve.classe)).filter((Eleve.prenom.contains(q))|(Eleve.nom.contains(q))|(Eleve.code.contains(q))).limit(10).all()
     return jsonify([{'id': e.id, 'prenom': e.prenom, 'nom': e.nom, 'code': e.code, 'classe': e.classe.nom if e.classe else ''} for e in els])
 
 @app.route('/eleves/ajouter', methods=['GET','POST'])

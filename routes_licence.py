@@ -128,13 +128,7 @@ def admin_licence_supprimer_bulk():
         return redirect(url_for('admin_licences'))
     
     ids = [int(id) for id in licence_ids if id.isdigit()]
-    count = 0
-    for lid in ids:
-        licence = Licence.query.get(lid)
-        if licence:
-            db.session.delete(licence)
-            count += 1
-    
+    count = Licence.query.filter(Licence.id.in_(ids)).delete(synchronize_session=False)
     db.session.commit()
     flash(f'{count} licence(s) supprimée(s)', 'success')
     return redirect(url_for('admin_licences'))

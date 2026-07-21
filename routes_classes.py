@@ -83,17 +83,11 @@ def classes_supprimer_bulk():
         return redirect(url_for('classes', embed=request.args.get('embed')))
     ids_int = [int(i) for i in ids]
     from models import Eleve, Note, Scolarite, TarifService
-    count = 0
-    for cid in ids_int:
-        c = Classe.query.filter_by(id=cid, ecole_id=ecole_id).first()
-        if not c:
-            continue
-        Eleve.query.filter_by(classe_id=cid).update({'classe_id': None})
-        Note.query.filter_by(classe_id=cid).delete()
-        Scolarite.query.filter_by(classe_id=cid).delete()
-        TarifService.query.filter_by(classe_id=cid).delete()
-        db.session.delete(c)
-        count += 1
+    Eleve.query.filter(Eleve.classe_id.in_(ids_int)).update({'classe_id': None}, synchronize_session=False)
+    Note.query.filter(Note.classe_id.in_(ids_int)).delete(synchronize_session=False)
+    Scolarite.query.filter(Scolarite.classe_id.in_(ids_int)).delete(synchronize_session=False)
+    TarifService.query.filter(TarifService.classe_id.in_(ids_int)).delete(synchronize_session=False)
+    count = Classe.query.filter(Classe.id.in_(ids_int), Classe.ecole_id == ecole_id).delete(synchronize_session=False)
     db.session.commit()
     flash(f'{count} classe(s) supprimée(s) avec succès', 'success')
     return redirect(url_for('classes', embed=request.args.get('embed')))
@@ -166,14 +160,8 @@ def matiere_supprimer_bulk():
         return redirect(url_for('matieres', embed=request.args.get('embed')))
     ids_int = [int(i) for i in ids]
     from models import Note
-    count = 0
-    for mid in ids_int:
-        m = Matiere.query.filter_by(id=mid, ecole_id=ecole_id).first()
-        if not m:
-            continue
-        Note.query.filter_by(matiere_id=mid).delete()
-        db.session.delete(m)
-        count += 1
+    Note.query.filter(Note.matiere_id.in_(ids_int)).delete(synchronize_session=False)
+    count = Matiere.query.filter(Matiere.id.in_(ids_int), Matiere.ecole_id == ecole_id).delete(synchronize_session=False)
     db.session.commit()
     flash(f'{count} matière(s) supprimée(s)', 'success')
     return redirect(url_for('matieres', embed=request.args.get('embed')))
