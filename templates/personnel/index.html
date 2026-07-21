@@ -6,17 +6,16 @@
     <div>
         <button class="btn btn-outline-dark btn-sm me-1" onclick="imprimerTableau()"><i class="bi bi-printer"></i> Imprimer</button>
         <a href="{{ url_for('personnel_ajouter', embed=embed) }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Ajouter</a>
-        <button class="btn btn-danger btn-sm d-none" id="btnSupprimerBulk" onclick="supprimerSelection()"><i class="bi bi-trash"></i> Supprimer la sélection</button>
     </div>
 </div>
 <form id="formBulk" method="POST" action="{{ url_for('personnel_supprimer_bulk', embed=embed) }}">
 <div style="max-height:65vh;overflow:auto;">
     <table class="table table-sm table-bordered align-middle bg-white" id="table-personnel">
-        <thead><tr><th style="width:40px;"><input type="checkbox" id="selectAll" onchange="toggleAll(this)"></th><th>CODE</th><th>PRENOM</th><th>NOM</th><th>FONCTION</th><th>TEL</th><th>SALAIRE FIXE</th><th>TAUX IMPOT</th><th>Actions</th></tr></thead>
+        <thead><tr><th style="width:40px;"><input type="checkbox" id="selectAll" onchange="toggleAll(this)"></th><th>CODE</th><th>PRENOM</th><th>NOM</th><th>FONCTION</th><th>TEL</th><th>SALAIRE FIXE</th><th>TAUX IMPOT</th></tr></thead>
         <tbody>
             {% for p in personnels %}
-            <tr>
-                <td class="text-center"><input type="checkbox" name="personnel_ids[]" value="{{ p.id }}" class="pers-check" onchange="updateBouton()"></td>
+            <tr data-salaire-url="{{ url_for('personnel_salaire', id=p.id, embed=embed) }}" data-nom="{{ p.prenom }} {{ p.nom }}" data-fonction="{{ p.fonction or '' }}" onclick="if (event.target.tagName !== 'INPUT' && event.target.tagName !== 'A' && event.target.tagName !== 'BUTTON' && event.target.tagName !== 'I') { var cb = this.querySelector('.pers-check'); if(cb) { cb.checked = !cb.checked; updateActionBar(); } }">
+                <td class="text-center"><input type="checkbox" name="personnel_ids[]" value="{{ p.id }}" class="pers-check" onchange="updateActionBar()"></td>
                 <td><code>{{ p.code }}</code></td>
                 <td>{{ p.prenom }}</td>
                 <td class="fw-bold">{{ p.nom }}</td>
@@ -24,9 +23,6 @@
                 <td>{{ p.tel or '-' }}</td>
                 <td class="text-end">{{ "{:,.0f}".format(p.salaire_fixe or 0).replace(',', ' ') }} F</td>
                 <td class="text-center">{{ p.taux_impot or 0 }}%</td>
-                <td class="text-center">
-                    <a href="{{ url_for('personnel_salaire', id=p.id, embed=embed) }}" class="btn btn-sm btn-outline-success"><i class="bi bi-cash"></i> Salaire</a>
-                </td>
             </tr>
             {% endfor %}
         </tbody>
@@ -34,15 +30,51 @@
 </div>
 </form>
 
+<!-- Barre d'outils flottante fixe en bas -->
+<div id="actionBar" class="d-none p-2 d-flex align-items-center gap-2" style="position:fixed; bottom:0; left:0; right:0; background: #1E1B4B; color:#fff; z-index:9999; box-shadow: 0 -4px 20px rgba(0,0,0,0.3);">
+    <span id="actionBarLabel" class="fw-bold small me-2 text-warning"></span>
+    <span id="actionBarSingle" class="d-flex gap-1"></span>
+    <span id="actionBarBulk" class="d-flex gap-1"></span>
+    <button class="btn btn-sm btn-outline-light ms-auto" onclick="deselectionnerTout()"><i class="bi bi-x-lg"></i></button>
+</div>
+
 <script>
 function toggleAll(source) {
     document.querySelectorAll('.pers-check').forEach(function(cb) { cb.checked = source.checked; });
-    updateBouton();
+    updateActionBar();
 }
-function updateBouton() {
-    var checked = document.querySelectorAll('.pers-check:checked').length;
-    var btn = document.getElementById('btnSupprimerBulk');
-    if (checked > 0) { btn.classList.remove('d-none'); } else { btn.classList.add('d-none'); }
+function updateActionBar() {
+    var checked = document.querySelectorAll('.pers-check:checked');
+    var n = checked.length;
+    var bar = document.getElementById('actionBar');
+    var label = document.getElementById('actionBarLabel');
+    var single = document.getElementById('actionBarSingle');
+    var bulk = document.getElementById('actionBarBulk');
+    
+    if (n === 0) {
+        bar.classList.add('d-none');
+        return;
+    }
+    bar.classList.remove('d-none');
+    single.innerHTML = '';
+    bulk.innerHTML = '';
+    
+    if (n === 1) {
+        var tr = checked[0].closest('tr');
+        var nom = tr.getAttribute('data-nom') || '';
+        var fonction = tr.getAttribute('data-fonction') || '';
+        label.innerHTML = '<i class="bi bi-person-badge me-1"></i> ' + nom + (fonction ? ' <span class="text-info">(' + fonction + ')</span>' : '');
+        var salaireUrl = tr.getAttribute('data-salaire-url');
+        single.innerHTML = '<a href="' + salaireUrl + '" class="btn btn-sm btn-outline-success"><i class="bi bi-cash"></i> Salaire</a>';
+    } else {
+        label.innerHTML = '<i class="bi bi-check-square me-1"></i> ' + n + ' membre(s) sélectionné(s)';
+        bulk.innerHTML = '<button class="btn btn-sm btn-danger" onclick="supprimerSelection()"><i class="bi bi-trash"></i> Supprimer la sélection</button>';
+    }
+}
+function deselectionnerTout() {
+    document.querySelectorAll('.pers-check').forEach(cb => cb.checked = false);
+    document.getElementById('selectAll').checked = false;
+    updateActionBar();
 }
 function supprimerSelection() {
     var checked = document.querySelectorAll('.pers-check:checked').length;

@@ -27,13 +27,13 @@
                     <th>Rôle</th>
                     <th>Créé le</th>
                     <th>Dernière connexion</th>
-                    <th class="text-end px-4">Actions</th>
+
                 </tr>
             </thead>
             <tbody>
                 {% for u in users %}
-                <tr>
-                    <td><input type="checkbox" name="user_ids[]" value="{{ u.id }}" onchange="updateBouton()" {% if u.id == current_user.id %}disabled{% endif %}></td>
+                <tr data-modifier-url="{{ url_for('admin_user_modifier', id=u.id) }}" data-supprimer-url="{{ url_for('admin_user_supprimer', id=u.id) }}" data-nom="{{ u.username }}" {% if u.id == current_user.id %}data-self="1"{% endif %} onclick="if (event.target.tagName !== 'INPUT' && event.target.tagName !== 'A' && event.target.tagName !== 'BUTTON' && event.target.tagName !== 'I') { var cb = this.querySelector('input[type=checkbox]'); if(cb && !cb.disabled) { cb.checked = !cb.checked; updateActionBar(); } }">
+                    <td><input type="checkbox" name="user_ids[]" value="{{ u.id }}" onchange="updateActionBar()" {% if u.id == current_user.id %}disabled{% endif %}></td>
                     <td>
                         <div class="d-flex align-items-center">
                             <div class="bg-light rounded-circle p-2 me-3">
@@ -72,25 +72,20 @@
                             <span class="text-muted small fst-italic">Jamais connecté</span>
                         {% endif %}
                     </td>
-                    <td class="text-end px-4">
-                        <div class="btn-group btn-group-sm">
-                            <a href="{{ url_for('admin_user_modifier', id=u.id) }}" class="btn btn-outline-primary" title="Modifier">
-                                <i class="bi bi-pencil"></i>
-                            </a>
-                            {% if u.id != current_user.id %}
-                            <form action="{{ url_for('admin_user_supprimer', id=u.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Supprimer cet utilisateur ?')">
-                                <button type="submit" class="btn btn-outline-danger" title="Supprimer">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </form>
-                            {% endif %}
-                        </div>
-                    </td>
+
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
         </form>
+
+<!-- Barre d'outils flottante fixe en bas -->
+<div id="actionBar" class="d-none p-2 d-flex align-items-center gap-2" style="position:fixed; bottom:0; left:0; right:0; background: #1E1B4B; color:#fff; z-index:9999; box-shadow: 0 -4px 20px rgba(0,0,0,0.3);">
+    <span id="actionBarLabel" class="fw-bold small me-2 text-warning"></span>
+    <span id="actionBarSingle" class="d-flex gap-1"></span>
+    <span id="actionBarBulk" class="d-flex gap-1"></span>
+    <button class="btn btn-sm btn-outline-light ms-auto" onclick="deselectionnerTout()"><i class="bi bi-x-lg"></i></button>
+</div>
     </div>
 </div>
 
@@ -102,17 +97,45 @@ function toggleAll(source) {
             cb.checked = source.checked;
         }
     });
-    updateBouton();
+    updateActionBar();
 }
 
-function updateBouton() {
-    var checkboxes = document.querySelectorAll('#table-users tbody input[name="user_ids[]"]:checked');
-    var btn = document.getElementById('btnSupprimerBulk');
-    if (checkboxes.length > 0) {
-        btn.classList.remove('d-none');
-    } else {
-        btn.classList.add('d-none');
+function updateActionBar() {
+    var checked = document.querySelectorAll('#table-users tbody input[name="user_ids[]"]:checked');
+    var n = checked.length;
+    var bar = document.getElementById('actionBar');
+    var label = document.getElementById('actionBarLabel');
+    var single = document.getElementById('actionBarSingle');
+    var bulk = document.getElementById('actionBarBulk');
+    
+    if (n === 0) {
+        bar.classList.add('d-none');
+        return;
     }
+    bar.classList.remove('d-none');
+    single.innerHTML = '';
+    bulk.innerHTML = '';
+    
+    if (n === 1) {
+        var tr = checked[0].closest('tr');
+        var nom = tr.getAttribute('data-nom') || '';
+        var isSelf = tr.getAttribute('data-self') === '1';
+        label.innerHTML = '<i class="bi bi-person me-1"></i> ' + nom;
+        var modifierUrl = tr.getAttribute('data-modifier-url');
+        single.innerHTML = '<a href="' + modifierUrl + '" class="btn btn-sm btn-outline-warning"><i class="bi bi-pencil"></i> Modifier</a>';
+        if (!isSelf) {
+            var supprimerUrl = tr.getAttribute('data-supprimer-url');
+            single.innerHTML += '<form method="POST" action="' + supprimerUrl + '" onsubmit="return confirm(\'Supprimer cet utilisateur ?\')" class="d-inline"><button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> Supprimer</button></form>';
+        }
+    } else {
+        label.innerHTML = '<i class="bi bi-check-square me-1"></i> ' + n + ' utilisateur(s) sélectionné(s)';
+        bulk.innerHTML = '<button class="btn btn-sm btn-danger" onclick="supprimerSelection()"><i class="bi bi-trash"></i> Supprimer la sélection</button>';
+    }
+}
+function deselectionnerTout() {
+    document.querySelectorAll('#table-users tbody input[name="user_ids[]"]').forEach(cb => { if(!cb.disabled) cb.checked = false; });
+    document.querySelector('#table-users thead input[type=checkbox]').checked = false;
+    updateActionBar();
 }
 
 function supprimerSelection() {

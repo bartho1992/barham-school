@@ -50,6 +50,7 @@
         #table-liste thead th { padding: 3px 6px !important; }
         #table-liste code { font-size: 0.65rem; }
         #table-liste .badge { font-size: 0.6rem; padding: 2px 5px; }
+        #table-liste tbody tr { cursor: pointer; }
         </style>
         <div style="max-height:65vh;overflow-y:auto;overflow-x:hidden;">
             <form id="formBulk" method="POST" action="{{ url_for('finances_paiements_supprimer_bulk', embed=embed) }}">
@@ -65,13 +66,13 @@
                         <th>Type de Paiement</th>
                         <th class="text-end">Montant (FCFA)</th>
                         <th class="text-center">Caissier</th>
-                        <th class="text-end px-4">Actions</th>
+
                     </tr>
                 </thead>
                 <tbody>
                     {% for p in paiements %}
-                    <tr data-classe="{{ p.eleve.classe.nom if p.eleve.classe else '' }}" data-mois="{{ p.type_paiement }}" data-nom="{{ p.eleve.prenom }} {{ p.eleve.nom }}" data-date="{{ p.date_paiement.strftime('%Y-%m-%d') }}">
-                        <td><input type="checkbox" name="paiement_ids[]" value="{{ p.id }}" class="paiement-check" onchange="updateBouton()"></td>
+                    <tr data-classe="{{ p.eleve.classe.nom if p.eleve.classe else '' }}" data-mois="{{ p.type_paiement }}" data-nom="{{ p.eleve.prenom }} {{ p.eleve.nom }}" data-date="{{ p.date_paiement.strftime('%Y-%m-%d') }}" data-print-url="{{ url_for('paiement_recu', id=p.id) }}" data-annuler-url="{{ url_for('paiement_annuler', id=p.id) }}" data-montant="{{ "{:,.0f}".format(p.montant).replace(',', ' ') }}" onclick="if (event.target.tagName !== 'INPUT' && event.target.tagName !== 'A' && event.target.tagName !== 'BUTTON' && event.target.tagName !== 'I') { var cb = this.querySelector('.paiement-check'); if(cb) { cb.checked = !cb.checked; updateActionBar(); } }">
+                        <td><input type="checkbox" name="paiement_ids[]" value="{{ p.id }}" class="paiement-check" onchange="updateActionBar()"></td>
                         <td><small class="text-muted">{{ loop.index }}</small></td>
                         <td>{{ p.date_paiement.strftime('%d/%m/%Y %H:%M') }}</td>
                         <td><code>{{ p.eleve.code }}</code></td>
@@ -80,21 +81,24 @@
                         <td><span class="badge rounded-pill bg-info text-dark">{{ p.type_paiement }}</span></td>
                         <td class="text-end fw-bold text-success">{{ "{:,.0f}".format(p.montant).replace(',', ' ') }}</td>
                         <td class="text-center"><small>{{ p.caissier }}</small></td>
-                        <td class="text-end px-4">
-                            <a href="{{ url_for('paiement_recu', id=p.id) }}" class="btn btn-sm btn-outline-secondary" title="Imprimer"><i class="bi bi-printer"></i></a>
-                            <form method="POST" action="{{ url_for('paiement_annuler', id=p.id) }}" class="d-inline" onsubmit="return confirm('Annuler ce paiement de {{ "{:,.0f}".format(p.montant).replace(',', ' ') }} FCFA ?\nCette action est irreversible.');">
-                                <button type="submit" class="btn btn-sm btn-outline-danger ms-1" title="Annuler"><i class="bi bi-x-circle"></i></button>
-                            </form>
-                        </td>
+
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="10" class="text-center py-5 text-muted">Aucun enregistrement trouvé.</td>
+                        <td colspan="9" class="text-center py-5 text-muted">Aucun enregistrement trouvé.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
             </form>
+
+<!-- Barre d'outils flottante fixe en bas -->
+<div id="actionBar" class="d-none p-2 d-flex align-items-center gap-2" style="position:fixed; bottom:0; left:0; right:0; background: #1E1B4B; color:#fff; z-index:9999; box-shadow: 0 -4px 20px rgba(0,0,0,0.3);">
+    <span id="actionBarLabel" class="fw-bold small me-2 text-warning"></span>
+    <span id="actionBarSingle" class="d-flex gap-1"></span>
+    <span id="actionBarBulk" class="d-flex gap-1"></span>
+    <button class="btn btn-sm btn-outline-light ms-auto" onclick="deselectionnerTout()"><i class="bi bi-x-lg"></i></button>
+</div>
         </div>
     </div>
 </div>
@@ -176,13 +180,43 @@ function imprimerTableau() {
 
 function toggleAll(source) {
     document.querySelectorAll('.paiement-check').forEach(function(cb) { cb.checked = source.checked; });
-    updateBouton();
+    updateActionBar();
 }
-function updateBouton() {
-    var n = document.querySelectorAll('.paiement-check:checked').length;
-    var btn = document.getElementById('btnSupprimerBulk');
-    if (n > 0) { btn.classList.remove('d-none'); btn.innerHTML = '<i class="bi bi-trash"></i> Supprimer (' + n + ')'; }
-    else { btn.classList.add('d-none'); }
+function updateActionBar() {
+    var checked = document.querySelectorAll('.paiement-check:checked');
+    var n = checked.length;
+    var bar = document.getElementById('actionBar');
+    var label = document.getElementById('actionBarLabel');
+    var single = document.getElementById('actionBarSingle');
+    var bulk = document.getElementById('actionBarBulk');
+    
+    if (n === 0) {
+        bar.classList.add('d-none');
+        return;
+    }
+    bar.classList.remove('d-none');
+    single.innerHTML = '';
+    bulk.innerHTML = '';
+    
+    if (n === 1) {
+        var tr = checked[0].closest('tr');
+        var nom = tr.getAttribute('data-nom') || '';
+        var montant = tr.getAttribute('data-montant') || '';
+        label.innerHTML = '<i class="bi bi-cash me-1"></i> ' + nom + ' <span class="text-info">(' + montant + ' FCFA)</span>';
+        var printUrl = tr.getAttribute('data-print-url');
+        var annulerUrl = tr.getAttribute('data-annuler-url');
+        single.innerHTML = 
+            '<a href="' + printUrl + '" class="btn btn-sm btn-outline-light"><i class="bi bi-printer"></i> Reçu</a>' +
+            '<form method="POST" action="' + annulerUrl + '" onsubmit="return confirm(\'Annuler ce paiement ?\')" class="d-inline"><button class="btn btn-sm btn-outline-danger"><i class="bi bi-x-circle"></i> Annuler</button></form>';
+    } else {
+        label.innerHTML = '<i class="bi bi-check-square me-1"></i> ' + n + ' paiement(s) sélectionné(s)';
+        bulk.innerHTML = '<button class="btn btn-sm btn-danger" onclick="supprimerSelection()"><i class="bi bi-trash"></i> Supprimer la sélection</button>';
+    }
+}
+function deselectionnerTout() {
+    document.querySelectorAll('.paiement-check').forEach(cb => cb.checked = false);
+    document.getElementById('selectAll').checked = false;
+    updateActionBar();
 }
 function supprimerSelection() {
     var n = document.querySelectorAll('.paiement-check:checked').length;

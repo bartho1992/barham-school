@@ -17,6 +17,7 @@
         border-radius: var(--radius-lg);
         border: 1px solid rgba(255,255,255,0.25);
     }
+    #table-eleves tbody tr { cursor: pointer; }
 </style>
 {% endblock %}
 
@@ -106,14 +107,13 @@
                 <th>Tuteur</th>
                 <th>Adresse</th>
                 <th>Situation</th>
-                <th class="text-center">Actions</th>
             </tr>
         </thead>
         <tbody>
             {% for e in eleves %}
-            <tr>
+            <tr data-fiche-url="{{ url_for('eleve_fiche', id=e.id) }}" data-modifier-url="{{ url_for('eleve_modifier', id=e.id) }}" data-supprimer-url="{{ url_for('eleve_supprimer', id=e.id) }}" data-nom="{{ e.prenom }} {{ e.nom }}" onclick="if (event.target.tagName !== 'INPUT' && event.target.tagName !== 'A' && event.target.tagName !== 'BUTTON' && event.target.tagName !== 'I') { var cb = this.querySelector('.eleve-check'); if(cb) { cb.checked = !cb.checked; updateActionBar(); } }">
                 <td class="td-check text-center">
-                    <input class="form-check-input eleve-check" type="checkbox" name="eleve_ids[]" value="{{ e.id }}" onchange="updateBouton()">
+                    <input class="form-check-input eleve-check" type="checkbox" name="eleve_ids[]" value="{{ e.id }}" onchange="updateActionBar()">
                 </td>
                 <td class="td-code"><code>{{ e.code }}</code></td>
                 <td class="td-long" title="{{ e.prenom }}">{{ e.prenom }}</td>
@@ -132,19 +132,10 @@
                     {% if e.situation == 'Inscrit' %}<span class="badge bg-success bg-opacity-15 text-success">{{ e.situation }}</span>
                     {% else %}<span class="badge bg-warning bg-opacity-15 text-warning">{{ e.situation }}</span>{% endif %}
                 </td>
-                <td class="td-actions">
-                    <div class="btn-group btn-group-sm">
-                        <a href="{{ url_for('eleve_fiche', id=e.id) }}" class="btn btn-outline-info py-1 px-2" title="Fiche élève"><i class="bi bi-eye"></i></a>
-                        <a href="{{ url_for('eleve_modifier', id=e.id) }}" class="btn btn-outline-warning py-1 px-2" title="Modifier"><i class="bi bi-pencil"></i></a>
-                        <form method="POST" action="{{ url_for('eleve_supprimer', id=e.id) }}" onsubmit="return confirm('Supprimer cet élève ? Toutes ses données (notes, paiements) seront supprimées définitivement.')" class="d-inline">
-                            <button class="btn btn-outline-danger py-1 px-2" title="Supprimer"><i class="bi bi-trash"></i></button>
-                        </form>
-                    </div>
-                </td>
             </tr>
             {% else %}
             <tr>
-                <td colspan="13" class="text-center py-4 text-muted"><i class="bi bi-info-circle me-1"></i> Aucun élève ne correspond à la recherche</td>
+                <td colspan="12" class="text-center py-4 text-muted"><i class="bi bi-info-circle me-1"></i> Aucun élève ne correspond à la recherche</td>
             </tr>
             {% endfor %}
         </tbody>
@@ -152,19 +143,55 @@
 </div>
 </form>
 
+<!-- Barre d'outils flottante fixe en bas -->
+<div id="actionBar" class="d-none p-2 d-flex align-items-center gap-2" style="position:fixed; bottom:0; left:0; right:0; background: #1E1B4B; color:#fff; z-index:9999; box-shadow: 0 -4px 20px rgba(0,0,0,0.3);">
+    <span id="actionBarLabel" class="fw-bold small me-2 text-warning"></span>
+    <span id="actionBarSingle" class="d-flex gap-1"></span>
+    <span id="actionBarBulk" class="d-flex gap-1"></span>
+    <button class="btn btn-sm btn-outline-light ms-auto" onclick="deselectionnerTout()"><i class="bi bi-x-lg"></i></button>
+</div>
+
 <script>
 function toggleAll(source) {
     document.querySelectorAll('.eleve-check').forEach(function(cb) { cb.checked = source.checked; });
-    updateBouton();
+    updateActionBar();
 }
-function updateBouton() {
-    var checked = document.querySelectorAll('.eleve-check:checked').length;
-    var btn = document.getElementById('btnSupprimerBulk');
-    if (checked > 0) { 
-        btn.classList.remove('d-none'); 
-        btn.innerHTML = '<i class="bi bi-trash"></i> Supprimer (' + checked + ')'; 
+function updateActionBar() {
+    var checked = document.querySelectorAll('.eleve-check:checked');
+    var n = checked.length;
+    var bar = document.getElementById('actionBar');
+    var label = document.getElementById('actionBarLabel');
+    var single = document.getElementById('actionBarSingle');
+    var bulk = document.getElementById('actionBarBulk');
+    
+    if (n === 0) {
+        bar.classList.add('d-none');
+        return;
     }
-    else { btn.classList.add('d-none'); }
+    bar.classList.remove('d-none');
+    single.innerHTML = '';
+    bulk.innerHTML = '';
+    
+    if (n === 1) {
+        var tr = checked[0].closest('tr');
+        var nom = tr.getAttribute('data-nom') || '';
+        label.innerHTML = '<i class="bi bi-person-circle me-1"></i> ' + nom;
+        var ficheUrl = tr.getAttribute('data-fiche-url');
+        var modifierUrl = tr.getAttribute('data-modifier-url');
+        var supprimerUrl = tr.getAttribute('data-supprimer-url');
+        single.innerHTML = 
+            '<a href="' + ficheUrl + '" class="btn btn-sm btn-outline-info"><i class="bi bi-eye"></i> Fiche</a>' +
+            '<a href="' + modifierUrl + '" class="btn btn-sm btn-outline-warning"><i class="bi bi-pencil"></i> Modifier</a>' +
+            '<form method="POST" action="' + supprimerUrl + '" onsubmit="return confirm(\'Supprimer cet élève ?\')" class="d-inline"><button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> Supprimer</button></form>';
+    } else {
+        label.innerHTML = '<i class="bi bi-check-square me-1"></i> ' + n + ' élève(s) sélectionné(s)';
+        bulk.innerHTML = '<button class="btn btn-sm btn-danger" onclick="supprimerSelection()"><i class="bi bi-trash"></i> Supprimer la sélection</button>';
+    }
+}
+function deselectionnerTout() {
+    document.querySelectorAll('.eleve-check').forEach(cb => cb.checked = false);
+    document.getElementById('selectAll').checked = false;
+    updateActionBar();
 }
 function supprimerSelection() {
     var checked = document.querySelectorAll('.eleve-check:checked').length;
