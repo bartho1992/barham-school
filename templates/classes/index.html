@@ -33,7 +33,7 @@
         <strong><i class="bi bi-list-ul text-success"></i> Ajouter plusieurs classes</strong>
         <button class="btn-close" onclick="toggleAjoutLot()"></button>
     </div>
-    <form method="POST" action="{{ url_for('classe_ajouter') }}">
+    <form method="POST" action="{{ url_for('classe_ajouter', embed=embed) }}">
         <input type="hidden" name="mode" value="multiple">
         <div class="row g-2">
             <div class="col-md-3">
@@ -57,7 +57,7 @@
 
 <small class="text-muted d-block mb-1" style="font-size:0.65rem;"><i class="bi bi-arrows-move me-1"></i> Glisser-deposer les classes pour les reorganiser (tri personnalise comme Excel)</small>
 
-<form id="formBulk" method="POST" action="{{ url_for('classes_supprimer_bulk') }}">
+<form id="formBulk" method="POST" action="{{ url_for('classes_supprimer_bulk', embed=embed) }}">
     <div style="max-height:65vh;overflow:auto;">
         <table class="table table-sm table-bordered align-middle bg-white">
             <thead>
@@ -82,7 +82,7 @@
                             <a href="{{ url_for('notes_saisir', classe_id=c.id, trimestre=1, embed=embed) }}" class="btn btn-outline-success" title="Notes"><i class="bi bi-pencil"></i></a>
                             <a href="{{ url_for('bulletin_classe', classe_id=c.id, trimestre=1, embed=embed) }}" class="btn btn-outline-info" title="Bulletin"><i class="bi bi-file-text"></i></a>
                             <a href="{{ url_for('classe_modifier', id=c.id, embed=embed) }}" class="btn btn-outline-warning" title="Modifier"><i class="bi bi-pencil-square"></i></a>
-                            <form method="POST" action="{{ url_for('classe_supprimer', id=c.id) }}" onsubmit="return confirm('Supprimer cette classe ? Les eleves seront deplaces.')" class="d-inline">
+                            <form method="POST" action="{{ url_for('classe_supprimer', id=c.id, embed=embed) }}" onsubmit="return confirm('Supprimer cette classe ? Les eleves seront deplaces.')" class="d-inline">
                                 <button class="btn btn-outline-danger" title="Supprimer"><i class="bi bi-trash"></i></button>
                             </form>
                         </div>
