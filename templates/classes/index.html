@@ -65,10 +65,10 @@
             </thead>
             <tbody id="sortable-tbody">
                 {% for c in classes %}
-                <tr data-id="{{ c.id }}" data-notes-url="{{ url_for('notes_saisir', classe_id=c.id, trimestre=1, embed=embed) }}" data-bulletin-url="{{ url_for('bulletin_classe', classe_id=c.id, trimestre=1, embed=embed) }}" data-modifier-url="{{ url_for('classe_modifier', id=c.id, embed=embed) }}" data-supprimer-url="{{ url_for('classe_supprimer', id=c.id, embed=embed) }}" data-nom="{{ c.nom }}" onclick="if (event.target.tagName !== 'INPUT' && event.target.tagName !== 'A' && event.target.tagName !== 'BUTTON' && event.target.tagName !== 'I') { var cb = this.querySelector('.classe-check'); cb.checked = !cb.checked; updateBouton(); }">
+                <tr data-id="{{ c.id }}" data-notes-url="{{ url_for('notes_saisir', classe_id=c.id, trimestre=1, embed=embed) }}" data-bulletin-url="{{ url_for('bulletin_classe', classe_id=c.id, trimestre=1, embed=embed) }}" data-modifier-url="{{ url_for('classe_modifier', id=c.id, embed=embed) }}" data-supprimer-url="{{ url_for('classe_supprimer', id=c.id, embed=embed) }}" data-nom="{{ c.nom }}" onclick="if (event.target.tagName !== 'INPUT' && event.target.tagName !== 'A' && event.target.tagName !== 'BUTTON' && event.target.tagName !== 'I') { var cb = this.querySelector('.classe-check'); cb.checked = !cb.checked; updateActionBar(); }">
                     <td class="text-center drag-handle"><i class="bi bi-grip-vertical"></i></td>
                     <td class="text-center">
-                        <input class="form-check-input classe-check" type="checkbox" name="classe_ids[]" value="{{ c.id }}" onchange="updateBouton()">
+                        <input class="form-check-input classe-check" type="checkbox" name="classe_ids[]" value="{{ c.id }}" onchange="updateActionBar()">
                     </td>
                     <td class="fw-bold">{{ c.nom }}</td>
                     <td><span class="badge bg-secondary">{{ c.niveau or '-' }}</span></td>
