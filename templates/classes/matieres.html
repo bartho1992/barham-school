@@ -1,5 +1,12 @@
 {% extends "base.html" %}
 {% block title %}Matieres - {{ ecole.nom }}{% endblock %}
+{% block extra_css %}
+<style>
+    #matieres-tbody tr { cursor: pointer; }
+    #matieres-tbody tr:hover { background: #e8f5e9 !important; }
+    .matiere-check { cursor: pointer; }
+</style>
+{% endblock %}
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-2">
     <h5 class="mb-0"><i class="bi bi-book"></i> Matieres</h5>
@@ -17,51 +24,68 @@
                     <th>Matiere</th>
                     <th>Domaine</th>
                     <th class="text-center" style="width:55px;">Coeff</th>
-                    <th class="text-center" style="width:75px;">Actions</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="matieres-tbody">
                 {% for m in matieres %}
-                <tr>
+                <tr data-id="{{ m.id }}" data-modifier-url="{{ url_for('matiere_modifier', id=m.id, embed=embed) }}" data-supprimer-url="{{ url_for('matiere_supprimer', id=m.id, embed=embed) }}" data-nom="{{ m.nom }}" onclick="if (event.target.tagName !== 'INPUT' && event.target.tagName !== 'A' && event.target.tagName !== 'BUTTON' && event.target.tagName !== 'I') { var cb = this.querySelector('.matiere-check'); cb.checked = !cb.checked; updateActionBar(); }">
                     <td class="text-center">
-                        <input class="form-check-input matiere-check" type="checkbox" name="matiere_ids[]" value="{{ m.id }}" onchange="updateBouton()">
+                        <input class="form-check-input matiere-check" type="checkbox" name="matiere_ids[]" value="{{ m.id }}" onchange="updateActionBar()">
                     </td>
                     <td class="small">{{ m.nom }}</td>
                     <td class="small"><span class="badge bg-secondary">{{ m.domaine or '-' }}</span></td>
                     <td class="text-center small">{{ m.coefficient }}</td>
-                    <td class="text-center">
-                        <a href="{{ url_for('matiere_modifier', id=m.id, embed=embed) }}" class="text-warning me-1" title="Modifier"><i class="bi bi-pencil"></i></a>
-                        <a href="#" onclick="if(confirm('Supprimer ?')){var f=document.createElement('form');f.method='POST';f.action='{{ url_for('matiere_supprimer', id=m.id, embed=embed) }}';document.body.appendChild(f);f.submit();}return false;" class="text-danger" title="Supprimer"><i class="bi bi-trash"></i></a>
-                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
-
-        <!-- Barre d'action sticky en bas -->
-        <div id="bulkActionBar" class="d-none p-2 d-flex align-items-center gap-2" style="background:#fff3cd; border-top:2px solid #ffc107; position:sticky; bottom:0; z-index:10;">
-            <span id="bulkCount" class="fw-bold small me-2"></span>
-            <button class="btn btn-danger btn-sm" onclick="supprimerSelection()"><i class="bi bi-trash"></i> Supprimer</button>
-            <button class="btn btn-outline-secondary btn-sm" onclick="deselectionnerTout()"><i class="bi bi-x-lg"></i> Deselectionner</button>
-        </div>
     </div>
 </form>
+
+<!-- Barre d'outils flottante fixe en bas -->
+<div id="actionBar" class="d-none p-2 d-flex align-items-center gap-2" style="position:fixed; bottom:0; left:0; right:0; background: #1E1B4B; color:#fff; z-index:9999; box-shadow: 0 -4px 20px rgba(0,0,0,0.3);">
+    <span id="actionBarLabel" class="fw-bold small me-2 text-warning"></span>
+    <span id="actionBarSingle" class="d-flex gap-1"></span>
+    <span id="actionBarBulk" class="d-flex gap-1"></span>
+    <button class="btn btn-sm btn-outline-light ms-auto" onclick="deselectionnerTout()"><i class="bi bi-x-lg"></i></button>
+</div>
+
 <script>
-function toggleAll(s) { document.querySelectorAll('.matiere-check').forEach(cb => cb.checked = s.checked); updateBouton(); }
-function updateBouton() {
-    var n = document.querySelectorAll('.matiere-check:checked').length;
-    var bar = document.getElementById('bulkActionBar');
-    if (n > 0) {
-        bar.classList.remove('d-none');
-        document.getElementById('bulkCount').innerHTML = '<i class="bi bi-check-square me-1"></i> ' + n + ' matiere(s) selectionnee(s)';
-    } else {
+function toggleAll(s) { document.querySelectorAll('.matiere-check').forEach(cb => cb.checked = s.checked); updateActionBar(); }
+function updateActionBar() {
+    var checked = document.querySelectorAll('.matiere-check:checked');
+    var n = checked.length;
+    var bar = document.getElementById('actionBar');
+    var label = document.getElementById('actionBarLabel');
+    var single = document.getElementById('actionBarSingle');
+    var bulk = document.getElementById('actionBarBulk');
+    
+    if (n === 0) {
         bar.classList.add('d-none');
+        return;
+    }
+    bar.classList.remove('d-none');
+    single.innerHTML = '';
+    bulk.innerHTML = '';
+    
+    if (n === 1) {
+        var tr = checked[0].closest('tr');
+        var nom = tr.getAttribute('data-nom') || '';
+        label.innerHTML = '<i class="bi bi-book me-1"></i> ' + nom;
+        var modifierUrl = tr.getAttribute('data-modifier-url');
+        var supprimerUrl = tr.getAttribute('data-supprimer-url');
+        single.innerHTML = 
+            '<a href="' + modifierUrl + '" class="btn btn-sm btn-outline-warning"><i class="bi bi-pencil"></i> Modifier</a>' +
+            '<form method="POST" action="' + supprimerUrl + '" onsubmit="return confirm(\'Supprimer cette matiere ?\')" class="d-inline"><button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> Supprimer</button></form>';
+    } else {
+        label.innerHTML = '<i class="bi bi-check-square me-1"></i> ' + n + ' matiere(s) selectionnee(s)';
+        bulk.innerHTML = '<button class="btn btn-sm btn-danger" onclick="supprimerSelection()"><i class="bi bi-trash"></i> Supprimer la selection</button>';
     }
 }
 function deselectionnerTout() {
     document.querySelectorAll('.matiere-check').forEach(cb => cb.checked = false);
     document.getElementById('selectAll').checked = false;
-    updateBouton();
+    updateActionBar();
 }
 function supprimerSelection() {
     var n = document.querySelectorAll('.matiere-check:checked').length;
