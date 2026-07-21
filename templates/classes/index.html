@@ -9,18 +9,22 @@
 </style>
 {% endblock %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-2 flex-nowrap gap-1">
+<div class="d-flex justify-content-between align-items-center mb-2">
     <div class="section-header"><i class="bi bi-building"></i> Gestion des Classes</div>
-    <div class="d-flex flex-nowrap gap-1">
-        <button id="btnSupprimerBulk" class="btn btn-danger btn-sm d-none" onclick="supprimerSelection()">
-            <i class="bi bi-trash"></i> Supprimer la selection
-        </button>
-        <button id="btnAjoutLot" class="btn btn-outline-success btn-sm me-1" onclick="toggleAjoutLot()">
+    <div class="d-flex gap-1">
+        <button id="btnAjoutLot" class="btn btn-outline-success btn-sm" onclick="toggleAjoutLot()">
             <i class="bi bi-list-ul"></i> Ajouter en lot
         </button>
-        <button class="btn btn-outline-dark btn-sm me-1" onclick="imprimerTableau()"><i class="bi bi-printer"></i> Imprimer</button>
+        <button class="btn btn-outline-dark btn-sm" onclick="imprimerTableau()"><i class="bi bi-printer"></i> Imprimer</button>
         <a href="{{ url_for('classe_ajouter', embed=embed) }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Ajouter</a>
     </div>
+</div>
+
+<!-- Barre d'action bulk -->
+<div id="bulkActionBar" class="d-none mb-2 p-2 rounded d-flex align-items-center gap-2" style="background:#fff3cd; border:1px solid #ffc107;">
+    <span id="bulkCount" class="fw-bold small me-2"></span>
+    <button class="btn btn-danger btn-sm" onclick="supprimerSelection()"><i class="bi bi-trash"></i> Supprimer</button>
+    <button class="btn btn-outline-secondary btn-sm" onclick="deselectionnerTout()"><i class="bi bi-x-lg"></i> Deselectionner</button>
 </div>
 
 <!-- Panneau Ajout en lot -->
@@ -120,9 +124,18 @@ function toggleAjoutLot() {
 function toggleAll(s) { document.querySelectorAll('.classe-check').forEach(cb => cb.checked = s.checked); updateBouton(); }
 function updateBouton() {
     var n = document.querySelectorAll('.classe-check:checked').length;
-    var b = document.getElementById('btnSupprimerBulk');
-    if (n > 0) { b.classList.remove('d-none'); b.innerHTML = '<i class="bi bi-trash"></i> Supprimer (' + n + ')'; }
-    else b.classList.add('d-none');
+    var bar = document.getElementById('bulkActionBar');
+    if (n > 0) {
+        bar.classList.remove('d-none');
+        document.getElementById('bulkCount').innerHTML = '<i class="bi bi-check-square me-1"></i> ' + n + ' classe(s) selectionnee(s)';
+    } else {
+        bar.classList.add('d-none');
+    }
+}
+function deselectionnerTout() {
+    document.querySelectorAll('.classe-check').forEach(cb => cb.checked = false);
+    document.getElementById('selectAll').checked = false;
+    updateBouton();
 }
 function supprimerSelection() {
     var n = document.querySelectorAll('.classe-check:checked').length;
