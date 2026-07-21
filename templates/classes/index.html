@@ -20,13 +20,6 @@
     </div>
 </div>
 
-<!-- Barre d'action bulk -->
-<div id="bulkActionBar" class="d-none mb-2 p-2 rounded d-flex align-items-center gap-2" style="background:#fff3cd; border:1px solid #ffc107;">
-    <span id="bulkCount" class="fw-bold small me-2"></span>
-    <button class="btn btn-danger btn-sm" onclick="supprimerSelection()"><i class="bi bi-trash"></i> Supprimer</button>
-    <button class="btn btn-outline-secondary btn-sm" onclick="deselectionnerTout()"><i class="bi bi-x-lg"></i> Deselectionner</button>
-</div>
-
 <!-- Panneau Ajout en lot -->
 <div id="panelAjoutLot" class="d-none mb-2 p-3 rounded" style="background: #f8fdf8; border: 1px dashed #2E7D32;">
     <div class="d-flex justify-content-between align-items-center mb-2">
@@ -91,6 +84,13 @@
                 {% endfor %}
             </tbody>
         </table>
+
+        <!-- Barre d'action sticky en bas du tableau -->
+        <div id="bulkActionBar" class="d-none p-2 d-flex align-items-center gap-2" style="background:#fff3cd; border-top:2px solid #ffc107; position:sticky; bottom:0; z-index:10;">
+            <span id="bulkCount" class="fw-bold small me-2"></span>
+            <button class="btn btn-danger btn-sm" onclick="supprimerSelection()"><i class="bi bi-trash"></i> Supprimer</button>
+            <button class="btn btn-outline-secondary btn-sm" onclick="deselectionnerTout()"><i class="bi bi-x-lg"></i> Deselectionner</button>
+        </div>
     </div>
 </form>
 
