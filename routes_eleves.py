@@ -140,22 +140,29 @@ def eleves_supprimer_bulk():
     if not ids:
         flash('Aucun élève sélectionné', 'warning')
         return redirect(url_for('eleves'))
-    count = 0
-    for eid in [int(i) for i in ids]:
-        el = Eleve.query.filter_by(id=eid, ecole_id=ecole_id).first()
-        if not el:
-            continue
-        classe_id = el.classe_id
-        Note.query.filter_by(eleve_id=eid).delete()
-        Paiement.query.filter_by(eleve_id=eid).delete()
-        AbonnementService.query.filter_by(eleve_id=eid).delete()
-        Document.query.filter_by(eleve_id=eid).delete()
-        Bulletin.query.filter_by(eleve_id=eid).delete()
-        db.session.delete(el)
-        if classe_id:
-            cls = Classe.query.get(classe_id)
-            if cls: cls.effectif = Eleve.query.filter_by(classe_id=classe_id).count()
-        count += 1
+    eids = [int(i) for i in ids]
+    
+    # Récupérer les classe_ids avant suppression
+    eleves = Eleve.query.filter(Eleve.id.in_(eids), Eleve.ecole_id == ecole_id).all()
+    classe_ids = set(e.classe_id for e in eleves if e.classe_id)
+    count = len(eleves)
+    
+    # Suppression en lot de toutes les données liées (1 requête par table)
+    Note.query.filter(Note.eleve_id.in_(eids)).delete(synchronize_session=False)
+    Paiement.query.filter(Paiement.eleve_id.in_(eids)).delete(synchronize_session=False)
+    AbonnementService.query.filter(AbonnementService.eleve_id.in_(eids)).delete(synchronize_session=False)
+    Document.query.filter(Document.eleve_id.in_(eids)).delete(synchronize_session=False)
+    Bulletin.query.filter(Bulletin.eleve_id.in_(eids)).delete(synchronize_session=False)
+    
+    # Suppression en lot des élèves
+    Eleve.query.filter(Eleve.id.in_(eids), Eleve.ecole_id == ecole_id).delete(synchronize_session=False)
+    
+    # Mise à jour des effectifs
+    for cid in classe_ids:
+        cls = Classe.query.get(cid)
+        if cls:
+            cls.effectif = Eleve.query.filter_by(classe_id=cid).count()
+    
     db.session.commit()
     flash(f'{count} élève(s) supprimé(s) avec succès', 'success')
     return redirect(url_for('eleves'))
