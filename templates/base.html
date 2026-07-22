@@ -44,49 +44,49 @@
             <nav class="sidebar-menu">
                 <ul class="nav flex-column gap-0">
                     {% set nav_items = [
-                        ('dashboard', 'bi-speedometer2', 'Dashboard'),
-                        ('eleves', 'bi-people-fill', 'Eleves'),
-                        ('administration', 'bi-gear-wide', 'Administration'),
-                        ('documents', 'bi-printer', 'Documents'),
-                        ('finances_hub', 'bi-cash-stack', 'Finances'),
+                        ('dashboard', 'bi-speedometer2', 'Dashboard', '#3b82f6'),
+                        ('eleves', 'bi-people-fill', 'Eleves', '#10b981'),
+                        ('administration', 'bi-gear-wide', 'Administration', '#8b5cf6'),
+                        ('documents', 'bi-printer', 'Documents', '#f59e0b'),
+                        ('finances_hub', 'bi-cash-stack', 'Finances', '#14b8a6'),
                     ] %}
                     
                     {% if not has_licence %}
                     <!-- Client sans licence : seulement Abonnement -->
                     <li class="nav-item">
                         <a class="nav-link d-flex align-items-center gap-2 py-1 px-2 {{ 'active' if request.endpoint == 'abonnement' }}" href="{{ url_for('abonnement') }}">
-                            <i class="bi bi-key-fill" style="font-size: 0.9rem;"></i>
+                            <i class="bi bi-key-fill" style="font-size: 0.9rem; color: #f59e0b;"></i>
                             <span style="font-size: 0.65rem; text-transform: uppercase; font-weight: 600;">Abonnement</span>
                         </a>
                     </li>
                     {% else %}
                     <!-- Client avec licence : menu complet -->
-                    {% for endpoint, icon, label in nav_items %}
+                    {% for endpoint, icon, label, color in nav_items %}
                     <li class="nav-item">
-                        <a class="nav-link d-flex align-items-center gap-2 py-1 px-2 {{ 'active' if request.endpoint == endpoint }}" href="{{ url_for(endpoint) }}">
-                            <i class="bi {{ icon }}" style="font-size: 0.9rem;"></i>
+                        <a class="nav-link d-flex align-items-center gap-2 py-1 px-2 {{ 'active' if request.endpoint == endpoint }}" href="{{ url_for(endpoint) }}" style="border-left: 3px solid {{ color }};">
+                            <i class="bi {{ icon }}" style="font-size: 0.9rem; color: {{ color }};"></i>
                             <span style="font-size: 0.65rem; text-transform: uppercase; font-weight: 600;">{{ label }}</span>
                         </a>
                     </li>
                     {% endfor %}
                     
                     <li class="nav-item">
-                        <a class="nav-link d-flex align-items-center gap-2 py-1 px-2 {{ 'active' if request.endpoint == 'parametres_financiers' }}" href="{{ url_for('parametres_financiers') }}">
-                            <i class="bi bi-sliders" style="font-size: 0.9rem;"></i>
+                        <a class="nav-link d-flex align-items-center gap-2 py-1 px-2 {{ 'active' if request.endpoint == 'parametres_financiers' }}" href="{{ url_for('parametres_financiers') }}" style="border-left: 3px solid #94a3b8;">
+                            <i class="bi bi-sliders" style="font-size: 0.9rem; color: #94a3b8;"></i>
                             <span style="font-size: 0.65rem; text-transform: uppercase; font-weight: 600;">Paramètres</span>
                         </a>
                     </li>
                     
                     <li class="nav-item">
-                        <a class="nav-link d-flex align-items-center gap-2 py-1 px-2 {{ 'active' if request.endpoint == 'etablissement' }}" href="{{ url_for('etablissement') }}">
-                            <i class="bi bi-building" style="font-size: 0.9rem;"></i>
+                        <a class="nav-link d-flex align-items-center gap-2 py-1 px-2 {{ 'active' if request.endpoint == 'etablissement' }}" href="{{ url_for('etablissement') }}" style="border-left: 3px solid #06b6d4;">
+                            <i class="bi bi-building" style="font-size: 0.9rem; color: #06b6d4;"></i>
                             <span style="font-size: 0.65rem; text-transform: uppercase; font-weight: 600;">Etablissement</span>
                         </a>
                     </li>
                     
                     <li class="nav-item">
-                        <a class="nav-link d-flex align-items-center gap-2 py-1 px-2 {{ 'active' if request.endpoint == 'utilisateurs' }}" href="{{ url_for('utilisateurs') }}">
-                            <i class="bi bi-person-badge" style="font-size: 0.9rem;"></i>
+                        <a class="nav-link d-flex align-items-center gap-2 py-1 px-2 {{ 'active' if request.endpoint == 'utilisateurs' }}" href="{{ url_for('utilisateurs') }}" style="border-left: 3px solid #ec4899;">
+                            <i class="bi bi-person-badge" style="font-size: 0.9rem; color: #ec4899;"></i>
                             <span style="font-size: 0.65rem; text-transform: uppercase; font-weight: 600;">Utilisateurs</span>
                         </a>
                     </li>

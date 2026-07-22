@@ -621,6 +621,8 @@ h5 { font-size: 0.95rem; }
     white-space: nowrap;
     overflow: hidden;
     position: relative;
+    border-left: 3px solid transparent !important;
+    transition: all 0.2s ease, border-left-color 0.3s ease;
 }
 
 .sidebar-menu .nav-link::before {
@@ -641,10 +643,6 @@ h5 { font-size: 0.95rem; }
     background: rgba(255, 255, 255, 0.1) !important;
 }
 
-.sidebar-menu .nav-link:hover::before {
-    height: 60%;
-}
-
 .sidebar-menu .nav-link:hover i {
     transform: scale(1.15);
 }
@@ -654,11 +652,6 @@ h5 { font-size: 0.95rem; }
     background: white !important;
     font-weight: 700 !important;
     box-shadow: var(--shadow-md);
-}
-
-.sidebar-menu .nav-link.active::before {
-    height: 70%;
-    background: var(--primary-600);
 }
 
 .sidebar-menu .nav-link i {
