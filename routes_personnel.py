@@ -11,7 +11,7 @@ def _annee_courante(e):
 def personnel():
     ecole_id = get_current_ecole_id()
     embed = request.args.get('embed')
-    return render_template('personnel/index.html', personnels=Personnel.query.all(), ecole=Ecole.query.get(ecole_id), embed=embed)
+    return render_template('personnel/index.html', personnels=Personnel.query.filter_by(ecole_id=ecole_id).all(), ecole=Ecole.query.get(ecole_id), embed=embed)
 
 @app.route('/personnel/ajouter', methods=['GET','POST'])
 @login_required
@@ -20,7 +20,7 @@ def personnel_ajouter():
     e = Ecole.query.get(ecole_id)
     embed = request.args.get('embed')
     
-    last_p = Personnel.query.order_by(Personnel.id.desc()).first()
+    last_p = Personnel.query.filter_by(ecole_id=ecole_id).order_by(Personnel.id.desc()).first()
     next_id = (last_p.id + 1) if last_p else 1
     auto_code = f"P{next_id:03d}"
     

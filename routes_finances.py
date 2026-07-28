@@ -46,25 +46,36 @@ def finances():
     ecole_id = get_current_ecole_id()
     e = Ecole.query.get(ecole_id); annee = _annee_courante(e)
     embed = request.args.get('embed')
-    recent_paiements = Paiement.query.filter_by(annee_scolaire=annee).order_by(Paiement.date_paiement.desc()).limit(20).all()
-    total_encaisse = db.session.query(db.func.sum(Paiement.montant)).filter_by(annee_scolaire=annee).scalar() or 0
-    today_encaisse = db.session.query(db.func.sum(Paiement.montant)).filter(db.func.date(Paiement.date_paiement) == datetime.now().date(), Paiement.annee_scolaire == annee).scalar() or 0
-    categories = CategorieTarif.query.order_by(CategorieTarif.nom).all()
+    recent_paiements = Paiement.query.filter_by(annee_scolaire=annee, ecole_id=ecole_id).options(
+        joinedload(Paiement.eleve).joinedload(Eleve.classe)
+    ).order_by(Paiement.date_paiement.desc()).limit(20).all()
+    total_encaisse = db.session.query(db.func.sum(Paiement.montant)).filter_by(annee_scolaire=annee, ecole_id=ecole_id).scalar() or 0
+    today_encaisse = db.session.query(db.func.sum(Paiement.montant)).filter(
+        db.func.date(Paiement.date_paiement) == datetime.now().date(),
+        Paiement.annee_scolaire == annee,
+        Paiement.ecole_id == ecole_id
+    ).scalar() or 0
+    categories = CategorieTarif.query.filter_by(ecole_id=ecole_id).order_by(CategorieTarif.nom).all()
     
     # Calculer les lignes eleves pour le suivi paiement
     mois_scolaires = ['Inscription','Octobre','Novembre','Decembre','Janvier','Fevrier','Mars','Avril','Mai','Juin']
     eleves = Eleve.query.filter_by(ecole_id=ecole_id).options(joinedload(Eleve.classe)).filter(
         db.or_(Eleve.annee_scolaire == annee, Eleve.annee_scolaire == None, Eleve.annee_scolaire == '')
     ).order_by(Eleve.nom).all()
-    scolarites_map = {s.classe_id: s for s in Scolarite.query.filter_by(annee_scolaire=annee).all()}
+    eleve_ids = [eleve.id for eleve in eleves]
+    scolarites_map = {s.classe_id: s for s in Scolarite.query.filter_by(annee_scolaire=annee, ecole_id=ecole_id).all()}
     tarifs_services_map = {}
-    for t in TarifService.query.filter_by(annee_scolaire=annee).all():
+    for t in TarifService.query.filter_by(annee_scolaire=annee, ecole_id=ecole_id).all():
         tarifs_services_map[(t.classe_id, t.categorie_id)] = t
     abonnements_map = {}
-    for a in AbonnementService.query.filter_by(actif=True).all():
+    if eleve_ids:
+        abonnements = AbonnementService.query.filter(AbonnementService.actif == True, AbonnementService.eleve_id.in_(eleve_ids)).all()
+    else:
+        abonnements = []
+    for a in abonnements:
         abonnements_map.setdefault(a.eleve_id, set()).add(a.categorie_id)
     paiements_map = {}
-    for p in Paiement.query.filter_by(annee_scolaire=annee).all():
+    for p in Paiement.query.filter_by(annee_scolaire=annee, ecole_id=ecole_id).all():
         if p.eleve_id not in paiements_map:
             paiements_map[p.eleve_id] = {}
         key = p.type_paiement or ''
@@ -134,7 +145,7 @@ def finances():
     mois_list = ['Inscription','Octobre','Novembre','Decembre','Janvier','Fevrier','Mars','Avril','Mai','Juin']
     
     classes = Classe.query.filter_by(ecole_id=ecole_id).order_by(Classe.nom).all()
-    eleves_list = Eleve.query.filter_by(ecole_id=ecole_id).order_by(Eleve.nom, Eleve.prenom).all()
+    eleves_list = Eleve.query.filter_by(ecole_id=ecole_id).options(joinedload(Eleve.classe)).order_by(Eleve.nom, Eleve.prenom).all()
     
     return render_template('finances/index.html', ecole=e, paiements=recent_paiements, total_encaisse=total_encaisse,
         today_encaisse=today_encaisse, categories=categories, lignes_paiements=lignes_paiements, classes=classes, mois_list=mois_list, eleves_list=eleves_list, embed=embed)
@@ -598,12 +609,12 @@ def finances_liste():
     ecole_id = get_current_ecole_id()
     e = Ecole.query.get(ecole_id); annee = _annee_courante(e)
     embed = request.args.get('embed')
-    q = Paiement.query.filter_by(annee_scolaire=annee)
+    q = Paiement.query.filter_by(annee_scolaire=annee, ecole_id=ecole_id)
     type_p = request.args.get('type_paiement')
     if type_p: q = q.filter_by(type_paiement=type_p)
     ps = q.options(joinedload(Paiement.eleve).joinedload(Eleve.classe)).join(Paiement.eleve).order_by(Eleve.nom.asc(), Paiement.date_paiement.desc()).all()
     classes = Classe.query.filter_by(ecole_id=ecole_id).order_by(Classe.nom).all()
-    eleves_list = Eleve.query.filter_by(ecole_id=ecole_id).order_by(Eleve.nom, Eleve.prenom).all()
+    eleves_list = Eleve.query.filter_by(ecole_id=ecole_id).options(joinedload(Eleve.classe)).order_by(Eleve.nom, Eleve.prenom).all()
     return render_template('finances/liste.html', paiements=ps, ecole=e, classes=classes, eleves_list=eleves_list, embed=embed)
 
 @app.route('/finances/paiements/supprimer-bulk', methods=['POST'])
@@ -632,32 +643,37 @@ def impayes():
     mois_scolaires = ['Inscription','Octobre','Novembre','Decembre','Janvier','Fevrier','Mars','Avril','Mai','Juin']
     
     # Categories de services
-    categories = CategorieTarif.query.order_by(CategorieTarif.nom).all()
+    categories = CategorieTarif.query.filter_by(ecole_id=ecole_id).order_by(CategorieTarif.nom).all()
     
-    eleves = Eleve.query.filter_by(ecole_id=ecole_id).filter(
+    eleves = Eleve.query.filter_by(ecole_id=ecole_id).options(joinedload(Eleve.classe)).filter(
         db.or_(Eleve.annee_scolaire == annee, Eleve.annee_scolaire == None, Eleve.annee_scolaire == '')
     ).order_by(Eleve.nom).all()
+    eleve_ids = [eleve.id for eleve in eleves]
     
     # Map: classe_id -> Scolarite
     scolarites_map = {}
-    for s in Scolarite.query.filter_by(annee_scolaire=annee).all():
+    for s in Scolarite.query.filter_by(annee_scolaire=annee, ecole_id=ecole_id).all():
         scolarites_map[s.classe_id] = s
     
     # Map: (classe_id, categorie_id) -> TarifService
     tarifs_services_map = {}
-    for t in TarifService.query.filter_by(annee_scolaire=annee).all():
+    for t in TarifService.query.filter_by(annee_scolaire=annee, ecole_id=ecole_id).all():
         tarifs_services_map[(t.classe_id, t.categorie_id)] = t
     
     # Map: eleve_id -> {categorie_id} (active subscriptions)
     abonnements_map = {}
-    for a in AbonnementService.query.filter_by(actif=True).all():
+    if eleve_ids:
+        abonnements = AbonnementService.query.filter(AbonnementService.actif == True, AbonnementService.eleve_id.in_(eleve_ids)).all()
+    else:
+        abonnements = []
+    for a in abonnements:
         if a.eleve_id not in abonnements_map:
             abonnements_map[a.eleve_id] = set()
         abonnements_map[a.eleve_id].add(a.categorie_id)
     
     # Map: eleve_id -> {type_paiement: total_paye}
     paiements_map = {}
-    for p in Paiement.query.filter_by(annee_scolaire=annee).all():
+    for p in Paiement.query.filter_by(annee_scolaire=annee, ecole_id=ecole_id).all():
         if p.eleve_id not in paiements_map:
             paiements_map[p.eleve_id] = {}
         key = p.type_paiement or ''
@@ -753,7 +769,7 @@ def impayes():
         lignes.append(ligne)
     
     classes = Classe.query.filter_by(ecole_id=ecole_id).order_by(Classe.nom).all()
-    eleves_list = Eleve.query.filter_by(ecole_id=ecole_id).order_by(Eleve.nom, Eleve.prenom).all()
+    eleves_list = Eleve.query.filter_by(ecole_id=ecole_id).options(joinedload(Eleve.classe)).order_by(Eleve.nom, Eleve.prenom).all()
     
     return render_template('finances/impayes.html',
                          lignes=lignes, ecole=e, categories=categories, classes=classes,
