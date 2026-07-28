@@ -12,13 +12,13 @@
 <!-- FILTRES -->
 <div class="d-flex gap-1 align-items-center mb-2 flex-wrap">
     <span class="fw-bold small me-1"><i class="bi bi-funnel"></i> Filtrer :</span>
-    <select id="filtre-classe" class="form-select form-select-sm" style="width:auto;min-width:110px;font-size:0.7rem;height:28px;" onchange="filtrerListe()">
+    <select id="filtre-classe" class="form-select form-select-sm" style="width:auto;min-width:140px;font-size:0.7rem;height:28px;padding-right:34px;background-position:right 10px center;" onchange="filtrerListe()">
         <option value="">Toutes classes</option>
         {% for c in classes %}
         <option value="{{ c.nom }}">{{ c.nom }}</option>
         {% endfor %}
     </select>
-    <select id="filtre-mois" class="form-select form-select-sm" style="width:auto;min-width:110px;font-size:0.7rem;height:28px;" onchange="filtrerListe()">
+    <select id="filtre-mois" class="form-select form-select-sm" style="width:auto;min-width:145px;font-size:0.7rem;height:28px;padding-right:34px;background-position:right 10px center;" onchange="filtrerListe()">
         <option value="">Tous les mois</option>
         <option value="Inscription">Inscription</option>
         <option value="Octobre">Octobre</option>
