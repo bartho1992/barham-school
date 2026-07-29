@@ -107,6 +107,54 @@
     </div>
 </div>
 
+<div class="row g-3 mt-1">
+    <div class="col-12 animate-in" style="animation-delay: 0.18s;">
+        <div class="card fiche-card">
+            <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-calendar2-x me-1"></i> Assiduité récente</span>
+                <a href="{{ url_for('assiduite', classe_id=eleve.classe_id) }}" class="btn btn-sm btn-outline-light">Ouvrir le module</a>
+            </div>
+            <div class="card-body p-0">
+                {% if assiduites %}
+                <div style="max-height: 220px; overflow-y: auto;">
+                    <table class="table table-sm table-striped mb-0" style="font-size: 0.78rem;">
+                        <thead>
+                            <tr>
+                                <th class="ps-3">Date</th>
+                                <th>Type</th>
+                                <th>Motif</th>
+                                <th class="pe-3">Justifié</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in assiduites %}
+                            <tr>
+                                <td class="ps-3">{{ item.date_evenement }}</td>
+                                <td>
+                                    {% if item.type_evenement == 'Absent' %}
+                                    <span class="badge bg-danger">Absence</span>
+                                    {% else %}
+                                    <span class="badge bg-warning text-dark">Retard</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ item.motif or '-' }}</td>
+                                <td class="pe-3">{{ 'Oui' if item.justifie else 'Non' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-check2-circle fs-4 d-block mb-2 opacity-50"></i>
+                    Aucun incident d'assiduité enregistré pour cet élève.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="d-flex gap-2 mt-4 mb-3 animate-in" style="animation-delay: 0.2s;">
     <a href="{{ url_for('eleve_modifier', id=eleve.id) }}" class="btn btn-warning text-dark px-4"><i class="bi bi-pencil-fill me-1"></i> Modifier la fiche</a>
     <a href="{{ url_for('eleves') }}" class="btn btn-secondary px-4"><i class="bi bi-arrow-left-short"></i> Retour à la liste</a>

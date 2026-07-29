@@ -90,6 +90,7 @@ class Eleve(db.Model):
     classe = db.relationship('Classe', backref='eleves')
     notes = db.relationship('Note', backref='eleve', lazy='dynamic')
     paiements = db.relationship('Paiement', backref='eleve', lazy='dynamic')
+    assiduites = db.relationship('Assiduite', backref='eleve', lazy='dynamic')
 
 class Classe(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -132,6 +133,21 @@ class Bulletin(db.Model):
     decision = db.Column(db.String(100))
     absences = db.Column(db.Integer, default=0)
     annee_scolaire = db.Column(db.String(20), default='2024-2025')
+
+class Assiduite(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    eleve_id = db.Column(db.Integer, db.ForeignKey('eleve.id'), nullable=False)
+    classe_id = db.Column(db.Integer, db.ForeignKey('classe.id'))
+    ecole_id = db.Column(db.Integer, db.ForeignKey('ecole.id'), nullable=False, default=1)
+    date_evenement = db.Column(db.String(20), nullable=False)
+    type_evenement = db.Column(db.String(20), nullable=False, default='Absent')
+    motif = db.Column(db.String(255))
+    justifie = db.Column(db.Boolean, default=False)
+    annee_scolaire = db.Column(db.String(20), default='2024-2025')
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    classe = db.relationship('Classe', backref='assiduites')
+    ecole = db.relationship('Ecole', backref='assiduites')
 
 class Personnel(db.Model):
     id = db.Column(db.Integer, primary_key=True)

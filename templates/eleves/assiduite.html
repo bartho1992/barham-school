@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% block title %}Assiduité - {{ ecole.nom }}{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div class="section-header mb-0"><i class="bi bi-calendar2-check me-1"></i> Absences et retards</div>
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{{ url_for('eleves') }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-people"></i> Élèves</a>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-speedometer2"></i> Dashboard</a>
+    </div>
+</div>
+
+<form method="GET" class="card border-0 shadow-sm mb-3">
+    <div class="card-body py-2">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label small fw-bold mb-1">Classe</label>
+                <select name="classe_id" class="form-select form-select-sm">
+                    {% for c in classes %}
+                    <option value="{{ c.id }}" {{ 'selected' if classe_id == c.id }}>{{ c.nom }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-bold mb-1">Date</label>
+                <input type="date" name="date" class="form-control form-control-sm" value="{{ date_evenement }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small fw-bold mb-1">Recherche</label>
+                <input type="text" name="search" class="form-control form-control-sm" value="{{ search }}" placeholder="Nom, prénom, matricule">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary btn-sm w-100"><i class="bi bi-funnel"></i> Filtrer</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="small text-muted fw-bold">Présents</div>
+                <div class="fs-3 fw-bold text-success">{{ stats.presents }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="small text-muted fw-bold">Absents</div>
+                <div class="fs-3 fw-bold text-danger">{{ stats.absents }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="small text-muted fw-bold">Retards</div>
+                <div class="fs-3 fw-bold text-warning">{{ stats.retards }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form method="POST" action="{{ url_for('assiduite_enregistrer') }}">
+    <input type="hidden" name="classe_id" value="{{ classe_id or '' }}">
+    <input type="hidden" name="date_evenement" value="{{ date_evenement }}">
+    <input type="hidden" name="search" value="{{ search }}">
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center flex-wrap gap-2 py-2">
+            <div class="fw-bold"><i class="bi bi-list-check me-1"></i> Saisie du jour</div>
+            <div class="d-flex gap-1 flex-wrap">
+                <button type="button" class="btn btn-sm btn-light" onclick="appliquerStatut('Present')">Tout présent</button>
+                <button type="button" class="btn btn-sm btn-warning text-dark" onclick="appliquerStatut('Retard')">Tout retard</button>
+                <button type="button" class="btn btn-sm btn-danger" onclick="appliquerStatut('Absent')">Tout absent</button>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div style="max-height:55vh; overflow:auto;">
+                <table class="table table-sm table-bordered align-middle mb-0 bg-white">
+                    <thead>
+                        <tr>
+                            <th style="width:90px;">Code</th>
+                            <th>Élève</th>
+                            <th style="width:120px;">Classe</th>
+                            <th style="width:140px;">Statut</th>
+                            <th>Motif</th>
+                            <th style="width:90px;">Justifié</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for eleve in eleves %}
+                        {% set evenement = statuts.get(eleve.id) %}
+                        <tr>
+                            <td>
+                                <input type="hidden" name="eleve_ids[]" value="{{ eleve.id }}">
+                                <code>{{ eleve.code }}</code>
+                            </td>
+                            <td class="fw-bold">
+                                <a href="{{ url_for('eleve_fiche', id=eleve.id) }}" class="text-decoration-none text-dark">{{ eleve.prenom }} {{ eleve.nom }}</a>
+                            </td>
+                            <td>{{ eleve.classe.nom if eleve.classe else '-' }}</td>
+                            <td>
+                                <select name="statut_{{ eleve.id }}" class="form-select form-select-sm statut-select">
+                                    <option value="Present" {{ 'selected' if not evenement }}>Présent</option>
+                                    <option value="Absent" {{ 'selected' if evenement and evenement.type_evenement == 'Absent' }}>Absent</option>
+                                    <option value="Retard" {{ 'selected' if evenement and evenement.type_evenement == 'Retard' }}>Retard</option>
+                                </select>
+                            </td>
+                            <td>
+                                <input type="text" name="motif_{{ eleve.id }}" class="form-control form-control-sm" value="{{ evenement.motif if evenement else '' }}" placeholder="Motif optionnel">
+                            </td>
+                            <td class="text-center">
+                                <input type="checkbox" name="justifie_{{ eleve.id }}" class="form-check-input" {{ 'checked' if evenement and evenement.justifie }}>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">Aucun élève trouvé pour ce filtre</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer bg-light d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div class="small text-muted">{{ eleves|length }} élève(s) affiché(s) pour le {{ date_evenement }}</div>
+            <button type="submit" class="btn btn-success btn-sm"><i class="bi bi-check-circle"></i> Enregistrer l'assiduité</button>
+        </div>
+    </div>
+</form>
+
+<div class="card border-0 shadow-sm mt-3">
+    <div class="card-header bg-white fw-bold py-2"><i class="bi bi-clock-history me-1"></i> Derniers incidents enregistrés</div>
+    <div class="card-body p-0">
+        <div style="max-height:240px; overflow:auto;">
+            <table class="table table-sm table-bordered mb-0">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Élève</th>
+                        <th>Classe</th>
+                        <th>Type</th>
+                        <th>Motif</th>
+                        <th>Justifié</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in recent_events %}
+                    <tr>
+                        <td>{{ item.date_evenement }}</td>
+                        <td>{{ item.eleve.prenom }} {{ item.eleve.nom }}</td>
+                        <td>{{ item.eleve.classe.nom if item.eleve and item.eleve.classe else '-' }}</td>
+                        <td>
+                            {% if item.type_evenement == 'Absent' %}
+                            <span class="badge bg-danger">Absence</span>
+                            {% else %}
+                            <span class="badge bg-warning text-dark">Retard</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ item.motif or '-' }}</td>
+                        <td>{{ 'Oui' if item.justifie else 'Non' }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">Aucun incident d'assiduité enregistré</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+function appliquerStatut(statut) {
+    document.querySelectorAll('.statut-select').forEach(function(select) {
+        select.value = statut;
+    });
+}
+</script>
+
+{% endblock %}

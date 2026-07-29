@@ -1,11 +1,12 @@
 from flask import render_template, request, redirect, url_for, flash, jsonify, session, send_file
 from flask_login import login_required, current_user
-from models import db, Ecole, Eleve, Classe, Note, Paiement, AbonnementService, Document, Bulletin
+from models import db, Ecole, Eleve, Classe, Note, Paiement, AbonnementService, Document, Bulletin, Assiduite
 from app import app, get_current_ecole_id
 from sqlalchemy.orm import joinedload
 import os, io, openpyxl, unicodedata
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
+from datetime import date
 
 def _annee_courante(e):
     return session.get('annee_scolaire', e.annee_scolaire if e else '')
@@ -20,6 +21,117 @@ def eleves():
     if fc: q = q.filter_by(classe_id=fc)
     if fs: q = q.filter((Eleve.prenom.contains(fs))|(Eleve.nom.contains(fs))|(Eleve.code.contains(fs)))
     return render_template('eleves/index.html', eleves=q.order_by(Eleve.nom,Eleve.prenom).all(), classes=classes, ecole=e, filter_classe=fc, filter_search=fs)
+
+@app.route('/assiduite')
+@login_required
+def assiduite():
+    ecole_id = get_current_ecole_id()
+    e = Ecole.query.get(ecole_id); annee = _annee_courante(e)
+    classes = Classe.query.filter_by(ecole_id=ecole_id).order_by(Classe.nom).all()
+    classe_id = request.args.get('classe_id', type=int)
+    if not classe_id and classes:
+        classe_id = classes[0].id
+    date_evenement = request.args.get('date') or date.today().isoformat()
+    search = request.args.get('search', '').strip()
+
+    q = Eleve.query.filter_by(ecole_id=ecole_id, annee_scolaire=annee).options(joinedload(Eleve.classe))
+    if classe_id:
+        q = q.filter_by(classe_id=classe_id)
+    if search:
+        q = q.filter((Eleve.prenom.contains(search)) | (Eleve.nom.contains(search)) | (Eleve.code.contains(search)))
+    eleves = q.order_by(Eleve.nom, Eleve.prenom).all()
+    eleve_ids = [eleve.id for eleve in eleves]
+
+    evenements = []
+    if eleve_ids:
+        evenements = Assiduite.query.filter(
+            Assiduite.ecole_id == ecole_id,
+            Assiduite.annee_scolaire == annee,
+            Assiduite.date_evenement == date_evenement,
+            Assiduite.eleve_id.in_(eleve_ids)
+        ).all()
+    statuts = {item.eleve_id: item for item in evenements}
+
+    stats = {'presents': 0, 'absents': 0, 'retards': 0}
+    for eleve in eleves:
+        evenement = statuts.get(eleve.id)
+        statut = evenement.type_evenement if evenement else 'Present'
+        if statut == 'Absent':
+            stats['absents'] += 1
+        elif statut == 'Retard':
+            stats['retards'] += 1
+        else:
+            stats['presents'] += 1
+
+    recent_events = Assiduite.query.filter_by(ecole_id=ecole_id, annee_scolaire=annee).options(
+        joinedload(Assiduite.eleve).joinedload(Eleve.classe)
+    ).order_by(Assiduite.date_evenement.desc(), Assiduite.created_at.desc()).limit(20).all()
+
+    return render_template(
+        'eleves/assiduite.html',
+        ecole=e,
+        classes=classes,
+        eleves=eleves,
+        classe_id=classe_id,
+        date_evenement=date_evenement,
+        search=search,
+        statuts=statuts,
+        stats=stats,
+        recent_events=recent_events
+    )
+
+@app.route('/assiduite/enregistrer', methods=['POST'])
+@login_required
+def assiduite_enregistrer():
+    ecole_id = get_current_ecole_id()
+    e = Ecole.query.get(ecole_id); annee = _annee_courante(e)
+    classe_id = request.form.get('classe_id', type=int)
+    date_evenement = (request.form.get('date_evenement') or '').strip()
+    search = (request.form.get('search') or '').strip()
+
+    if not classe_id or not date_evenement:
+        flash("Classe et date obligatoires", "danger")
+        return redirect(url_for('assiduite'))
+
+    ids_bruts = request.form.getlist('eleve_ids[]')
+    eleve_ids = [int(eid) for eid in ids_bruts if str(eid).isdigit()]
+    eleves = Eleve.query.filter(Eleve.id.in_(eleve_ids), Eleve.ecole_id == ecole_id, Eleve.classe_id == classe_id).all() if eleve_ids else []
+    eleves_valides = {eleve.id: eleve for eleve in eleves}
+
+    if eleves_valides:
+        Assiduite.query.filter(
+            Assiduite.ecole_id == ecole_id,
+            Assiduite.annee_scolaire == annee,
+            Assiduite.date_evenement == date_evenement,
+            Assiduite.eleve_id.in_(list(eleves_valides.keys()))
+        ).delete(synchronize_session=False)
+
+    total_absents = 0
+    total_retards = 0
+    for eleve_id in eleves_valides:
+        statut = request.form.get(f'statut_{eleve_id}', 'Present')
+        motif = (request.form.get(f'motif_{eleve_id}') or '').strip()
+        justifie = request.form.get(f'justifie_{eleve_id}') == 'on'
+        if statut not in ('Absent', 'Retard'):
+            continue
+        db.session.add(Assiduite(
+            eleve_id=eleve_id,
+            classe_id=classe_id,
+            ecole_id=ecole_id,
+            date_evenement=date_evenement,
+            type_evenement=statut,
+            motif=motif or None,
+            justifie=justifie,
+            annee_scolaire=annee
+        ))
+        if statut == 'Absent':
+            total_absents += 1
+        else:
+            total_retards += 1
+
+    db.session.commit()
+    flash(f"Assiduité enregistrée : {total_absents} absence(s), {total_retards} retard(s)", "success")
+    return redirect(url_for('assiduite', classe_id=classe_id, date=date_evenement, search=search))
 
 @app.route('/api/eleves/search')
 @login_required
@@ -123,6 +235,7 @@ def eleve_supprimer(id):
     AbonnementService.query.filter_by(eleve_id=id).delete()
     Document.query.filter_by(eleve_id=id).delete()
     Bulletin.query.filter_by(eleve_id=id).delete()
+    Assiduite.query.filter_by(eleve_id=id).delete()
     db.session.delete(el)
     db.session.commit()
     # Mettre à jour l'effectif de la classe
@@ -154,6 +267,7 @@ def eleves_supprimer_bulk():
     AbonnementService.query.filter(AbonnementService.eleve_id.in_(eids)).delete(synchronize_session=False)
     Document.query.filter(Document.eleve_id.in_(eids)).delete(synchronize_session=False)
     Bulletin.query.filter(Bulletin.eleve_id.in_(eids)).delete(synchronize_session=False)
+    Assiduite.query.filter(Assiduite.eleve_id.in_(eids)).delete(synchronize_session=False)
     
     # Suppression en lot des élèves
     Eleve.query.filter(Eleve.id.in_(eids), Eleve.ecole_id == ecole_id).delete(synchronize_session=False)
@@ -177,7 +291,8 @@ def eleve_fiche(id):
     
     return render_template('eleves/fiche.html', eleve=el, ecole=e, 
         notes=Note.query.filter_by(eleve_id=id, annee_scolaire=annee).all(), 
-        paiements=Paiement.query.filter_by(eleve_id=id, annee_scolaire=annee).all())
+        paiements=Paiement.query.filter_by(eleve_id=id, annee_scolaire=annee).all(),
+        assiduites=Assiduite.query.filter_by(eleve_id=id, annee_scolaire=annee).order_by(Assiduite.date_evenement.desc(), Assiduite.created_at.desc()).limit(8).all())
 
 
 @app.route('/eleves/importer', methods=['POST'])
