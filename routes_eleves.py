@@ -288,11 +288,22 @@ def eleve_fiche(id):
     ecole_id = get_current_ecole_id()
     e = Ecole.query.get(ecole_id); el = Eleve.query.get_or_404(id); annee = _annee_courante(e)
     if el.ecole_id != ecole_id: flash('Accès non autorisé','danger'); return redirect(url_for('eleves'))
+    assiduite_resume = {
+        type_evt: total for type_evt, total in db.session.query(Assiduite.type_evenement, db.func.count(Assiduite.id))
+        .filter_by(eleve_id=id, annee_scolaire=annee)
+        .group_by(Assiduite.type_evenement)
+        .all()
+    }
+    assiduite_justifiees = db.session.query(db.func.count(Assiduite.id)).filter_by(
+        eleve_id=id, annee_scolaire=annee, justifie=True
+    ).scalar() or 0
     
     return render_template('eleves/fiche.html', eleve=el, ecole=e, 
         notes=Note.query.filter_by(eleve_id=id, annee_scolaire=annee).all(), 
         paiements=Paiement.query.filter_by(eleve_id=id, annee_scolaire=annee).all(),
-        assiduites=Assiduite.query.filter_by(eleve_id=id, annee_scolaire=annee).order_by(Assiduite.date_evenement.desc(), Assiduite.created_at.desc()).limit(8).all())
+        assiduites=Assiduite.query.filter_by(eleve_id=id, annee_scolaire=annee).order_by(Assiduite.date_evenement.desc(), Assiduite.created_at.desc()).limit(8).all(),
+        assiduite_resume=assiduite_resume,
+        assiduite_justifiees=assiduite_justifiees)
 
 
 @app.route('/eleves/importer', methods=['POST'])

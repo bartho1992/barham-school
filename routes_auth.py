@@ -171,7 +171,7 @@ def logout(): logout_user(); return redirect(url_for('login'))
 @app.route('/')
 @login_required
 def dashboard():
-    from models import Eleve, Classe, Personnel, Paiement, Scolarite, CategorieTarif, TarifService, AbonnementService
+    from models import Eleve, Classe, Personnel, Paiement, Scolarite, CategorieTarif, TarifService, AbonnementService, Assiduite
     from app import get_current_ecole_id
     from datetime import datetime
     ecole_id = get_current_ecole_id()
@@ -269,6 +269,25 @@ def dashboard():
         joinedload(Paiement.eleve).joinedload(Eleve.classe)
     ).order_by(Paiement.date_paiement.desc()).limit(10).all()
 
+    # Assiduité
+    date_jour = datetime.now().date().isoformat()
+    assiduite_jour = {
+        type_evt: total for type_evt, total in db.session.query(Assiduite.type_evenement, db.func.count(Assiduite.id))
+        .filter_by(ecole_id=ecole_id, annee_scolaire=annee, date_evenement=date_jour)
+        .group_by(Assiduite.type_evenement)
+        .all()
+    }
+    assiduite_annee = {
+        type_evt: total for type_evt, total in db.session.query(Assiduite.type_evenement, db.func.count(Assiduite.id))
+        .filter_by(ecole_id=ecole_id, annee_scolaire=annee)
+        .group_by(Assiduite.type_evenement)
+        .all()
+    }
+    absents_jour = int(assiduite_jour.get('Absent', 0))
+    retards_jour = int(assiduite_jour.get('Retard', 0))
+    absences_annee = int(assiduite_annee.get('Absent', 0))
+    retards_annee = int(assiduite_annee.get('Retard', 0))
+
     # Taux de recouvrement
     taux_recouvrement = round((total_paiements / total_du * 100) if total_du > 0 else 0, 1)
     
@@ -279,6 +298,8 @@ def dashboard():
         today_encaisse=today_encaisse, taux_recouvrement=taux_recouvrement,
         recent_paiements=recent_paiements, garcons=garcons, filles=filles,
         classes_stats=classes_stats, paiements_mois=paiements_mois,
-        mois_scolaires=mois_scolaires)
+        mois_scolaires=mois_scolaires, absents_jour=absents_jour,
+        retards_jour=retards_jour, absences_annee=absences_annee,
+        retards_annee=retards_annee)
 
 from models import Classe, Matiere

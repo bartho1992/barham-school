@@ -115,6 +115,54 @@
             </div>
         </div>
     </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-lg-3 col-md-6 animate-in" style="animation-delay: 0.3s;">
+            <div class="card db-card bg-white h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="db-stat-icon bg-danger bg-opacity-10 text-danger"><i class="bi bi-calendar2-x"></i></div>
+                    <div>
+                        <div class="db-stat-label">Absences du jour</div>
+                        <div class="db-stat-value text-danger counter-value" data-target="{{ absents_jour }}">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 animate-in" style="animation-delay: 0.35s;">
+            <div class="card db-card bg-white h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="db-stat-icon bg-warning bg-opacity-10 text-warning"><i class="bi bi-alarm"></i></div>
+                    <div>
+                        <div class="db-stat-label">Retards du jour</div>
+                        <div class="db-stat-value text-warning counter-value" data-target="{{ retards_jour }}">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 animate-in" style="animation-delay: 0.4s;">
+            <div class="card db-card bg-white h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="db-stat-icon bg-danger bg-opacity-10 text-danger"><i class="bi bi-calendar-range"></i></div>
+                    <div>
+                        <div class="db-stat-label">Absences année</div>
+                        <div class="db-stat-value text-danger counter-value" data-target="{{ absences_annee }}">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 animate-in" style="animation-delay: 0.45s;">
+            <div class="card db-card bg-white h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="db-stat-icon bg-warning bg-opacity-10 text-warning"><i class="bi bi-stopwatch"></i></div>
+                    <div>
+                        <div class="db-stat-label">Retards année</div>
+                        <div class="db-stat-value text-warning counter-value" data-target="{{ retards_annee }}">0</div>
+                        <a href="{{ url_for('assiduite') }}" class="small text-decoration-none fw-semibold mt-1 d-block"><i class="bi bi-arrow-right-short"></i> Ouvrir l'assiduité</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- ===== TAB 2 : STATISTIQUES ===== -->

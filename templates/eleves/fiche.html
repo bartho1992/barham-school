@@ -115,6 +115,11 @@
                 <a href="{{ url_for('assiduite', classe_id=eleve.classe_id) }}" class="btn btn-sm btn-outline-light">Ouvrir le module</a>
             </div>
             <div class="card-body p-0">
+                <div class="d-flex flex-wrap gap-2 px-3 pt-3 pb-2 border-bottom bg-light">
+                    <span class="badge bg-danger">Absences: {{ assiduite_resume.get('Absent', 0) }}</span>
+                    <span class="badge bg-warning text-dark">Retards: {{ assiduite_resume.get('Retard', 0) }}</span>
+                    <span class="badge bg-success">Justifiées: {{ assiduite_justifiees }}</span>
+                </div>
                 {% if assiduites %}
                 <div style="max-height: 220px; overflow-y: auto;">
                     <table class="table table-sm table-striped mb-0" style="font-size: 0.78rem;">
