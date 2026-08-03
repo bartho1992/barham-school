@@ -221,6 +221,14 @@ def _build_ligne_financiere(eleve, annee, categories, scolarites_map, tarifs_ser
                 mois_affiche = mois
                 break
     details_affiches = mois_details.get(mois_affiche, {'due': 0, 'paye': 0, 'reste': 0, 'cumul': 0})
+    if not mois_affiche and total_du > 0:
+        details_affiches = {
+            'due': total_du,
+            'paye': min(total_paye, total_du),
+            'reste': total_reste,
+            'cumul': total_reste
+        }
+        mois_affiche = 'Total'
 
     services_due = sum(cl['due'] for cl in cat_lines)
     services_paye = sum(cl['paye'] for cl in cat_lines)
