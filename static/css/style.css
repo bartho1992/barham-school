@@ -522,6 +522,7 @@ h5 { font-size: 0.95rem; }
     z-index: 1040;
     transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
+    overflow: hidden;
 }
 
 /* Collapsed state */
@@ -643,6 +644,7 @@ h5 { font-size: 0.95rem; }
 .sidebar-menu {
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
     scrollbar-width: none;
     -ms-overflow-style: none;
 }
@@ -656,6 +658,7 @@ h5 { font-size: 0.95rem; }
 }
 
 .sidebar-menu .nav-link {
+    width: 100%;
     color: rgba(255, 255, 255, 0.7) !important;
     border-radius: var(--radius-md);
     transition: var(--transition);
