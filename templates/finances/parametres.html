@@ -105,7 +105,6 @@
                         <button type="button" class="btn btn-primary btn-sm py-0 px-2" onclick="appliquerMontantSelection()" style="font-size:0.7rem;height:24px;">Appliquer</button>
                     </div>
                      <div>
-                         <button type="button" class="btn btn-outline-danger btn-xs py-0 px-1 me-1" onclick="supprimerSelection()" style="font-size:0.6rem;"><i class="bi bi-trash"></i></button>
                          <button type="button" class="btn btn-outline-danger btn-xs py-0 px-1" onclick="reinitialiserTout()" style="font-size:0.6rem;"><i class="bi bi-trash"></i> Tout</button>
                      </div>
                 </div>
@@ -141,7 +140,7 @@
                             {% for s in scolarites %}
                             <tr data-classe-id="{{ s.classe_id }}" data-scolarite-id="{{ s.id }}">
                                 <td class="grip-handle">⠿</td>
-                                <td><input type="checkbox" class="select-classe" value="{{ s.classe_id }}"></td>
+                                <td><input type="checkbox" class="select-classe" value="{{ s.classe_id }}" onchange="updateSelectionBar()"></td>
                                 <td class="fw-bold bg-light">{{ s.classe.nom }}</td>
                                 <td><input type="number" name="inscription_{{s.classe_id}}" data-mois="inscription" class="form-control form-control-sm" value="{{ s.inscription|default(0)|int }}"></td>
                                 <td><input type="number" name="janvier_{{s.classe_id}}" data-mois="janvier" class="form-control form-control-sm" value="{{ s.janvier|default(0)|int }}"></td>
@@ -157,14 +156,27 @@
                                 <td><input type="number" name="novembre_{{s.classe_id}}" data-mois="novembre" class="form-control form-control-sm" value="{{ s.novembre|default(0)|int }}"></td>
                                 <td><input type="number" name="decembre_{{s.classe_id}}" data-mois="decembre" class="form-control form-control-sm" value="{{ s.decembre|default(0)|int }}"></td>
                                 <td class="fw-bold text-end" id="total_{{s.classe_id}}">{{ s.total_annuel|default(0)|int }} FCFA</td>
-                                <td class="text-nowrap">
-                                    <button type="button" class="btn btn-outline-warning btn-xs py-0 px-1 mb-1" onclick="reinitialiserLigne({{ s.classe_id }})" title="Remettre a zero" style="font-size:0.6rem;"><i class="bi bi-arrow-counterclockwise"></i></button>
-                                    <button type="button" class="btn btn-outline-danger btn-xs py-0 px-1" onclick="supprimerLigne({{ s.classe_id }})" title="Supprimer la ligne" style="font-size:0.6rem;"><i class="bi bi-trash"></i></button>
-                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
+                </div>
+                <div id="selection-action-bar" class="d-none mt-2 p-2 rounded border bg-light d-flex flex-wrap align-items-center gap-2 justify-content-between position-sticky bottom-0 shadow-sm" style="z-index:5;">
+                    <div class="small fw-bold text-primary">
+                        <i class="bi bi-check2-square me-1"></i>
+                        <span id="selection-count">0</span> ligne(s) sélectionnée(s)
+                    </div>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="viderSelectionScolarite()">
+                            <i class="bi bi-x-lg"></i> Désélectionner
+                        </button>
+                        <button type="button" class="btn btn-outline-warning btn-sm" onclick="reinitialiserSelection()">
+                            <i class="bi bi-arrow-counterclockwise"></i> Réinitialiser la sélection
+                        </button>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="supprimerSelection()">
+                            <i class="bi bi-trash"></i> Supprimer la sélection
+                        </button>
+                    </div>
                 </div>
                 <button type="submit" class="btn btn-success w-100 mt-1 py-1 fw-bold" style="font-size:0.75rem;">
                     <i class="bi bi-check-circle"></i> ENREGISTRER TOUT
@@ -464,6 +476,68 @@ function toggleSelectAll() {
     checkboxes.forEach(function(cb) {
         cb.checked = selectAll.checked;
     });
+    updateSelectionBar();
+}
+
+function updateSelectionBar() {
+    const selected = document.querySelectorAll('.select-classe:checked');
+    const bar = document.getElementById('selection-action-bar');
+    const count = document.getElementById('selection-count');
+    const selectAll = document.getElementById('selectAll');
+    const all = document.querySelectorAll('.select-classe');
+    if (count) count.textContent = selected.length;
+    if (bar) bar.classList.toggle('d-none', selected.length === 0);
+    if (selectAll) {
+        selectAll.checked = all.length > 0 && selected.length === all.length;
+        selectAll.indeterminate = selected.length > 0 && selected.length < all.length;
+    }
+}
+
+function viderSelectionScolarite() {
+    document.querySelectorAll('.select-classe').forEach(function(cb) {
+        cb.checked = false;
+    });
+    updateSelectionBar();
+}
+
+function reinitialiserSelection() {
+    const selected = document.querySelectorAll('.select-classe:checked');
+    if (selected.length === 0) {
+        alert('Veuillez selectionner au moins une classe');
+        return;
+    }
+    if (!confirm('Réinitialiser à 0 les ' + selected.length + ' ligne(s) sélectionnée(s) ?')) return;
+
+    const promises = [];
+    selected.forEach(function(cb) {
+        promises.push(
+            fetch('/api/scolarite/reinitialiser/' + cb.value, {
+                method: 'POST',
+                credentials: 'same-origin'
+            }).then(function(r) { return r.json(); })
+        );
+    });
+
+    Promise.all(promises).then(function(results) {
+        let ok = 0;
+        selected.forEach(function(cb, index) {
+            if (results[index] && results[index].success) {
+                const tr = cb.closest('tr');
+                if (tr) {
+                    tr.querySelectorAll('input[data-mois]').forEach(function(input) {
+                        input.value = 0;
+                    });
+                    document.getElementById('total_' + cb.value).textContent = '0 FCFA';
+                }
+                ok++;
+            }
+        });
+        if (ok > 0) {
+            alert(ok + ' ligne(s) réinitialisée(s) avec succès.');
+        }
+    }).catch(function(err) {
+        alert('Erreur réseau : ' + err);
+    });
 }
 
 function appliquerMontantSelection() {
@@ -599,6 +673,7 @@ function reinitialiserLigne(classeId) {
                 input.value = 0;
             });
             document.getElementById('total_' + classeId).textContent = '0 FCFA';
+            updateSelectionBar();
         } else {
             alert(res.message || 'Erreur');
         }
@@ -620,7 +695,7 @@ function supprimerLigne(classeId) {
     })
     .then(function(r) { return r.json(); })
     .then(function(res) {
-        if (res.success) { tr.remove(); }
+        if (res.success) { tr.remove(); updateSelectionBar(); }
         else { alert(res.message || 'Erreur lors de la suppression.'); }
     })
     .catch(function(err) {
@@ -659,6 +734,7 @@ function supprimerSelection() {
         results.forEach(function(res, i) {
             if (res.success) { if (rows[i]) rows[i].remove(); ok++; }
         });
+        updateSelectionBar();
         if (ok > 0) alert(ok + ' ligne(s) supprimee(s) avec succes.');
     }).catch(function(err) {
         alert('Erreur reseau : ' + err);
@@ -682,6 +758,7 @@ function reinitialiserTout() {
                 const classeId = tr.dataset.classeId;
                 document.getElementById('total_' + classeId).textContent = '0 FCFA';
             });
+            updateSelectionBar();
         } else {
             alert(res.message || 'Erreur');
         }
@@ -690,6 +767,10 @@ function reinitialiserTout() {
         alert('Erreur réseau : ' + err);
     });
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    updateSelectionBar();
+});
 
 // ============ DRAG & DROP REORDONNANCEMENT SCOLARITE ============
 (function() {
