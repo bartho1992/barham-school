@@ -350,7 +350,8 @@ def finances():
     eleves_list = Eleve.query.filter_by(ecole_id=ecole_id).options(joinedload(Eleve.classe)).order_by(Eleve.nom, Eleve.prenom).all()
     
     return render_template('finances/index.html', ecole=e, paiements=recent_paiements, total_encaisse=total_encaisse,
-        today_encaisse=today_encaisse, categories=categories, lignes_paiements=lignes_paiements, classes=classes, mois_list=mois_list, eleves_list=eleves_list, embed=embed)
+        today_encaisse=today_encaisse, categories=categories, lignes_paiements=lignes_paiements, classes=classes, mois_list=mois_list, eleves_list=eleves_list, embed=embed,
+        diag_nb_eleves=len(eleves), diag_nb_scolarites=len(scolarites_map), diag_annee=annee, diag_ecole_id=ecole_id)
 
 @app.route('/api/tarifs/<int:eleve_id>/<mois>')
 @login_required

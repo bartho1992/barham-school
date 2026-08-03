@@ -95,6 +95,24 @@
     {% endfor %}
 </div>
 
+<!-- DIAGNOSTIC -->
+<div style="background:#fff3cd;border:1px solid #ffc107;padding:6px 10px;margin-bottom:8px;border-radius:4px;font-size:0.65rem;font-family:monospace;">
+    <strong>DIAG:</strong> 
+    ecole_id={{ diag_ecole_id }} | annee={{ diag_annee }} |
+    eleves_bdd={{ diag_nb_eleves }} | scolarites_bdd={{ diag_nb_scolarites }} |
+    lignes={{ lignes_paiements|length }} |
+    {% if lignes_paiements %}
+    1er: DU={{ lignes_paiements[0].du_affiche }} 
+    AVANCE={{ lignes_paiements[0].avance_affiche }} 
+    RESTE={{ lignes_paiements[0].reste_affiche }} 
+    CUMUL={{ lignes_paiements[0].cumul_affiche }} 
+    MOIS="{{ lignes_paiements[0].mois_affiche }}"
+    total_du={{ lignes_paiements[0].total_du }}
+    {% else %}
+    AUCUNE LIGNE (eleves sans classe?)
+    {% endif %}
+</div>
+
 <div class="card shadow-sm border-0">
     <div class="card-header bg-white py-2 d-flex justify-content-between align-items-center">
         <h6 class="mb-0 fw-bold"><i class="bi bi-credit-card"></i> Suivi des Paiements</h6>
