@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+{% set classe_id = request.args.get('classe_id')|int if request.args.get('classe_id') else none %}
+{% set matiere_id = request.args.get('matiere_id')|int if request.args.get('matiere_id') else none %}
 {% block title %}Cahier de Textes - {{ ecole.nom }}{% endblock %}
 {% block extra_css %}
 <style>
@@ -115,9 +117,6 @@
 </form>
 
 <!-- Liste des séances -->
-{% set classe_id = request.args.get('classe_id')|int if request.args.get('classe_id') else None %}
-{% set matiere_id = request.args.get('matiere_id')|int if request.args.get('matiere_id') else None %}
-
 {% if not classe_id %}
 <div class="ct-empty">
     <i class="bi bi-arrow-up-circle" style="font-size:2.5rem; display:block; margin-bottom:0.5rem;"></i>
