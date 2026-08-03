@@ -14,9 +14,12 @@ except ImportError:
 def _annee_courante(e):
     return session.get('annee_scolaire', e.annee_scolaire if e else '')
 
+def _bypass_licence_check():
+    return current_user.role in ('super_users', 'dev')
+
 def _check_parametres_access(ecole_id):
-    """Verifie l'acces aux parametres : super_users toujours ok, user = licence active requise"""
-    if current_user.role != 'super_users':
+    """Verifie l'acces aux parametres : dev/super_users toujours ok, sinon licence active requise"""
+    if not _bypass_licence_check():
         from models import Licence
         lic = Licence.licence_active_for_ecole(ecole_id)
         if not lic:
@@ -25,7 +28,7 @@ def _check_parametres_access(ecole_id):
 
 def _check_parametres_access_json(ecole_id):
     """Version JSON pour les appels AJAX"""
-    if current_user.role != 'super_users':
+    if not _bypass_licence_check():
         from models import Licence
         lic = Licence.licence_active_for_ecole(ecole_id)
         if not lic:
@@ -782,7 +785,7 @@ def parametres_financiers():
     # Accessible a tous les utilisateurs avec une licence
     from models import Licence
     ecole_id = get_current_ecole_id()
-    if current_user.role != 'super_users':
+    if not _bypass_licence_check():
         lic = Licence.licence_active_for_ecole(ecole_id)
         if not lic:
             flash('Vous devez avoir un abonnement actif pour acceder aux paramètres.', 'danger')
@@ -805,7 +808,7 @@ def parametres_financiers():
 def categorie_ajouter():
     ecole_id = get_current_ecole_id()
     # Alow all users with active licence
-    if current_user.role != 'super_users':
+    if not _bypass_licence_check():
         from models import Licence
         lic = Licence.licence_active_for_ecole(ecole_id)
         if not lic:
@@ -825,7 +828,7 @@ def categorie_ajouter():
 def categorie_supprimer(id):
     ecole_id = get_current_ecole_id()
     # Alow all users with active licence
-    if current_user.role != 'super_users':
+    if not _bypass_licence_check():
         from models import Licence
         lic = Licence.licence_active_for_ecole(ecole_id)
         if not lic:
@@ -913,7 +916,7 @@ def scolarite_sauvegarder():
     """Sauvegarde les scolarites pour toutes les classes"""
     ecole_id = get_current_ecole_id()
     # Alow all users with active licence
-    if current_user.role != 'super_users':
+    if not _bypass_licence_check():
         from models import Licence
         lic = Licence.licence_active_for_ecole(ecole_id)
         if not lic:
@@ -991,7 +994,7 @@ def api_scolarite_sauvegarder(classe_id):
     """Sauvegarde les montants de scolarite pour une classe (AJAX)"""
     ecole_id = get_current_ecole_id()
     # Alow all users with active licence
-    if current_user.role != 'super_users':
+    if not _bypass_licence_check():
         from models import Licence
         lic = Licence.licence_active_for_ecole(ecole_id)
         if not lic:
@@ -1019,7 +1022,7 @@ def api_scolarite_reinitialiser(classe_id):
     """Remet a zero les montants de scolarite pour une classe (AJAX)"""
     ecole_id = get_current_ecole_id()
     # Alow all users with active licence
-    if current_user.role != 'super_users':
+    if not _bypass_licence_check():
         from models import Licence
         lic = Licence.licence_active_for_ecole(ecole_id)
         if not lic:
@@ -1040,7 +1043,7 @@ def api_scolarite_supprimer(classe_id):
     """Supprime une ligne de scolarite (AJAX)"""
     ecole_id = get_current_ecole_id()
     # Alow all users with active licence
-    if current_user.role != 'super_users':
+    if not _bypass_licence_check():
         from models import Licence
         lic = Licence.licence_active_for_ecole(ecole_id)
         if not lic:
@@ -1056,13 +1059,13 @@ def api_scolarite_supprimer(classe_id):
 @login_required
 def api_scolarite_reinitialiser_tout():
     """Remet a zero toutes les scolarites (AJAX)"""
+    ecole_id = get_current_ecole_id()
     # Alow all users with active licence
-    if current_user.role != 'super_users':
+    if not _bypass_licence_check():
         from models import Licence
         lic = Licence.licence_active_for_ecole(ecole_id)
         if not lic:
             return jsonify({'success': False, 'message': 'Abonnement requis'}), 403
-    ecole_id = get_current_ecole_id()
     annee = _annee_courante(Ecole.query.get(ecole_id))
     scolarites = Scolarite.query.filter_by(annee_scolaire=annee).all()
     for s in scolarites:
@@ -1077,8 +1080,9 @@ def api_scolarite_reinitialiser_tout():
 @login_required
 def api_scolarite_reorder():
     """Reordonne les lignes de scolarite (AJAX)"""
+    ecole_id = get_current_ecole_id()
     # Alow all users with active licence
-    if current_user.role != 'super_users':
+    if not _bypass_licence_check():
         from models import Licence
         lic = Licence.licence_active_for_ecole(ecole_id)
         if not lic:
