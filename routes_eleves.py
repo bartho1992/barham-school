@@ -16,7 +16,9 @@ def _annee_courante(e):
 def eleves():
     ecole_id = get_current_ecole_id()
     e = Ecole.query.get(ecole_id); classes = Classe.query.filter_by(ecole_id=ecole_id).all(); annee = _annee_courante(e)
-    q = Eleve.query.filter_by(annee_scolaire=annee, ecole_id=ecole_id).options(joinedload(Eleve.classe))
+    q = Eleve.query.filter_by(ecole_id=ecole_id).options(joinedload(Eleve.classe)).filter(
+        db.or_(Eleve.annee_scolaire == annee, Eleve.annee_scolaire == None, Eleve.annee_scolaire == '')
+    )
     fc = request.args.get('classe',''); fs = request.args.get('search','')
     if fc: q = q.filter_by(classe_id=fc)
     if fs: q = q.filter((Eleve.prenom.contains(fs))|(Eleve.nom.contains(fs))|(Eleve.code.contains(fs)))
