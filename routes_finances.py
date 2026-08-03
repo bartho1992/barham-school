@@ -901,13 +901,15 @@ def parametres_financiers():
             flash('Vous devez avoir un abonnement actif pour acceder aux paramètres.', 'danger')
             return redirect(url_for('abonnement'))
     e = Ecole.query.get(ecole_id); annee = _annee_courante(e)
-    categories = CategorieTarif.query.order_by(CategorieTarif.type_categorie, CategorieTarif.nom).all()
-    categories_mensuel = CategorieTarif.query.filter_by(type_categorie='mensuel').all()
-    categories_inscription = CategorieTarif.query.filter_by(type_categorie='inscription').all()
-    scolarites = Scolarite.query.filter_by(annee_scolaire=annee).order_by(Scolarite.ordre, Scolarite.classe_id).all()
-    tarifs_services = TarifService.query.filter_by(annee_scolaire=annee).order_by(TarifService.classe_id, TarifService.categorie_id).all()
-    classes = Classe.query.order_by(Classe.nom).all()
-    abonnements = AbonnementService.query.filter_by(actif=True).order_by(AbonnementService.date_debut.desc()).all()
+    categories = CategorieTarif.query.filter_by(ecole_id=ecole_id).order_by(CategorieTarif.type_categorie, CategorieTarif.nom).all()
+    categories_mensuel = CategorieTarif.query.filter_by(ecole_id=ecole_id, type_categorie='mensuel').all()
+    categories_inscription = CategorieTarif.query.filter_by(ecole_id=ecole_id, type_categorie='inscription').all()
+    scolarites = Scolarite.query.filter_by(annee_scolaire=annee, ecole_id=ecole_id).order_by(Scolarite.ordre, Scolarite.classe_id).all()
+    tarifs_services = TarifService.query.filter_by(annee_scolaire=annee, ecole_id=ecole_id).order_by(TarifService.classe_id, TarifService.categorie_id).all()
+    classes = Classe.query.filter_by(ecole_id=ecole_id).order_by(Classe.nom).all()
+    abonnements_ids = [a.eleve_id for a in AbonnementService.query.filter_by(actif=True).all()]
+    eleves_ecole_ids = [el.id for el in Eleve.query.filter_by(ecole_id=ecole_id).all()]
+    abonnements = AbonnementService.query.filter(AbonnementService.actif == True, AbonnementService.eleve_id.in_(eleves_ecole_ids)).order_by(AbonnementService.date_debut.desc()).all() if eleves_ecole_ids else []
     return render_template('finances/parametres.html',
                          ecole=e, categories=categories, categories_mensuel=categories_mensuel,
                          categories_inscription=categories_inscription, scolarites=scolarites,
@@ -927,7 +929,7 @@ def categorie_ajouter():
     type_categorie = request.form.get('type_categorie')
     if not nom or not type_categorie:
         return jsonify({'success': False, 'message': 'Champs manquants'}), 400
-    categorie = CategorieTarif(nom=nom.upper(), type_categorie=type_categorie.strip())
+    categorie = CategorieTarif(nom=nom.upper(), type_categorie=type_categorie.strip(), ecole_id=ecole_id)
     db.session.add(categorie)
     db.session.commit()
     flash('Categorie ajoutee avec succes', 'success')
@@ -1040,9 +1042,9 @@ def scolarite_sauvegarder():
     for classe in classes:
         has_data = any(request.form.get(f'{mois}_{classe.id}') is not None for mois in mois_list)
         if not has_data: continue
-        scolarite = Scolarite.query.filter_by(classe_id=classe.id, annee_scolaire=annee).first()
+        scolarite = Scolarite.query.filter_by(classe_id=classe.id, annee_scolaire=annee, ecole_id=ecole_id).first()
         if not scolarite:
-            scolarite = Scolarite(classe_id=classe.id, annee_scolaire=annee)
+            scolarite = Scolarite(classe_id=classe.id, annee_scolaire=annee, ecole_id=ecole_id)
             db.session.add(scolarite)
         for mois in mois_list:
             field_name = f'{mois}_{classe.id}'
@@ -1078,12 +1080,12 @@ def scolarite_ajouter_ligne():
             classe = Classe(nom=nom, ecole_id=ecole_id)
             db.session.add(classe)
             db.session.flush()
-        scolarite = Scolarite.query.filter_by(classe_id=classe.id, annee_scolaire=annee).first()
+        scolarite = Scolarite.query.filter_by(classe_id=classe.id, annee_scolaire=annee, ecole_id=ecole_id).first()
         if scolarite:
             existe_deja.append(nom)
         else:
             max_ordre += 1
-            scolarite = Scolarite(classe_id=classe.id, annee_scolaire=annee, ordre=max_ordre)
+            scolarite = Scolarite(classe_id=classe.id, annee_scolaire=annee, ecole_id=ecole_id, ordre=max_ordre)
             db.session.add(scolarite)
             ajoutees += 1
     db.session.commit()
@@ -1113,9 +1115,9 @@ def api_scolarite_sauvegarder(classe_id):
     data = request.get_json()
     if not data:
         return jsonify({'success': False, 'message': 'Donnees invalides'}), 400
-    scolarite = Scolarite.query.filter_by(classe_id=classe_id, annee_scolaire=annee).first()
+    scolarite = Scolarite.query.filter_by(classe_id=classe_id, annee_scolaire=annee, ecole_id=ecole_id).first()
     if not scolarite:
-        max_ordre = db.session.query(db.func.max(Scolarite.ordre)).filter_by(annee_scolaire=annee).scalar() or 0
+        max_ordre = db.session.query(db.func.max(Scolarite.ordre)).filter_by(annee_scolaire=annee, ecole_id=ecole_id).scalar() or 0
         scolarite = Scolarite(classe_id=classe_id, annee_scolaire=annee, ecole_id=ecole_id, ordre=max_ordre + 1)
         db.session.add(scolarite)
     mois_list = ['inscription', 'janvier', 'fevrier', 'mars', 'avril', 'mai', 'juin',
@@ -1138,7 +1140,7 @@ def api_scolarite_reinitialiser(classe_id):
         if not lic:
             return jsonify({'success': False, 'message': 'Abonnement requis'}), 403
     annee = _annee_courante(Ecole.query.get(ecole_id))
-    scolarite = Scolarite.query.filter_by(classe_id=classe_id, annee_scolaire=annee).first()
+    scolarite = Scolarite.query.filter_by(classe_id=classe_id, annee_scolaire=annee, ecole_id=ecole_id).first()
     if scolarite:
         mois_list = ['inscription', 'janvier', 'fevrier', 'mars', 'avril', 'mai', 'juin',
                      'juillet', 'aout', 'septembre', 'octobre', 'novembre', 'decembre']
@@ -1159,7 +1161,7 @@ def api_scolarite_supprimer(classe_id):
         if not lic:
             return jsonify({'success': False, 'message': 'Abonnement requis'}), 403
     annee = _annee_courante(Ecole.query.get(ecole_id))
-    scolarite = Scolarite.query.filter_by(classe_id=classe_id, annee_scolaire=annee).first()
+    scolarite = Scolarite.query.filter_by(classe_id=classe_id, annee_scolaire=annee, ecole_id=ecole_id).first()
     if scolarite:
         db.session.delete(scolarite)
         db.session.commit()
@@ -1177,7 +1179,7 @@ def api_scolarite_reinitialiser_tout():
         if not lic:
             return jsonify({'success': False, 'message': 'Abonnement requis'}), 403
     annee = _annee_courante(Ecole.query.get(ecole_id))
-    scolarites = Scolarite.query.filter_by(annee_scolaire=annee).all()
+    scolarites = Scolarite.query.filter_by(annee_scolaire=annee, ecole_id=ecole_id).all()
     for s in scolarites:
         mois_list = ['inscription', 'janvier', 'fevrier', 'mars', 'avril', 'mai', 'juin',
                      'juillet', 'aout', 'septembre', 'octobre', 'novembre', 'decembre']
@@ -1220,11 +1222,11 @@ def tarif_service_sauvegarder():
     if not classe_id or not categorie_id:
         flash('Classe et categorie requises', 'warning')
         return redirect(url_for('parametres_financiers', _anchor='categories'))
-    tarif = TarifService.query.filter_by(classe_id=classe_id, categorie_id=categorie_id, annee_scolaire=annee).first()
+    tarif = TarifService.query.filter_by(classe_id=classe_id, categorie_id=categorie_id, annee_scolaire=annee, ecole_id=ecole_id).first()
     if tarif:
         flash('Ce tarif existe deja.', 'info')
         return redirect(url_for('parametres_financiers', _anchor='categories'))
-    tarif = TarifService(classe_id=classe_id, categorie_id=categorie_id, annee_scolaire=annee)
+    tarif = TarifService(classe_id=classe_id, categorie_id=categorie_id, annee_scolaire=annee, ecole_id=ecole_id)
     mois_list = ['inscription', 'janvier', 'fevrier', 'mars', 'avril', 'mai', 'juin',
                  'juillet', 'aout', 'septembre', 'octobre', 'novembre', 'decembre']
     for mois in mois_list:
@@ -1248,3 +1250,27 @@ def tarif_service_supprimer(id):
     db.session.commit()
     flash('Tarif de service supprime avec succes', 'success')
     return redirect(url_for('parametres_financiers', _anchor='categories'))
+
+@app.route('/admin/fix-ecole-id')
+@login_required
+def admin_fix_ecole_id():
+    """Corrige les enregistrements sans ecole_id ou avec le mauvais ecole_id"""
+    if current_user.role not in ('dev', 'super_users'):
+        flash('Acces reserve', 'danger')
+        return redirect(url_for('dashboard'))
+    ecole_id = get_current_ecole_id()
+    
+    resultats = []
+    # Corriger Scolarite
+    nb = Scolarite.query.filter(Scolarite.ecole_id != ecole_id).update({Scolarite.ecole_id: ecole_id}, synchronize_session=False)
+    resultats.append(f'Scolarites corrigees: {nb}')
+    # Corriger TarifService
+    nb2 = TarifService.query.filter(TarifService.ecole_id != ecole_id).update({TarifService.ecole_id: ecole_id}, synchronize_session=False)
+    resultats.append(f'Tarifs services corriges: {nb2}')
+    # Corriger CategorieTarif
+    nb3 = CategorieTarif.query.filter(CategorieTarif.ecole_id != ecole_id).update({CategorieTarif.ecole_id: ecole_id}, synchronize_session=False)
+    resultats.append(f'Categories corrigees: {nb3}')
+    db.session.commit()
+    
+    flash(f'Migration ecole_id={ecole_id} terminee. ' + ' | '.join(resultats), 'success')
+    return redirect(url_for('finances'))
