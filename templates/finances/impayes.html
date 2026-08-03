@@ -59,7 +59,7 @@
     <select id="filtre-categorie" class="form-select form-select-sm" style="width:auto;min-width:170px;font-size:0.7rem;height:28px;padding-right:34px;background-position:right 10px center;" onchange="filtrer()">
         <option value="">Toutes categories</option>
         {% for cat in categories %}
-        <option value="{{ cat.nom }}">{{ cat.nom }}</option>
+        <option value="{{ cat.id }}">{{ cat.nom }}</option>
         {% endfor %}
     </select>
     <input list="eleves-list" id="filtre-nom" class="form-control form-control-sm" style="width:auto;min-width:180px;height:28px;font-size:0.7rem;" placeholder="Nom ou prenom..." oninput="filtrer()">
@@ -143,7 +143,7 @@
                 </td>
                 <td style="text-align:right;vertical-align:middle;font-weight:bold;font-size:0.7rem;white-space:nowrap;
                     {% if ligne.total_reste > 0 %}color:#c00;{% else %}color:#155724;{% endif %}">
-                    {{ '{:,.0f}'.format(ligne.total_reste).replace(',', ' ') if ligne.total_reste > 0 else '&#10003;' }}
+                    {% if ligne.total_reste > 0 %}{{ '{:,.0f}'.format(ligne.total_reste).replace(',', ' ') }}{% else %}✓{% endif %}
                 </td>
                 <td style="text-align:right;vertical-align:middle;{% if ligne.total_reste > 0 %}color:#c00;{% else %}color:#999;{% endif %}">
                     {{ '{:,.0f}'.format(ligne.total_reste).replace(',', ' ') if ligne.total_reste > 0 else '-' }}
@@ -160,7 +160,7 @@
                     {% if cl.statut == 'inactif' %}&#9866;
                     {% elif cl.statut == 'sans_tarif' %}?
                     {% elif cl.reste > 0 %}{{ '{:,.0f}'.format(cl.reste).replace(',', ' ') }}
-                    {% elif cl.statut == 'paye' %}&#10003;
+                    {% elif cl.statut == 'paye' %}✓
                     {% endif %}
                 </td>
                 {% endfor %}
@@ -246,16 +246,8 @@ function filtrer() {
         
         // Filtre categorie : masquer si la categorie n'a pas de reste > 0
         if (categorie) {
-            var trouveCat = false;
-            for (var i = 12; i < cells.length; i++) {
-                if (cells[i].textContent.trim() !== '' && cells[i].textContent.trim() !== '-'
-                    && cells[i].textContent.trim() !== '\u2713' && cells[i].textContent.trim() !== '\u2726'
-                    && cells[i].textContent.trim().match(/^\d/)) {
-                    trouveCat = true;
-                    break;
-                }
-            }
-            if (!trouveCat) show = false;
+            var resteCategorie = parseFloat(tr.getAttribute('data-cat-' + categorie) || '0');
+            if (!(resteCategorie > 0)) show = false;
         }
         
         // Filtre mois : modifier les colonnes DU/AVANCE/RESTE/CUMUL/MOIS
@@ -282,18 +274,16 @@ function filtrer() {
                      cells[7].style.color = '#155724';
                      cells[7].style.fontWeight = '';
                      cells[7].style.fontSize = '';
-                 } else { cells[7].textContent = '-'; cells[7].style.fontWeight = ''; }
-                 // CUMUL = somme cumulative du mois + tous les precedents
-                 var moisOrder = ['Inscription','Octobre','Novembre','Decembre','Janvier','Fevrier','Mars','Avril','Mai','Juin'];
-                 var cumul = 0;
-                 for (var mi = 0; mi < moisOrder.length; mi++) {
-                     var m = moisOrder[mi];
-                     if (details[m]) cumul += details[m].reste;
-                     if (m === mois) break;
+                 } else {
+                     cells[7].textContent = '-';
+                     cells[7].style.color = '#999';
+                     cells[7].style.fontWeight = '';
+                     cells[7].style.fontSize = '';
                  }
-                 cells[8].textContent = cumul > 0 ? Number(cumul).toLocaleString('fr-FR') : '\u2713';
-                 cells[8].style.color = cumul > 0 ? '#c00' : '#155724';
+                 cells[8].textContent = d.cumul > 0 ? Number(d.cumul).toLocaleString('fr-FR') : (d.due > 0 ? '\u2713' : '-');
+                 cells[8].style.color = d.cumul > 0 ? '#c00' : (d.due > 0 ? '#155724' : '#999');
                 cells[11].textContent = d.due > 0 ? Number(d.due).toLocaleString('fr-FR') : '-';
+                if (d.due === 0 && d.paye === 0 && d.reste === 0) show = false;
             }
         } else {
             // Restaurer les valeurs agregees
@@ -339,7 +329,7 @@ function filtrer() {
     }
     
     // Mettre a jour les badges selon les lignes visibles
-    var bNonPaye = 0, bDU = 0, bAV = 0, bRE = 0, bMOIS = 0;
+    var bNonPaye = 0, bDU = 0, bAV = 0, bRE = 0, bCU = 0, bMOIS = 0;
     rows.forEach(function(tr) {
         if (tr.style.display === 'none') return;
         var cells = tr.querySelectorAll('td');
@@ -351,8 +341,9 @@ function filtrer() {
         var du = toNum(cells[5].textContent);
         var av = toNum(cells[6].textContent);
         var re = toNum(cells[7].textContent);
+        var cu = toNum(cells[8].textContent);
         var mo = toNum(cells[11].textContent);
-        bDU += du; bAV += av; bRE += re; bMOIS += mo;
+        bDU += du; bAV += av; bRE += re; bCU += cu; bMOIS += mo;
         if (av <= 0) bNonPaye++;
     });
     var fmt = function(n) { return Number(n).toLocaleString('fr-FR'); };
@@ -364,7 +355,7 @@ function filtrer() {
     setBadge('badge-du', bDU);
     setBadge('badge-avance', bAV);
     setBadge('total-impayes-card', bRE);
-    setBadge('badge-cumul', bRE);
+    setBadge('badge-cumul', bCU);
     setBadge('badge-scolarite', bMOIS);
 }
 

@@ -11,6 +11,10 @@ try:
 except ImportError:
     requests = None
 
+MOIS_SCOLAIRES = ['Inscription', 'Octobre', 'Novembre', 'Decembre', 'Janvier', 'Fevrier', 'Mars', 'Avril', 'Mai', 'Juin']
+MOIS_CALENDAIRES = ['Janvier', 'Fevrier', 'Mars', 'Avril', 'Mai', 'Juin',
+                    'Juillet', 'Aout', 'Septembre', 'Octobre', 'Novembre', 'Decembre']
+
 def _annee_courante(e):
     return session.get('annee_scolaire', e.annee_scolaire if e else '')
 
@@ -34,6 +38,221 @@ def _check_parametres_access_json(ecole_id):
         if not lic:
             return jsonify({'error': 'Licence expiree', 'redirect': url_for('abonnement')}), 403
     return None
+
+def _montant_scolarite_mois(scolarite, mois):
+    if not scolarite:
+        return 0
+    if mois == 'Inscription':
+        return scolarite.inscription or 0
+    return getattr(scolarite, mois.lower(), 0) or 0
+
+def _mois_dans_abonnement(abo, mois):
+    if mois == 'Inscription':
+        return abo.categorie.type_categorie == 'inscription'
+    if abo.categorie.type_categorie != 'mensuel':
+        return False
+    try:
+        idx_mois = MOIS_CALENDAIRES.index(mois)
+        idx_debut = MOIS_CALENDAIRES.index(abo.mois_debut)
+        idx_fin = MOIS_CALENDAIRES.index(abo.mois_fin)
+    except ValueError:
+        return True
+    if idx_debut <= idx_fin:
+        return idx_debut <= idx_mois <= idx_fin
+    return idx_mois >= idx_debut or idx_mois <= idx_fin
+
+def _montant_service_mois(cat, tarif, abo, mois):
+    if not abo or not tarif:
+        return 0
+    if not _mois_dans_abonnement(abo, mois):
+        return 0
+    if abo.montant_personnalise is not None and cat.type_categorie == 'mensuel' and mois != 'Inscription':
+        return abo.montant_personnalise or 0
+    if mois == 'Inscription':
+        return tarif.inscription or 0
+    return getattr(tarif, mois.lower(), 0) or 0
+
+def _index_mois_scolaire(mois):
+    try:
+        return MOIS_SCOLAIRES.index(mois)
+    except ValueError:
+        return None
+
+def _build_ligne_financiere(eleve, annee, categories, scolarites_map, tarifs_services_map, abonnements_by_eleve, paiements):
+    if not eleve.classe:
+        return None
+
+    scolarite = scolarites_map.get(eleve.classe_id)
+    abonnements = abonnements_by_eleve.get(eleve.id, [])
+    abonnement_par_categorie = {abo.categorie_id: abo for abo in abonnements if abo.actif}
+
+    cat_lines = []
+    cat_lines_by_id = {}
+    for cat in categories:
+        abo = abonnement_par_categorie.get(cat.id)
+        tarif = tarifs_services_map.get((eleve.classe_id, cat.id))
+        statut = 'inactif'
+        if abo and tarif:
+            statut = 'actif'
+        elif abo and not tarif:
+            statut = 'sans_tarif'
+        cat_line = {
+            'cat': cat,
+            'due': 0,
+            'paye': 0,
+            'reste': 0,
+            'statut': statut
+        }
+        cat_lines.append(cat_line)
+        cat_lines_by_id[cat.id] = cat_line
+
+    mois_details = {
+        mois: {'due': 0, 'paye': 0, 'reste': 0, 'cumul': 0}
+        for mois in MOIS_SCOLAIRES
+    }
+
+    dues = []
+    total_du = 0
+    for mois in MOIS_SCOLAIRES:
+        du_scolarite = _montant_scolarite_mois(scolarite, mois)
+        if du_scolarite > 0:
+            dues.append({
+                'kind': 'scolarite',
+                'month': mois,
+                'month_index': _index_mois_scolaire(mois),
+                'remaining': du_scolarite,
+                'paid': 0,
+                'amount': du_scolarite
+            })
+            mois_details[mois]['due'] += du_scolarite
+            total_du += du_scolarite
+
+        for cat in categories:
+            abo = abonnement_par_categorie.get(cat.id)
+            tarif = tarifs_services_map.get((eleve.classe_id, cat.id))
+            montant = _montant_service_mois(cat, tarif, abo, mois)
+            if montant <= 0:
+                continue
+            dues.append({
+                'kind': 'service',
+                'category_id': cat.id,
+                'month': mois,
+                'month_index': _index_mois_scolaire(mois),
+                'remaining': montant,
+                'paid': 0,
+                'amount': montant
+            })
+            cat_lines_by_id[cat.id]['due'] += montant
+            mois_details[mois]['due'] += montant
+            total_du += montant
+
+    paiements_tries = sorted(
+        paiements,
+        key=lambda p: (((p.date_paiement.isoformat() if p.date_paiement else '')), p.id or 0)
+    )
+    total_paye = sum((p.montant or 0) for p in paiements_tries)
+
+    for paiement in paiements_tries:
+        restant = paiement.montant or 0
+        type_paiement = (paiement.type_paiement or '').strip()
+        idx_cible = _index_mois_scolaire(type_paiement)
+
+        if idx_cible is not None:
+            for due in dues:
+                if due['month_index'] is None or due['month_index'] > idx_cible or due['remaining'] <= 0:
+                    continue
+                allocation = min(restant, due['remaining'])
+                if allocation <= 0:
+                    continue
+                due['remaining'] -= allocation
+                due['paid'] += allocation
+                mois_details[due['month']]['paye'] += allocation
+                if due['kind'] == 'service':
+                    cat_lines_by_id[due['category_id']]['paye'] += allocation
+                restant -= allocation
+                if restant <= 0:
+                    break
+        else:
+            for cat in categories:
+                if cat.nom != type_paiement:
+                    continue
+                for due in dues:
+                    if due['kind'] != 'service' or due.get('category_id') != cat.id or due['remaining'] <= 0:
+                        continue
+                    allocation = min(restant, due['remaining'])
+                    if allocation <= 0:
+                        continue
+                    due['remaining'] -= allocation
+                    due['paid'] += allocation
+                    mois_details[due['month']]['paye'] += allocation
+                    cat_lines_by_id[cat.id]['paye'] += allocation
+                    restant -= allocation
+                    if restant <= 0:
+                        break
+                break
+
+    scolarite_due = sum(
+        due['amount'] for due in dues
+        if due['kind'] == 'scolarite'
+    )
+    scolarite_paye = sum(
+        due['paid'] for due in dues
+        if due['kind'] == 'scolarite'
+    )
+
+    cumul = 0
+    mois_payes = set()
+    for mois in MOIS_SCOLAIRES:
+        details = mois_details[mois]
+        details['reste'] = max(details['due'] - details['paye'], 0)
+        cumul += details['reste']
+        details['cumul'] = cumul
+        if details['paye'] > 0:
+            mois_payes.add(mois)
+
+    services_due = sum(cl['due'] for cl in cat_lines)
+    services_paye = sum(cl['paye'] for cl in cat_lines)
+    for cl in cat_lines:
+        cl['reste'] = max(cl['due'] - cl['paye'], 0)
+        if cl['statut'] == 'sans_tarif':
+            continue
+        if cl['due'] <= 0 and cl['paye'] <= 0:
+            cl['statut'] = 'inactif'
+        elif cl['reste'] > 0:
+            cl['statut'] = 'impaye'
+        else:
+            cl['statut'] = 'paye'
+
+    total_reste = max(total_du - min(total_paye, total_du), 0)
+
+    nb_mois_actifs = sum(1 for mois in MOIS_SCOLAIRES if mois_details[mois]['due'] > 0)
+    montant_mois = (total_du / nb_mois_actifs) if nb_mois_actifs else 0
+
+    date_limite = ''
+    try:
+        annees = (annee or '').split('-')
+        date_limite = f"30/06/{annees[1] if len(annees) > 1 else '2026'}"
+    except Exception:
+        pass
+
+    return {
+        'eleve': eleve,
+        'scolarite_due': scolarite_due,
+        'scolarite_paye': scolarite_paye,
+        'scolarite_reste': max(scolarite_due - scolarite_paye, 0),
+        'cat_lines': cat_lines,
+        'total_du': total_du,
+        'total_paye': total_paye,
+        'total_reste': total_reste,
+        'montant_mois': montant_mois,
+        'date_limite': date_limite,
+        'paye_au_moins_un': total_paye > 0,
+        'mois_payes': mois_payes,
+        'mois_details': mois_details,
+        'nb_impayes': sum(1 for cl in cat_lines if cl['reste'] > 0) + (1 if max(scolarite_due - scolarite_paye, 0) > 0 else 0),
+        'services_due': services_due,
+        'services_paye': services_paye
+    }
 
 @app.route('/finances/gestion')
 @login_required
@@ -60,8 +279,6 @@ def finances():
     ).scalar() or 0
     categories = CategorieTarif.query.filter_by(ecole_id=ecole_id).order_by(CategorieTarif.nom).all()
     
-    # Calculer les lignes eleves pour le suivi paiement
-    mois_scolaires = ['Inscription','Octobre','Novembre','Decembre','Janvier','Fevrier','Mars','Avril','Mai','Juin']
     eleves = Eleve.query.filter_by(ecole_id=ecole_id).options(joinedload(Eleve.classe)).filter(
         db.or_(Eleve.annee_scolaire == annee, Eleve.annee_scolaire == None, Eleve.annee_scolaire == '')
     ).order_by(Eleve.nom).all()
@@ -72,80 +289,28 @@ def finances():
         tarifs_services_map[(t.classe_id, t.categorie_id)] = t
     abonnements_map = {}
     if eleve_ids:
-        abonnements = AbonnementService.query.filter(AbonnementService.actif == True, AbonnementService.eleve_id.in_(eleve_ids)).all()
+        abonnements = AbonnementService.query.filter(
+            AbonnementService.actif == True,
+            AbonnementService.eleve_id.in_(eleve_ids)
+        ).options(joinedload(AbonnementService.categorie)).all()
     else:
         abonnements = []
     for a in abonnements:
-        abonnements_map.setdefault(a.eleve_id, set()).add(a.categorie_id)
-    paiements_map = {}
+        abonnements_map.setdefault(a.eleve_id, []).append(a)
+    paiements_par_eleve = {}
     for p in Paiement.query.filter_by(annee_scolaire=annee, ecole_id=ecole_id).all():
-        if p.eleve_id not in paiements_map:
-            paiements_map[p.eleve_id] = {}
-        key = p.type_paiement or ''
-        paiements_map[p.eleve_id][key] = paiements_map[p.eleve_id].get(key, 0) + p.montant
+        paiements_par_eleve.setdefault(p.eleve_id, []).append(p)
     
     lignes_paiements = []
     for eleve in eleves:
-        if not eleve.classe: continue
-        scol = scolarites_map.get(eleve.classe_id)
-        payes = paiements_map.get(eleve.id, {})
-        abos = abonnements_map.get(eleve.id, set())
-        scolarite_due = scol.total_annuel if scol else 0
-        scolarite_paye = sum(payes.get(m, 0) for m in mois_scolaires)
-        
-        # Donnees par mois pour la scolarite
-        mois_details = {}
-        for m in mois_scolaires:
-            if m == 'Inscription':
-                due_m = scol.inscription if scol else 0
-            else:
-                due_m = getattr(scol, m.lower(), 0) if scol else 0
-            paye_m = payes.get(m, 0)
-            reste_m = max(due_m - paye_m, 0)
-            mois_details[m] = {'due': due_m, 'paye': paye_m, 'reste': reste_m}
-        
-        cat_lines = []
-        services_due = 0
-        services_paye = 0
-        for cat in categories:
-            tarif = tarifs_services_map.get((eleve.classe_id, cat.id))
-            is_abonne = cat.id in abos
-            if not tarif or not is_abonne:
-                cat_lines.append({'cat': cat, 'due': 0, 'paye': 0, 'reste': 0})
-                continue
-            due = tarif.total_annuel
-            paye = payes.get(cat.nom, 0)
-            reste = max(due - paye, 0)
-            services_due += due
-            services_paye += paye
-            cat_lines.append({'cat': cat, 'due': due, 'paye': paye, 'reste': reste})
-        total_du = scolarite_due + services_due
-        total_paye = scolarite_paye + services_paye
-        total_reste = max(total_du - total_paye, 0)
-        nb_mois_actifs = len([m for m in mois_scolaires if m == 'Inscription' and scol and scol.inscription > 0 or m != 'Inscription' and scol and getattr(scol, m.lower(), 0) > 0]) if scol else 0
-        for cat in categories:
-            tarif = tarifs_services_map.get((eleve.classe_id, cat.id))
-            if tarif and cat.id in abos:
-                for m in ['inscription','janvier','fevrier','mars','avril','mai','juin','octobre','novembre','decembre']:
-                    if getattr(tarif, m, 0) > 0: nb_mois_actifs = max(nb_mois_actifs, 10)
-        if nb_mois_actifs < 1: nb_mois_actifs = 10
-        montant_mois = total_du / nb_mois_actifs if total_du > 0 else 0
-        date_limite = ''
-        try:
-            annees = annee.split('-') if annee else ['2025','2026']
-            date_limite = f'30/06/{annees[1] if len(annees) > 1 else "2026"}'
-        except: pass
-        lignes_paiements.append({
-            'eleve': eleve, 'total_du': total_du, 'total_paye': total_paye,
-            'total_reste': total_reste, 'montant_mois': montant_mois,
-            'date_limite': date_limite, 'cat_lines': cat_lines,
-            'paye_au_moins_un': total_paye > 0,
-            'mois_payes': set(payes.keys()),
-            'mois_details': mois_details,
-        })
+        ligne = _build_ligne_financiere(
+            eleve, annee, categories, scolarites_map, tarifs_services_map,
+            abonnements_map, paiements_par_eleve.get(eleve.id, [])
+        )
+        if ligne:
+            lignes_paiements.append(ligne)
     
-    # Mois distincts des paiements pour le filtre
-    mois_list = ['Inscription','Octobre','Novembre','Decembre','Janvier','Fevrier','Mars','Avril','Mai','Juin']
+    mois_list = MOIS_SCOLAIRES
     
     classes = Classe.query.filter_by(ecole_id=ecole_id).order_by(Classe.nom).all()
     eleves_list = Eleve.query.filter_by(ecole_id=ecole_id).options(joinedload(Eleve.classe)).order_by(Eleve.nom, Eleve.prenom).all()
@@ -568,40 +733,33 @@ def api_eleve_statut_paiements(eleve_id):
     ecole_id = get_current_ecole_id()
     e = Ecole.query.get(ecole_id); annee = _annee_courante(e)
     eleve = Eleve.query.get_or_404(eleve_id)
-    
-    # Mois de la sequence scolaire
-    mois_scolaires = ['Inscription','Octobre','Novembre','Decembre','Janvier','Fevrier','Mars','Avril','Mai','Juin']
-    
-    # Recuperer la scolarite de la classe de l'eleve
-    scolarite = None
-    if eleve.classe:
-        scolarite = Scolarite.query.filter_by(classe_id=eleve.classe_id, annee_scolaire=annee).first()
-    
-    # Recuperer tous les paiements de l'eleve pour cette annee
-    paiements = Paiement.query.filter_by(eleve_id=eleve_id, annee_scolaire=annee).all()
-    
-    # Total paye par mois
-    paye_par_mois = {}
-    for p in paiements:
-        mois_key = p.type_paiement
-        paye_par_mois[mois_key] = paye_par_mois.get(mois_key, 0) + p.montant
+    categories = CategorieTarif.query.filter_by(ecole_id=ecole_id).order_by(CategorieTarif.nom).all()
+    scolarites_map = {}
+    if eleve.classe_id:
+        scolarite = Scolarite.query.filter_by(classe_id=eleve.classe_id, annee_scolaire=annee, ecole_id=ecole_id).first()
+        if scolarite:
+            scolarites_map[eleve.classe_id] = scolarite
+    tarifs_services_map = {}
+    for t in TarifService.query.filter_by(annee_scolaire=annee, ecole_id=ecole_id).all():
+        tarifs_services_map[(t.classe_id, t.categorie_id)] = t
+    abonnements = AbonnementService.query.filter_by(eleve_id=eleve_id, actif=True).options(joinedload(AbonnementService.categorie)).all()
+    paiements = Paiement.query.filter_by(eleve_id=eleve_id, annee_scolaire=annee, ecole_id=ecole_id).all()
+    ligne = _build_ligne_financiere(
+        eleve, annee, categories, scolarites_map, tarifs_services_map,
+        {eleve_id: abonnements}, paiements
+    )
     
     resultat = {}
-    for mois in mois_scolaires:
-        # Tarif du mois
-        tarif_mois = 0
-        if scolarite:
-            if mois == 'Inscription':
-                tarif_mois = scolarite.inscription or 0
-            else:
-                tarif_mois = getattr(scolarite, mois.lower(), 0) or 0
-        
-        total_paye = paye_par_mois.get(mois, 0)
+    for mois in MOIS_SCOLAIRES:
+        details = ligne['mois_details'].get(mois, {}) if ligne else {}
+        tarif_mois = details.get('due', 0)
+        total_paye = details.get('paye', 0)
+        impaye = details.get('reste', 0)
         resultat[mois] = {
             'tarif': tarif_mois,
-            'paye': total_paye >= tarif_mois if tarif_mois > 0 else False,
+            'paye': impaye == 0 and tarif_mois > 0,
             'total_paye': total_paye,
-            'impaye': max(tarif_mois - total_paye, 0) if tarif_mois > 0 else 0
+            'impaye': impaye
         }
     
     return jsonify({'paiements': resultat, 'eleve_id': eleve_id, 'annee': annee})
@@ -643,8 +801,6 @@ def impayes():
     ecole_id = get_current_ecole_id()
     e = Ecole.query.get(ecole_id); annee = _annee_courante(e)
     
-    mois_scolaires = ['Inscription','Octobre','Novembre','Decembre','Janvier','Fevrier','Mars','Avril','Mai','Juin']
-    
     # Categories de services
     categories = CategorieTarif.query.filter_by(ecole_id=ecole_id).order_by(CategorieTarif.nom).all()
     
@@ -663,113 +819,32 @@ def impayes():
     for t in TarifService.query.filter_by(annee_scolaire=annee, ecole_id=ecole_id).all():
         tarifs_services_map[(t.classe_id, t.categorie_id)] = t
     
-    # Map: eleve_id -> {categorie_id} (active subscriptions)
     abonnements_map = {}
     if eleve_ids:
-        abonnements = AbonnementService.query.filter(AbonnementService.actif == True, AbonnementService.eleve_id.in_(eleve_ids)).all()
+        abonnements = AbonnementService.query.filter(
+            AbonnementService.actif == True,
+            AbonnementService.eleve_id.in_(eleve_ids)
+        ).options(joinedload(AbonnementService.categorie)).all()
     else:
         abonnements = []
     for a in abonnements:
-        if a.eleve_id not in abonnements_map:
-            abonnements_map[a.eleve_id] = set()
-        abonnements_map[a.eleve_id].add(a.categorie_id)
+        abonnements_map.setdefault(a.eleve_id, []).append(a)
     
-    # Map: eleve_id -> {type_paiement: total_paye}
     paiements_map = {}
     for p in Paiement.query.filter_by(annee_scolaire=annee, ecole_id=ecole_id).all():
-        if p.eleve_id not in paiements_map:
-            paiements_map[p.eleve_id] = {}
-        key = p.type_paiement or ''
-        paiements_map[p.eleve_id][key] = paiements_map[p.eleve_id].get(key, 0) + p.montant
+        paiements_map.setdefault(p.eleve_id, []).append(p)
     
     lignes = []
     total_global = 0
     
     for eleve in eleves:
-        if not eleve.classe: continue
-        scol = scolarites_map.get(eleve.classe_id)
-        payes = paiements_map.get(eleve.id, {})
-        abos = abonnements_map.get(eleve.id, set())
-        
-        # --- Scolarité (due et paye) ---
-        scolarite_due = scol.total_annuel if scol else 0
-        scolarite_paye = sum(payes.get(m, 0) for m in mois_scolaires)
-        
-        # Donnees par mois pour la scolarite
-        mois_details = {}
-        for m in mois_scolaires:
-            if m == 'Inscription':
-                due_m = scol.inscription if scol else 0
-            else:
-                due_m = getattr(scol, m.lower(), 0) if scol else 0
-            paye_m = payes.get(m, 0)
-            reste_m = max(due_m - paye_m, 0)
-            mois_details[m] = {'due': due_m, 'paye': paye_m, 'reste': reste_m}
-        
-        # --- Services (categories) ---
-        cat_lines = []
-        services_due = 0
-        services_paye = 0
-        for cat in categories:
-            tarif = tarifs_services_map.get((eleve.classe_id, cat.id))
-            is_abonne = cat.id in abos
-            if not tarif or not is_abonne:
-                cat_lines.append({
-                    'cat': cat, 'due': 0, 'paye': 0, 'reste': 0,
-                    'statut': 'inactif' if not is_abonne else 'sans_tarif'
-                })
-                continue
-            due = tarif.total_annuel
-            paye = payes.get(cat.nom, 0)
-            reste = max(due - paye, 0)
-            services_due += due
-            services_paye += paye
-            cat_lines.append({
-                'cat': cat, 'due': due, 'paye': paye, 'reste': reste,
-                'statut': 'impaye' if reste > 0 else 'paye'
-            })
-        
-        # --- Totaux ---
-        total_du = scolarite_due + services_due
-        total_paye = scolarite_paye + services_paye
-        total_reste = max(total_du - total_paye, 0)
-        nb_mois_actifs = len([m for m in mois_scolaires if (scol.inscription if m == 'Inscription' else getattr(scol, m.lower(), 0) or 0) > 0]) if scol else 0
-        # Ajouter mois pour services
-        for cat in categories:
-            tarif = tarifs_services_map.get((eleve.classe_id, cat.id))
-            if tarif and cat.id in abos:
-                for m in ['inscription','janvier','fevrier','mars','avril','mai','juin',
-                          'juillet','aout','septembre','octobre','novembre','decembre']:
-                    if getattr(tarif, m, 0) > 0:
-                        nb_mois_actifs = max(nb_mois_actifs, 10)  # 10 school months
-        if nb_mois_actifs < 1: nb_mois_actifs = 10
-        montant_mois = total_du / nb_mois_actifs if total_du > 0 else 0
-        
-        # --- Déterminer date limite ---
-        from datetime import datetime
-        date_limite = ''
-        try:
-            annees = annee.split('-') if annee else ['2025','2026']
-            date_limite = f'30/06/{annees[1] if len(annees) > 1 else "2026"}'
-        except: pass
-        
-        ligne = {
-            'eleve': eleve,
-            'scolarite_due': scolarite_due,
-            'scolarite_paye': scolarite_paye,
-            'scolarite_reste': max(scolarite_due - scolarite_paye, 0),
-            'cat_lines': cat_lines,
-            'total_du': total_du,
-            'total_paye': total_paye,
-            'total_reste': total_reste,
-            'montant_mois': montant_mois,
-            'date_limite': date_limite,
-            'nb_impayes': sum(1 for cl in cat_lines if cl['reste'] > 0) + (1 if scol and max(scolarite_due - scolarite_paye, 0) > 0 else 0),
-            'mois_details': mois_details,
-            'mois_payes': set(payes.keys()),
-        }
-        total_global += total_reste
-        lignes.append(ligne)
+        ligne = _build_ligne_financiere(
+            eleve, annee, categories, scolarites_map, tarifs_services_map,
+            abonnements_map, paiements_map.get(eleve.id, [])
+        )
+        if ligne:
+            total_global += ligne['total_reste']
+            lignes.append(ligne)
     
     classes = Classe.query.filter_by(ecole_id=ecole_id).order_by(Classe.nom).all()
     eleves_list = Eleve.query.filter_by(ecole_id=ecole_id).options(joinedload(Eleve.classe)).order_by(Eleve.nom, Eleve.prenom).all()
@@ -777,7 +852,7 @@ def impayes():
     return render_template('finances/impayes.html',
                          lignes=lignes, ecole=e, categories=categories, classes=classes,
                          total_impayes_global=total_global, nb_eleves=len(lignes), eleves_list=eleves_list,
-                         mois_list=mois_scolaires)
+                         mois_list=MOIS_SCOLAIRES)
 
 @app.route('/finances/parametres')
 @login_required
