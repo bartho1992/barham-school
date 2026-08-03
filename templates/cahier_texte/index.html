@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+{% block title %}Cahier de Textes - {{ ecole.nom }}{% endblock %}
+{% block extra_css %}
+<style>
+    .ct-filters {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 10px 14px;
+    }
+    .ct-card {
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 10px 14px;
+        margin-bottom: 6px;
+        transition: box-shadow 0.15s ease;
+        background: #fff;
+    }
+    .ct-card:hover {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .ct-card .ct-date {
+        font-weight: 700;
+        font-size: 0.7rem;
+        color: #1e1b4b;
+        white-space: nowrap;
+    }
+    .ct-card .ct-meta {
+        font-size: 0.65rem;
+        color: #64748b;
+    }
+    .ct-card .ct-label {
+        font-size: 0.6rem;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: #94a3b8;
+        letter-spacing: 0.04em;
+    }
+    .ct-card .ct-text {
+        font-size: 0.7rem;
+        color: #334155;
+        line-height: 1.35;
+    }
+    .ct-card .ct-text p { margin-bottom: 2px; }
+    .ct-card .ct-text p:last-child { margin-bottom: 0; }
+    .ct-badge {
+        font-size: 0.55rem;
+        padding: 2px 7px;
+        border-radius: 4px;
+        font-weight: 600;
+    }
+    .btn-ct-delete {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        font-size: 0.65rem;
+        line-height: 1;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.15s ease;
+    }
+    .modal-ct .modal-header {
+        padding: 8px 14px;
+        border-bottom: 1px solid #eee;
+    }
+    .modal-ct .modal-body {
+        padding: 10px 14px;
+    }
+    .modal-ct .modal-footer {
+        padding: 6px 14px;
+    }
+    .ct-empty {
+        padding: 3rem 1rem;
+        text-align: center;
+        color: #94a3b8;
+    }
+</style>
+{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-1">
+    <div class="section-header"><i class="bi bi-journal-text"></i> Cahier de Textes</div>
+</div>
+
+<!-- Filtres -->
+<form method="GET" action="{{ url_for('cahier_texte_bp.cahier_texte') }}" class="ct-filters mb-2">
+    <div class="row g-2 align-items-end">
+        <div class="col-auto">
+            <label class="form-label mb-0 small fw-bold text-muted">Classe</label>
+            <select name="classe_id" class="form-select form-select-sm" onchange="this.form.submit()" style="min-width:150px;">
+                <option value="">-- Choisir --</option>
+                {% for c in classes %}
+                <option value="{{ c.id }}" {% if request.args.get('classe_id')|int == c.id %}selected{% endif %}>{{ c.nom }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-auto">
+            <label class="form-label mb-0 small fw-bold text-muted">Matière</label>
+            <select name="matiere_id" class="form-select form-select-sm" onchange="this.form.submit()" style="min-width:160px;" {% if not request.args.get('classe_id') %}disabled{% endif %}>
+                <option value="">-- Choisir --</option>
+                {% for m in matieres %}
+                <option value="{{ m.id }}" {% if request.args.get('matiere_id')|int == m.id %}selected{% endif %}>{{ m.nom }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        {% if request.args.get('classe_id') and request.args.get('matiere_id') %}
+        <div class="col-auto">
+            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalAjoutSeance">
+                <i class="bi bi-plus-lg"></i> Ajouter une séance
+            </button>
+        </div>
+        {% endif %}
+    </div>
+</form>
+
+<!-- Liste des séances -->
+{% set classe_id = request.args.get('classe_id')|int if request.args.get('classe_id') else None %}
+{% set matiere_id = request.args.get('matiere_id')|int if request.args.get('matiere_id') else None %}
+
+{% if not classe_id %}
+<div class="ct-empty">
+    <i class="bi bi-arrow-up-circle" style="font-size:2.5rem; display:block; margin-bottom:0.5rem;"></i>
+    <span class="fw-medium">Sélectionnez une classe pour commencer</span>
+</div>
+{% elif not matiere_id %}
+<div class="ct-empty">
+    <i class="bi bi-journal-bookmark-fill" style="font-size:2.5rem; display:block; margin-bottom:0.5rem;"></i>
+    <span class="fw-medium">Sélectionnez une matière pour afficher les séances</span>
+</div>
+{% else %}
+<div id="seances-container">
+    <div class="text-center py-3" id="seances-loading">
+        <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+        <span class="ms-1 small text-muted">Chargement...</span>
+    </div>
+</div>
+{% endif %}
+
+<!-- Modal Ajouter une séance -->
+<div class="modal fade modal-ct" id="modalAjoutSeance" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('cahier_texte_bp.cahier_texte_ajouter') }}">
+                <input type="hidden" name="classe_id" value="{{ classe_id or '' }}">
+                <input type="hidden" name="matiere_id" value="{{ matiere_id or '' }}">
+                <div class="modal-header">
+                    <h6 class="modal-title" style="font-size:0.8rem;">
+                        <i class="bi bi-plus-circle"></i> Ajouter une séance
+                    </h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" style="font-size:0.6rem;"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <label class="form-label small mb-1 fw-semibold">Date de la séance <span class="text-danger">*</span></label>
+                            <input type="date" name="date_seance" class="form-control form-control-sm" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small mb-1 fw-semibold">Enseignant</label>
+                            <input type="text" name="enseignant" class="form-control form-control-sm" placeholder="Nom de l'enseignant">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small mb-1 fw-semibold">Classe / Matière</label>
+                            <input type="text" class="form-control form-control-sm" readonly
+                                   value="{% for c in classes %}{% if c.id == classe_id %}{{ c.nom }}{% endif %}{% endfor %} — {% for m in matieres %}{% if m.id == matiere_id %}{{ m.nom }}{% endif %}{% endfor %}">
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <label class="form-label small mb-1 fw-semibold">Contenu de la séance <span class="text-danger">*</span></label>
+                        <textarea name="contenu" class="form-control form-control-sm" rows="3" placeholder="Décrivez le contenu de la séance..." required></textarea>
+                    </div>
+                    <div class="row g-2 mt-1">
+                        <div class="col-md-6">
+                            <label class="form-label small mb-1 fw-semibold">Devoirs</label>
+                            <textarea name="devoirs" class="form-control form-control-sm" rows="2" placeholder="Devoirs à faire..."></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small mb-1 fw-semibold">Observations</label>
+                            <textarea name="observations" class="form-control form-control-sm" rows="2" placeholder="Observations éventuelles..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-check-lg"></i> Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const classeId = {{ classe_id|tojson }};
+    const matiereId = {{ matiere_id|tojson }};
+    const container = document.getElementById('seances-container');
+
+    if (classeId && matiereId && container) {
+        fetch("{{ url_for('cahier_texte_bp.cahier_texte_api', classe_id=999999, matiere_id=999999) }}"
+            .replace('999999', classeId).replace('999999', matiereId))
+            .then(r => r.json())
+            .then(seances => {
+                container.innerHTML = '';
+                if (!seances.length) {
+                    container.innerHTML = '<div class="ct-empty"><i class="bi bi-inbox" style="font-size:2rem; display:block; margin-bottom:0.3rem;"></i><span class="fw-medium small">Aucune séance enregistrée</span></div>';
+                    return;
+                }
+                seances.forEach(s => {
+                    const contenuPreview = s.contenu.length > 120 ? s.contenu.substring(0, 120) + '...' : s.contenu;
+                    const card = document.createElement('div');
+                    card.className = 'ct-card d-flex gap-3 align-items-start';
+                    card.innerHTML = `
+                        <div class="text-center flex-shrink-0" style="min-width:52px;">
+                            <div class="ct-date">${formatDate(s.date_seance)}</div>
+                        </div>
+                        <div class="flex-grow-1" style="min-width:0;">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                                    <span class="ct-badge bg-primary bg-opacity-10 text-primary">${escapeHtml(s.matiere)}</span>
+                                    ${s.enseignant ? `<span class="ct-meta"><i class="bi bi-person me-1"></i>${escapeHtml(s.enseignant)}</span>` : ''}
+                                </div>
+                                <form method="POST" action="{{ url_for('cahier_texte_bp.cahier_texte_supprimer', id=0) }}".replace('0', s.id)
+                                      onsubmit="return confirm('Supprimer cette séance ?');" style="flex-shrink:0;">
+                                    <button type="submit" class="btn btn-outline-danger btn-ct-delete" title="Supprimer"><i class="bi bi-trash3"></i></button>
+                                </form>
+                            </div>
+                            <div class="ct-label">Contenu</div>
+                            <div class="ct-text">${escapeHtml(contenuPreview)}</div>
+                            ${s.devoirs ? `<div class="ct-label mt-1">Devoirs</div><div class="ct-text">${escapeHtml(s.devoirs)}</div>` : ''}
+                            ${s.observations ? `<div class="ct-label mt-1">Observations</div><div class="ct-text text-muted fst-italic">${escapeHtml(s.observations)}</div>` : ''}
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            })
+            .catch(err => {
+                container.innerHTML = '<div class="ct-empty text-danger small">Erreur de chargement.</div>';
+            });
+    }
+});
+
+function formatDate(d) {
+    if (!d) return '';
+    const parts = d.split('-');
+    if (parts.length === 3) {
+        const mois = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
+        const m = parseInt(parts[1]) - 1;
+        return `<span style="font-size:0.82rem;font-weight:800;">${parts[2]}</span><br><span style="font-size:0.55rem;color:#64748b;">${mois[m] || parts[1]}</span><br><span style="font-size:0.5rem;color:#94a3b8;">${parts[0]}</span>`;
+    }
+    return d;
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+</script>
+{% endblock %}

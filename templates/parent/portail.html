@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portail Parent — {{ eleve.prenom }} {{ eleve.nom }}</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #1e1b4b 0%, #312e81 40%, #4338ca 100%);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', 'Outfit', sans-serif;
+            background: #f1f5f9;
+            color: #1e293b;
+            min-height: 100vh;
+        }
+        /* --- Header --- */
+        .portal-header {
+            background: var(--primary-gradient);
+            color: #fff;
+            padding: 20px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+        .portal-header .school-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .portal-header .school-icon {
+            width: 44px; height: 44px;
+            background: linear-gradient(135deg, #f59e0b, #fbbf24);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            color: #1e1b4b;
+            flex-shrink: 0;
+        }
+        .portal-header h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin: 0;
+            line-height: 1.3;
+        }
+        .portal-header .student-badge {
+            background: rgba(255,255,255,0.15);
+            border-radius: 10px;
+            padding: 8px 16px;
+            font-weight: 600;
+            font-size: 0.88rem;
+        }
+        .portal-header .btn-group-header {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .btn-print {
+            background: rgba(255,255,255,0.15);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 10px;
+            padding: 9px 18px;
+            font-weight: 600;
+            font-size: 0.82rem;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .btn-print:hover {
+            background: rgba(255,255,255,0.25);
+        }
+        .btn-logout {
+            background: rgba(239,68,68,0.2);
+            color: #fca5a5;
+            border: 1px solid rgba(239,68,68,0.3);
+            border-radius: 10px;
+            padding: 9px 18px;
+            font-weight: 600;
+            font-size: 0.82rem;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        .btn-logout:hover {
+            background: rgba(239,68,68,0.35);
+            color: #fff;
+        }
+        /* --- Main Content --- */
+        .portal-content {
+            max-width: 960px;
+            margin: 28px auto;
+            padding: 0 24px;
+            animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .section-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.04);
+            border: 1px solid #e2e8f0;
+        }
+        .section-card h4 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #1e1b4b;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section-card h4 i {
+            color: #6366f1;
+            font-size: 1.1rem;
+        }
+        /* --- Table Styles --- */
+        .table-compact {
+            font-size: 0.8rem;
+            margin-bottom: 0;
+        }
+        .table-compact thead th {
+            background: #f8fafc;
+            font-weight: 600;
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            color: #64748b;
+            border-bottom: 2px solid #e2e8f0;
+            padding: 10px 8px;
+            white-space: nowrap;
+        }
+        .table-compact tbody td {
+            padding: 8px 8px;
+            vertical-align: middle;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .highlight-trim {
+            background: #eef2ff;
+            font-weight: 700;
+            color: #4338ca;
+        }
+        .badge-status {
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+        .badge-paye {
+            background: #dcfce7;
+            color: #15803d;
+        }
+        .badge-absent {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+        .badge-retard {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .badge-justifie {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+        .text-muted-small {
+            color: #94a3b8;
+            font-size: 0.7rem;
+        }
+        .empty-state {
+            text-align: center;
+            color: #94a3b8;
+            padding: 24px;
+            font-size: 0.85rem;
+        }
+        .empty-state i {
+            font-size: 2rem;
+            display: block;
+            margin-bottom: 8px;
+            opacity: 0.5;
+        }
+        /* --- Print Styles --- */
+        @media print {
+            body {
+                background: #fff !important;
+                font-size: 11px;
+            }
+            .portal-header {
+                background: #1e1b4b !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .section-card {
+                box-shadow: none !important;
+                border: 1px solid #ccc !important;
+                break-inside: avoid;
+                page-break-inside: avoid;
+                padding: 14px;
+                margin-bottom: 16px;
+            }
+            .btn-print, .btn-logout, .btn-group-header {
+                display: none !important;
+            }
+            .table-compact {
+                font-size: 10px;
+            }
+            .table-compact thead th {
+                font-size: 9px;
+                padding: 6px 4px;
+            }
+            .table-compact tbody td {
+                padding: 5px 4px;
+            }
+            .portal-content {
+                max-width: 100%;
+                margin: 0;
+                padding: 0 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <div class="portal-header">
+        <div class="school-info">
+            <div class="school-icon">
+                <i class="bi bi-mortarboard-fill"></i>
+            </div>
+            <div>
+                <h3>{{ ecole.nom if ecole else 'Barham School' }}</h3>
+                <span style="font-size:0.72rem; opacity:0.65;">{{ ecole.adresse if ecole else '' }}</span>
+            </div>
+        </div>
+        <div class="student-badge">
+            <i class="bi bi-person-fill me-1"></i>
+            {{ eleve.prenom }} {{ eleve.nom }}
+            {% if eleve.classe %}
+            &nbsp;|&nbsp; {{ eleve.classe.nom }}
+            {% endif %}
+        </div>
+        <div class="btn-group-header">
+            <button class="btn-print" onclick="window.print()">
+                <i class="bi bi-printer-fill me-1"></i> Imprimer
+            </button>
+            <a href="{{ url_for('parent_bp.parent_deconnexion') }}" class="btn-logout">
+                <i class="bi bi-box-arrow-right me-1"></i> Déconnexion
+            </a>
+        </div>
+    </div>
+
+    <!-- INFO ELEVE -->
+    <div class="portal-content">
+        <div class="section-card">
+            <h4><i class="bi bi-info-circle-fill"></i> Informations de l'élève</h4>
+            <div class="row g-3">
+                <div class="col-md-3 col-6">
+                    <div class="text-muted-small text-uppercase">Nom</div>
+                    <div class="fw-semibold">{{ eleve.nom }}</div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="text-muted-small text-uppercase">Prénom</div>
+                    <div class="fw-semibold">{{ eleve.prenom }}</div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="text-muted-small text-uppercase">Classe</div>
+                    <div class="fw-semibold">{{ eleve.classe.nom if eleve.classe else '—' }}</div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="text-muted-small text-uppercase">Année</div>
+                    <div class="fw-semibold">{{ annee }}</div>
+                </div>
+                {% if eleve.date_naissance %}
+                <div class="col-md-3 col-6">
+                    <div class="text-muted-small text-uppercase">Né(e) le</div>
+                    <div class="fw-semibold">{{ eleve.date_naissance }}</div>
+                </div>
+                {% endif %}
+                {% if eleve.tuteur %}
+                <div class="col-md-3 col-6">
+                    <div class="text-muted-small text-uppercase">Tuteur</div>
+                    <div class="fw-semibold">{{ eleve.tuteur }}</div>
+                </div>
+                {% endif %}
+                {% if eleve.tel %}
+                <div class="col-md-3 col-6">
+                    <div class="text-muted-small text-uppercase">Téléphone</div>
+                    <div class="fw-semibold">{{ eleve.tel }}</div>
+                </div>
+                {% endif %}
+                <div class="col-md-3 col-6">
+                    <div class="text-muted-small text-uppercase">Situation</div>
+                    <div class="fw-semibold">{{ eleve.situation or '—' }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NOTES -->
+        <div class="section-card">
+            <h4><i class="bi bi-journal-bookmark-fill"></i> Notes par trimestre — {{ annee }}</h4>
+            {% set has_notes = false %}
+            {% for t in [1, 2, 3] %}
+                {% if notes_par_trimestre[t]['notes'] %}
+                    {% set has_notes = true %}
+                {% endif %}
+            {% endfor %}
+
+            {% if has_notes %}
+            <div class="table-responsive">
+                <table class="table table-compact table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Matière</th>
+                            {% for t in [1, 2, 3] %}
+                            <th class="text-center">Trimestre {{ t }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for matiere in matieres %}
+                        <tr>
+                            <td>{{ matiere.nom }}</td>
+                            {% for t in [1, 2, 3] %}
+                                {% set note = notes_par_trimestre[t]['notes'].get(matiere.nom) %}
+                                <td class="text-center">
+                                    {% if note and note.moyenne is not none %}
+                                        {{ "%.2f"|format(note.moyenne) }}
+                                    {% else %}
+                                        <span class="text-muted-small">—</span>
+                                    {% endif %}
+                                </td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                        <tr style="background: #f8fafc;">
+                            <td class="fw-bold">Moyenne Générale</td>
+                            {% for t in [1, 2, 3] %}
+                            <td class="text-center highlight-trim">
+                                {% set mg = notes_par_trimestre[t]['moyenne'] %}
+                                {% if mg is not none %}
+                                    {{ "%.2f"|format(mg) }}
+                                {% else %}
+                                    <span class="text-muted-small">—</span>
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="bi bi-journal-x"></i>
+                Aucune note disponible pour l'année {{ annee }}.
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- PAIEMENTS -->
+        <div class="section-card">
+            <h4><i class="bi bi-cash-stack"></i> Paiements récents — {{ annee }}</h4>
+            {% if paiements %}
+            <div class="table-responsive">
+                <table class="table table-compact table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th class="text-end">Montant</th>
+                            <th>Mode</th>
+                            <th>Caissier</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in paiements %}
+                        <tr>
+                            <td>{% if p.date_paiement %}{{ p.date_paiement.strftime('%d/%m/%Y %H:%M') }}{% else %}—{% endif %}</td>
+                            <td>{{ p.type_paiement or '—' }}</td>
+                            <td class="text-end fw-semibold">{{ "%,.0f"|format(p.montant) }} FCFA</td>
+                            <td>
+                                <span class="badge-status badge-paye">{{ p.mode_paiement or 'Espèces' }}</span>
+                            </td>
+                            <td>{{ p.caissier or '—' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="bi bi-cash-coin"></i>
+                Aucun paiement enregistré pour l'année {{ annee }}.
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- ABSENCES -->
+        <div class="section-card">
+            <h4><i class="bi bi-calendar2-x-fill"></i> Absences récentes — {{ annee }}</h4>
+            {% if absences %}
+            <div class="table-responsive">
+                <table class="table table-compact table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Motif</th>
+                            <th class="text-center">Justifié</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for a in absences %}
+                        <tr>
+                            <td>{{ a.date_evenement or '—' }}</td>
+                            <td>
+                                <span class="badge-status {% if a.type_evenement == 'Absent' %}badge-absent{% elif a.type_evenement == 'Retard' %}badge-retard{% else %}badge-justifie{% endif %}">
+                                    {{ a.type_evenement or '—' }}
+                                </span>
+                            </td>
+                            <td>{{ a.motif or '—' }}</td>
+                            <td class="text-center">
+                                {% if a.justifie %}
+                                <span class="badge-status badge-justifie">Oui</span>
+                                {% else %}
+                                <span class="badge-status badge-absent">Non</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="bi bi-calendar2-check"></i>
+                Aucune absence enregistrée pour l'année {{ annee }}.
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- FOOTER -->
+        <div class="text-center text-muted-small py-3">
+            &copy; {{ ecole.dev if ecole and ecole.dev else 'Barham Informatique' }} — Portail Parent
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

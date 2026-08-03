@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Archives - {{ ecole.nom }}{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div class="section-header mb-0"><i class="bi bi-archive me-1"></i> Archives — {{ ecole.nom }} | Année en cours : <strong>{{ current_annee }}</strong></div>
+</div>
+
+{% if not stats_annees %}
+<div class="alert alert-info border-0 shadow-sm py-2 small">
+    <i class="bi bi-info-circle me-1"></i> Aucune année scolaire passée à archiver pour le moment.
+</div>
+{% else %}
+
+<div class="table-responsive">
+    <table class="table table-hover table-sm align-middle bg-white shadow-sm rounded-3 overflow-hidden">
+        <thead class="table-dark">
+            <tr>
+                <th class="ps-3">Année scolaire</th>
+                <th class="text-center">Classes</th>
+                <th class="text-center">Élèves</th>
+                <th class="text-center">Paiements</th>
+                <th class="text-center">Statut</th>
+                <th class="text-end pe-3">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for sa in stats_annees %}
+            <tr>
+                <td class="ps-3 fw-bold">{{ sa.annee }}</td>
+                <td class="text-center">{{ sa.nb_classes }}</td>
+                <td class="text-center">{{ sa.nb_eleves }}</td>
+                <td class="text-center">{{ sa.nb_paiements }}</td>
+                <td class="text-center">
+                    {% if sa.deja_archivee %}
+                    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i> Archivée</span>
+                    {% else %}
+                    <span class="badge bg-warning text-dark"><i class="bi bi-clock me-1"></i> En attente</span>
+                    {% endif %}
+                </td>
+                <td class="text-end pe-3">
+                    <div class="d-flex gap-1 justify-content-end">
+                        {% if not sa.deja_archivee %}
+                        <form method="POST" action="{{ url_for('archives_bp.archiver_annee', annee=sa.annee) }}" onsubmit="return confirm('Confirmer l\'archivage de l\'année {{ sa.annee }} ?\n\nLes données d\'assiduité, cahier de texte, notifications et messages seront déplacées vers les tables d\'archives.\nLes élèves, notes, paiements et bulletins restent conservés.');">
+                            <button class="btn btn-sm btn-primary" title="Archiver {{ sa.annee }}">
+                                <i class="bi bi-archive"></i> Archiver
+                            </button>
+                        </form>
+                        {% endif %}
+                        <a href="{{ url_for('archives_bp.consulter_annee', annee=sa.annee) }}" class="btn btn-sm btn-outline-secondary" title="Consulter {{ sa.annee }}">
+                            <i class="bi bi-eye"></i> Consulter
+                        </a>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="alert alert-light border small mt-3">
+    <i class="bi bi-info-circle me-1"></i>
+    <strong>Note :</strong> L'archivage déplace les données non critiques (assiduité, cahier de texte, notifications, messages) vers des tables d'archives.
+    Les données critiques (élèves, notes, paiements, bulletins) sont conservées dans les tables principales et restent consultables.
+</div>
+
+{% endif %}
+
+{% endblock %}

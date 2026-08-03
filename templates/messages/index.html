@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Messagerie - {{ ecole.nom }}{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2 animate-in">
+    <div class="section-header mb-0"><i class="bi bi-envelope-fill me-1"></i> Messagerie interne</div>
+    <div>
+        <a href="{{ url_for('messages_bp.message_nouveau') }}" class="btn btn-sm btn-primary">
+            <i class="bi bi-pencil-square"></i> Nouveau message
+        </a>
+    </div>
+</div>
+
+<!-- Onglets -->
+<ul class="nav nav-tabs mb-3">
+    <li class="nav-item">
+        <a class="nav-link position-relative {{ 'active' if onglet == 'inbox' else '' }}" href="{{ url_for('messages_bp.messages') }}">
+            <i class="bi bi-inbox-fill me-1"></i> Boîte de réception
+            {% if non_lus_count > 0 %}
+            <span class="badge bg-danger rounded-pill ms-1" style="font-size:0.6rem;">{{ non_lus_count }}</span>
+            {% endif %}
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ 'active' if onglet == 'envoyes' else '' }}" href="{{ url_for('messages_bp.messages_envoyes') }}">
+            <i class="bi bi-send-fill me-1"></i> Envoyés
+        </a>
+    </li>
+</ul>
+
+{% if messages %}
+<div style="max-height:65vh;overflow:auto;">
+    <table class="table table-sm table-bordered align-middle bg-white">
+        <thead>
+            <tr>
+                <th>
+                    {% if onglet == 'inbox' %}Expéditeur{% else %}Destinataire{% endif %}
+                </th>
+                <th>Sujet</th>
+                <th>Date</th>
+                <th>Statut</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for msg in messages %}
+            <tr style="cursor:pointer; {% if onglet == 'inbox' and not msg.lu %}font-weight:600; background:#f0f7ff;{% endif %}" 
+                onclick="window.location.href='{{ url_for('messages_bp.message_lire', id=msg.id) }}'">
+                <td>
+                    {% if onglet == 'inbox' %}
+                        {{ msg.expediteur.username }}
+                    {% else %}
+                        {{ msg.destinataire.username if msg.destinataire else 'Tous' }}
+                    {% endif %}
+                </td>
+                <td>
+                    <strong>{{ msg.sujet }}</strong>
+                </td>
+                <td style="white-space:nowrap;font-size:0.75rem;">
+                    {{ msg.date_envoi.strftime('%d/%m/%Y %H:%M') if msg.date_envoi else '' }}
+                </td>
+                <td>
+                    {% if onglet == 'inbox' %}
+                        {% if msg.lu %}
+                        <span class="badge bg-secondary" style="font-size:0.65rem;">Lu</span>
+                        {% else %}
+                        <span class="badge bg-danger" style="font-size:0.65rem;">Non lu</span>
+                        {% endif %}
+                    {% else %}
+                        {% if msg.lu %}
+                        <span class="badge bg-success" style="font-size:0.65rem;">Lu</span>
+                        {% else %}
+                        <span class="badge bg-warning text-dark" style="font-size:0.65rem;">Non lu</span>
+                        {% endif %}
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="text-center py-5 text-muted">
+    <i class="bi bi-envelope-open" style="font-size:3rem;"></i>
+    <p class="mt-2">Aucun message</p>
+    <a href="{{ url_for('messages_bp.message_nouveau') }}" class="btn btn-sm btn-primary">
+        <i class="bi bi-pencil-square"></i> Écrire un message
+    </a>
+</div>
+{% endif %}
+
+{% endblock %}

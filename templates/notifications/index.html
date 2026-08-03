@@ -1,0 +1,375 @@
+{% extends "base.html" %}
+{% block title %}Notifications - {{ ecole.nom }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .notif-table td, .notif-table th {
+        font-size: 0.72rem;
+        vertical-align: middle;
+        padding: 6px 8px;
+    }
+    .notif-table th {
+        background: #f8fafc;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.65rem;
+        letter-spacing: 0.3px;
+    }
+    .badge-type {
+        font-size: 0.62rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        padding: 3px 7px;
+        border-radius: 4px;
+    }
+    .type-absence { background: #fee2e2; color: #991b1b; }
+    .type-retard { background: #fed7aa; color: #7c2d12; }
+    .type-paiement { background: #dbeafe; color: #1e40af; }
+    .type-evenement { background: #d1fae5; color: #065f46; }
+    .canal-sms { background: #e0e7ff; color: #3730a3; font-size: 0.6rem; padding: 2px 6px; border-radius: 3px; }
+    .canal-whatsapp { background: #d1fae5; color: #065f46; font-size: 0.6rem; padding: 2px 6px; border-radius: 3px; }
+    .msg-trunc {
+        max-width: 220px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: inline-block;
+    }
+    .search-wrap { position: relative; }
+    .search-wrap .dropdown-menu {
+        width: 100%;
+        max-height: 200px;
+        overflow-y: auto;
+        font-size: 0.72rem;
+    }
+    .modal-compact .modal-header { padding: 10px 14px; }
+    .modal-compact .modal-body { padding: 14px; }
+    .modal-compact .modal-footer { padding: 10px 14px; }
+    .modal-compact .form-label { font-size: 0.7rem; font-weight: 600; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.3px; }
+    .modal-compact .form-control, .modal-compact .form-select { font-size: 0.75rem; padding: 6px 10px; }
+    .modal-compact textarea.form-control { font-size: 0.72rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2 animate-in">
+    <div class="section-header mb-0">
+        <i class="bi bi-bell-fill me-1"></i> Notifications parents
+    </div>
+    <div>
+        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalNouvelleNotif">
+            <i class="bi bi-plus-circle"></i> Nouvelle notification
+        </button>
+    </div>
+</div>
+
+<!-- Filtres -->
+<form method="GET" class="row g-2 mb-3 align-items-end">
+    <div class="col-auto">
+        <label class="form-label mb-0" style="font-size:0.68rem;font-weight:600;">Type</label>
+        <select name="type" class="form-select form-select-sm" style="font-size:0.72rem;width:140px;">
+            <option value="">Tous</option>
+            {% for key, label in type_labels.items() %}
+            <option value="{{ key }}" {% if filtre_type == key %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-auto">
+        <label class="form-label mb-0" style="font-size:0.68rem;font-weight:600;">Date</label>
+        <input type="date" name="date" class="form-control form-control-sm" style="font-size:0.72rem;width:150px;" value="{{ filtre_date }}">
+    </div>
+    <div class="col-auto">
+        <label class="form-label mb-0" style="font-size:0.68rem;font-weight:600;">Recherche</label>
+        <input type="text" name="recherche" class="form-control form-control-sm" style="font-size:0.72rem;width:200px;" placeholder="Nom, prénom, mot-clé..." value="{{ filtre_recherche }}">
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-sm btn-outline-secondary" style="font-size:0.7rem;">
+            <i class="bi bi-funnel"></i> Filtrer
+        </button>
+        {% if filtre_type or filtre_date or filtre_recherche %}
+        <a href="{{ url_for('notifications_bp.notifications') }}" class="btn btn-sm btn-outline-danger ms-1" style="font-size:0.7rem;">
+            <i class="bi bi-x-circle"></i> Effacer
+        </a>
+        {% endif %}
+    </div>
+</form>
+
+<!-- Tableau historique -->
+{% if notifs %}
+<div style="max-height:60vh;overflow:auto;">
+    <table class="table table-sm table-bordered align-middle bg-white notif-table mb-0">
+        <thead class="sticky-top">
+            <tr>
+                <th>Date</th>
+                <th>Élève</th>
+                <th>Classe</th>
+                <th>Type</th>
+                <th>Canal</th>
+                <th>Message</th>
+                <th style="width:60px;">Statut</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for n in notifs %}
+            <tr>
+                <td style="white-space:nowrap;">{{ n.date_envoi.strftime('%d/%m/%Y %H:%M') if n.date_envoi else '—' }}</td>
+                <td style="white-space:nowrap;">{{ n.eleve.prenom }} {{ n.eleve.nom }}</td>
+                <td style="white-space:nowrap;">{{ n.eleve.classe.nom if n.eleve.classe else '—' }}</td>
+                <td>
+                    <span class="badge-type type-{{ n.type_notif }}">{{ type_labels.get(n.type_notif, n.type_notif) }}</span>
+                </td>
+                <td>
+                    <span class="canal-{{ n.canal }}">{{ n.canal.upper() }}</span>
+                </td>
+                <td>
+                    <span class="msg-trunc" title="{{ n.message }}">{{ n.message }}</span>
+                </td>
+                <td class="text-center">
+                    {% if n.statut == 'envoye' %}
+                    <span class="badge bg-success" style="font-size:0.6rem;">Envoyé</span>
+                    {% elif n.statut == 'echoue' %}
+                    <span class="badge bg-danger" style="font-size:0.6rem;">Échoué</span>
+                    {% else %}
+                    <span class="badge bg-secondary" style="font-size:0.6rem;">{{ n.statut }}</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="text-center py-5 text-muted">
+    <i class="bi bi-bell-slash" style="font-size:3rem;"></i>
+    <p class="mt-2">Aucune notification envoyée</p>
+    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalNouvelleNotif">
+        <i class="bi bi-plus-circle"></i> Envoyer une notification
+    </button>
+</div>
+{% endif %}
+
+<!-- ============================================================ -->
+<!-- MODAL : Nouvelle notification                                -->
+<!-- ============================================================ -->
+<div class="modal fade modal-compact" id="modalNouvelleNotif" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('notifications_bp.envoyer') }}" id="formNotif">
+                <div class="modal-header bg-light">
+                    <h6 class="modal-title" style="font-size:0.8rem;font-weight:700;">
+                        <i class="bi bi-bell-fill me-1"></i> Nouvelle notification
+                    </h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-2">
+                        <!-- Type -->
+                        <div class="col-md-4">
+                            <label class="form-label">Type de notification</label>
+                            <select name="type_notif" id="typeNotif" class="form-select" required>
+                                <option value="">— Choisir —</option>
+                                {% for key, label in type_labels.items() %}
+                                <option value="{{ key }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <!-- Canal -->
+                        <div class="col-md-4">
+                            <label class="form-label">Canal</label>
+                            <select name="canal" id="canalNotif" class="form-select">
+                                <option value="sms">SMS</option>
+                                <option value="whatsapp">WhatsApp</option>
+                            </select>
+                        </div>
+                        <!-- Mode d'envoi -->
+                        <div class="col-md-4">
+                            <label class="form-label">Destinataire</label>
+                            <select id="modeEnvoi" class="form-select" onchange="toggleMode()">
+                                <option value="individuel">Individuel</option>
+                                <option value="groupe">Envoi groupé</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Bloc INDIVIDUEL -->
+                    <div id="blocIndividuel" class="mt-2">
+                        <label class="form-label">Rechercher un élève</label>
+                        <div class="search-wrap">
+                            <input type="text" id="searchEleve" class="form-control" placeholder="Nom, prénom ou code..." autocomplete="off">
+                            <div class="dropdown-menu" id="searchResults" style="display:none;"></div>
+                            <input type="hidden" name="eleve_id" id="eleveId">
+                        </div>
+                        <div id="eleveChoisi" class="mt-1" style="display:none;">
+                            <span class="badge bg-info text-dark" id="eleveChoisiLabel" style="font-size:0.7rem;"></span>
+                            <button type="button" class="btn-close ms-1" style="font-size:0.5rem;" onclick="clearEleve()"></button>
+                        </div>
+                    </div>
+
+                    <!-- Bloc GROUPE -->
+                    <div id="blocGroupe" class="mt-2" style="display:none;">
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <label class="form-label">Type de groupe</label>
+                                <select name="groupe_type" id="groupeType" class="form-select" onchange="toggleClasseSelect()">
+                                    <option value="">— Choisir —</option>
+                                    <option value="classe">Toute une classe</option>
+                                    <option value="impayes">Tous les impayés</option>
+                                    <option value="tous">Tous les élèves</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6" id="colClasse" style="display:none;">
+                                <label class="form-label">Classe</label>
+                                <select name="groupe_classe_id" id="groupeClasseId" class="form-select">
+                                    <option value="">— Choisir —</option>
+                                    {% for c in classes %}
+                                    <option value="{{ c.id }}">{{ c.nom }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Message -->
+                    <div class="mt-2">
+                        <label class="form-label">Message</label>
+                        <textarea name="message" id="messageNotif" class="form-control" rows="4" placeholder="Saisissez votre message..." required></textarea>
+                        <div class="text-muted mt-1" style="font-size:0.6rem;">
+                            <span id="charCount">0</span> caractères
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal" style="font-size:0.7rem;">Annuler</button>
+                    <button type="submit" name="canal_submit" value="sms" class="btn btn-sm btn-primary" style="font-size:0.7rem;">
+                        <i class="bi bi-chat-dots"></i> Envoyer SMS
+                    </button>
+                    <button type="submit" name="canal_submit" value="whatsapp" class="btn btn-sm btn-success" style="font-size:0.7rem;">
+                        <i class="bi bi-whatsapp"></i> Envoyer WhatsApp
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // === Pré-remplissage du message selon le type ===
+    var messagesPredefinis = {{ messages_predefinis | tojson }};
+    document.getElementById('typeNotif').addEventListener('change', function() {
+        var type = this.value;
+        var msgArea = document.getElementById('messageNotif');
+        if (type && messagesPredefinis[type] && !msgArea.value.trim()) {
+            msgArea.value = messagesPredefinis[type];
+            updateCharCount();
+        }
+    });
+
+    // === Compteur de caractères ===
+    document.getElementById('messageNotif').addEventListener('input', updateCharCount);
+    function updateCharCount() {
+        var len = document.getElementById('messageNotif').value.length;
+        document.getElementById('charCount').textContent = len;
+    }
+
+    // === Bascule Individuel / Groupe ===
+    function toggleMode() {
+        var mode = document.getElementById('modeEnvoi').value;
+        document.getElementById('blocIndividuel').style.display = (mode === 'individuel') ? '' : 'none';
+        document.getElementById('blocGroupe').style.display = (mode === 'groupe') ? '' : 'none';
+        if (mode === 'groupe') {
+            clearEleve();
+        }
+    }
+
+    function toggleClasseSelect() {
+        var gt = document.getElementById('groupeType').value;
+        document.getElementById('colClasse').style.display = (gt === 'classe') ? '' : 'none';
+    }
+
+    // === Autocomplete élève ===
+    var searchInput = document.getElementById('searchEleve');
+    var resultsDiv = document.getElementById('searchResults');
+    var eleveIdInput = document.getElementById('eleveId');
+    var eleveChoisiDiv = document.getElementById('eleveChoisi');
+    var eleveChoisiLabel = document.getElementById('eleveChoisiLabel');
+    var searchTimeout;
+
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        var q = this.value.trim();
+        if (q.length < 2) {
+            resultsDiv.style.display = 'none';
+            return;
+        }
+        searchTimeout = setTimeout(function() {
+            fetch('/notifications/eleves/search?q=' + encodeURIComponent(q))
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    resultsDiv.innerHTML = '';
+                    if (data.eleves.length === 0) {
+                        resultsDiv.innerHTML = '<div class="dropdown-item text-muted" style="font-size:0.7rem;">Aucun résultat</div>';
+                    } else {
+                        data.eleves.forEach(function(e) {
+                            var item = document.createElement('a');
+                            item.className = 'dropdown-item';
+                            item.style.cssText = 'font-size:0.7rem;cursor:pointer;';
+                            item.textContent = e.label;
+                            item.href = '#';
+                            item.addEventListener('click', function(ev) {
+                                ev.preventDefault();
+                                selectEleve(e);
+                            });
+                            resultsDiv.appendChild(item);
+                        });
+                    }
+                    resultsDiv.style.display = 'block';
+                });
+        }, 250);
+    });
+
+    function selectEleve(e) {
+        eleveIdInput.value = e.id;
+        searchInput.value = '';
+        resultsDiv.style.display = 'none';
+        eleveChoisiLabel.textContent = e.label;
+        eleveChoisiDiv.style.display = '';
+    }
+
+    function clearEleve() {
+        eleveIdInput.value = '';
+        eleveChoisiDiv.style.display = 'none';
+    }
+
+    // Cacher les résultats si on clique ailleurs
+    document.addEventListener('click', function(ev) {
+        if (!searchInput.contains(ev.target) && !resultsDiv.contains(ev.target)) {
+            resultsDiv.style.display = 'none';
+        }
+    });
+
+    // === Gestion des boutons SMS / WhatsApp dans le footer ===
+    var formNotif = document.getElementById('formNotif');
+    var canalSelect = document.getElementById('canalNotif');
+    var btnsCanal = document.querySelectorAll('button[name="canal_submit"]');
+    btnsCanal.forEach(function(btn) {
+        btn.addEventListener('click', function(ev) {
+            ev.preventDefault();
+            canalSelect.value = this.value;
+            formNotif.submit();
+        });
+    });
+
+    // === Ouvrir le modal automatiquement si paramètre nouveau=1 ===
+    {% if request.args.get('nouveau') == '1' %}
+    var modal = new bootstrap.Modal(document.getElementById('modalNouvelleNotif'));
+    modal.show();
+    {% endif %}
+
+    // === Initialiser le compteur ===
+    updateCharCount();
+</script>
+{% endblock %}

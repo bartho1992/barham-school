@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Nouveau message - {{ ecole.nom }}{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3 animate-in">
+    <div class="section-header mb-0"><i class="bi bi-pencil-square me-1"></i> Nouveau message</div>
+    <a href="{{ url_for('messages_bp.messages') }}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Retour
+    </a>
+</div>
+
+<div class="card filter-card animate-in" style="animation-delay:0.05s; max-width:700px;">
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('messages_bp.message_envoyer') }}">
+            <div class="mb-3">
+                <label class="form-label small fw-bold">Destinataire</label>
+                <select name="destinataire_id" class="form-select form-select-sm" required>
+                    <option value="">-- Sélectionner un destinataire --</option>
+                    {% for u in users %}
+                    <option value="{{ u.id }}" {% if reply_to == u.id %}selected{% endif %}>
+                        {{ u.username }} {% if u.role %}({{ u.role }}){% endif %}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label small fw-bold">Sujet</label>
+                <input type="text" name="sujet" class="form-control form-control-sm" required
+                       placeholder="Sujet du message" 
+                       value="{{ reply_sujet if reply_sujet else '' }}">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label small fw-bold">Message</label>
+                <textarea name="contenu" class="form-control form-control-sm" rows="8" required
+                          placeholder="Écrivez votre message ici..."></textarea>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary btn-sm">
+                    <i class="bi bi-send"></i> Envoyer
+                </button>
+                <a href="{{ url_for('messages_bp.messages') }}" class="btn btn-outline-secondary btn-sm">Annuler</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exports PDF — {{ ecole.nom }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body { background: #f1f5f9; font-family: 'Inter', 'Segoe UI', sans-serif; min-height: 100vh; }
+        .export-header {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+            color: white; padding: 28px 32px; border-radius: 16px; margin-bottom: 28px;
+            box-shadow: 0 8px 32px rgba(37, 99, 235, 0.2);
+        }
+        .export-header h2 { font-weight: 700; margin: 0; font-size: 1.5rem; }
+        .export-header p { opacity: 0.85; margin: 6px 0 0; font-size: 0.9rem; }
+        .export-card {
+            border: none; border-radius: 14px; transition: all 0.25s ease;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06); cursor: pointer;
+            text-decoration: none; color: inherit; display: block; height: 100%;
+        }
+        .export-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 28px rgba(0,0,0,0.12);
+        }
+        .export-card .card-body { padding: 24px; }
+        .export-card .icon-circle {
+            width: 56px; height: 56px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; margin-bottom: 14px;
+        }
+        .export-card h5 { font-weight: 700; font-size: 1.05rem; margin-bottom: 6px; }
+        .export-card p { color: #64748b; font-size: 0.82rem; margin: 0; }
+        .btn-back {
+            background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 8px; padding: 6px 14px; font-size: 0.8rem;
+            text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+            transition: background 0.2s;
+        }
+        .btn-back:hover { background: rgba(255,255,255,0.3); color: white; }
+        .form-select-sm, .form-control-sm { font-size: 0.82rem; border-radius: 8px; }
+        .btn-go {
+            background: #2563eb; color: white; border: none; border-radius: 8px;
+            padding: 6px 18px; font-size: 0.82rem; font-weight: 600;
+            transition: background 0.2s; cursor: pointer;
+        }
+        .btn-go:hover { background: #1d4ed8; }
+        .select-group { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        @media print { body { background: white; } .export-header { box-shadow: none; border-radius: 0; } }
+    </style>
+</head>
+<body>
+<div class="container py-4" style="max-width: 960px;">
+
+    <div class="export-header d-flex justify-content-between align-items-center">
+        <div>
+            <h2><i class="bi bi-file-earmark-pdf me-2"></i>Exports PDF</h2>
+            <p>Générez des rapports et documents imprimables</p>
+        </div>
+        <a href="{{ url_for('dashboard') }}" class="btn-back"><i class="bi bi-arrow-left"></i> Dashboard</a>
+    </div>
+
+    <!-- Carte 1 : État financier annuel -->
+    <a href="{{ url_for('exports_bp.etat_financier') }}" class="export-card card mb-3">
+        <div class="card-body d-flex align-items-center gap-3">
+            <div class="icon-circle" style="background: #dbeafe; color: #2563eb;">
+                <i class="bi bi-cash-stack"></i>
+            </div>
+            <div class="flex-grow-1">
+                <h5>État financier annuel</h5>
+                <p>Récapitulatif des recettes par mois, par type de paiement et total annuel</p>
+            </div>
+            <i class="bi bi-chevron-right text-muted fs-5"></i>
+        </div>
+    </a>
+
+    <!-- Carte 2 : Relevé de notes (avec sélecteurs) -->
+    <div class="export-card card mb-3" style="cursor: default;">
+        <div class="card-body">
+            <div class="d-flex align-items-start justify-content-between flex-wrap gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="icon-circle" style="background: #fef3c7; color: #d97706;">
+                        <i class="bi bi-award"></i>
+                    </div>
+                    <div>
+                        <h5>Relevé de notes</h5>
+                        <p>Notes de toute une classe par trimestre avec moyennes et classement</p>
+                    </div>
+                </div>
+                <div class="select-group">
+                    <select class="form-select form-select-sm" id="releve-classe" style="width: 160px;">
+                        <option value="">-- Classe --</option>
+                        {% for cl in classes %}
+                        <option value="{{ cl.id }}">{{ cl.nom }}</option>
+                        {% endfor %}
+                    </select>
+                    <select class="form-select form-select-sm" id="releve-trimestre" style="width: 130px;">
+                        <option value="1">Trimestre 1</option>
+                        <option value="2">Trimestre 2</option>
+                        <option value="3">Trimestre 3</option>
+                    </select>
+                    <button class="btn-go" onclick="goReleve()">
+                        <i class="bi bi-arrow-right"></i> Voir
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Carte 3 : Liste des élèves -->
+    <a href="{{ url_for('exports_bp.liste_eleves') }}" class="export-card card mb-3">
+        <div class="card-body d-flex align-items-center gap-3">
+            <div class="icon-circle" style="background: #d1fae5; color: #059669;">
+                <i class="bi bi-people-fill"></i>
+            </div>
+            <div class="flex-grow-1">
+                <h5>Liste des élèves</h5>
+                <p>Liste complète avec code, nom, prénom, sexe, classe, tuteur et téléphone</p>
+            </div>
+            <i class="bi bi-chevron-right text-muted fs-5"></i>
+        </div>
+    </a>
+
+    <!-- Carte 4 : Statistiques globales -->
+    <a href="{{ url_for('exports_bp.statistiques') }}" class="export-card card mb-3">
+        <div class="card-body d-flex align-items-center gap-3">
+            <div class="icon-circle" style="background: #ede9fe; color: #7c3aed;">
+                <i class="bi bi-pie-chart-fill"></i>
+            </div>
+            <div class="flex-grow-1">
+                <h5>Statistiques globales</h5>
+                <p>Effectifs, répartition filles/garçons, effectif par classe, taux de recouvrement</p>
+            </div>
+            <i class="bi bi-chevron-right text-muted fs-5"></i>
+        </div>
+    </a>
+
+</div>
+
+<script>
+function goReleve() {
+    var classeId = document.getElementById('releve-classe').value;
+    var trimestre = document.getElementById('releve-trimestre').value;
+    if (!classeId) {
+        alert('Veuillez sélectionner une classe.');
+        return;
+    }
+    window.location.href = "{{ url_for('exports_bp.releve_notes', classe_id=0, trimestre=0) }}"
+        .replace('/0/', '/' + classeId + '/')
+        .replace('/0', '/' + trimestre);
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}Conseil - {{ conseil.classe.nom }} - {{ ecole.nom }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2 animate-in">
+    <div class="section-header mb-0"><i class="bi bi-people-fill me-1"></i> Conseil de Classe</div>
+    <a href="{{ url_for('conseil_bp.conseil') }}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Retour à la liste
+    </a>
+</div>
+
+<!-- En-tête -->
+<div class="card shadow-sm mb-3">
+    <div class="card-body py-3">
+        <div class="row g-2">
+            <div class="col-sm-3">
+                <small class="text-muted d-block">Classe</small>
+                <strong>{{ conseil.classe.nom }}</strong>
+            </div>
+            <div class="col-sm-3">
+                <small class="text-muted d-block">Trimestre</small>
+                <strong>{{ conseil.trimestre }}{% if conseil.trimestre == 1 %}er{% else %}ème{% endif %} Trimestre</strong>
+            </div>
+            <div class="col-sm-3">
+                <small class="text-muted d-block">Date</small>
+                <strong>{{ conseil.date_conseil or '-' }}</strong>
+            </div>
+            <div class="col-sm-3">
+                <small class="text-muted d-block">Président</small>
+                <strong>{{ conseil.president or '-' }}</strong>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form method="POST" action="{{ url_for('conseil_bp.conseil_sauvegarder', id=conseil.id) }}">
+    <!-- Président (modifiable) -->
+    <div class="card shadow-sm mb-3">
+        <div class="card-body py-2">
+            <div class="row g-2 align-items-center">
+                <div class="col-sm-4">
+                    <label class="form-label fw-bold mb-0 small">Président</label>
+                    <input type="text" name="president" class="form-control form-control-sm" value="{{ conseil.president or '' }}">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tableau des élèves -->
+    <div class="card shadow-sm mb-3">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width:40px;">N°</th>
+                            <th>Élève</th>
+                            <th class="text-center">Moyenne</th>
+                            <th class="text-center">Rang</th>
+                            <th class="text-center">Absences</th>
+                            <th class="text-center">Retards</th>
+                            <th style="min-width:200px;">Appréciation</th>
+                            <th style="width:140px;">Décision</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for app in appreciations %}
+                        <tr>
+                            <td class="text-muted small">{{ loop.index }}</td>
+                            <td><strong>{{ app.eleve.prenom }} {{ app.eleve.nom }}</strong></td>
+                            <td class="text-center">
+                                {% if app.moyenne_generale is not none %}
+                                <span class="badge bg-primary">{{ "%.2f"|format(app.moyenne_generale) }}</span>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if app.rang is not none %}
+                                <span class="badge bg-secondary">{{ app.rang }}</span>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if app.absences > 0 %}
+                                <span class="badge bg-warning text-dark">{{ app.absences }}</span>
+                                {% else %}
+                                <span class="text-muted">0</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if app.retards > 0 %}
+                                <span class="badge bg-info text-dark">{{ app.retards }}</span>
+                                {% else %}
+                                <span class="text-muted">0</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <input type="text" name="appreciation_{{ app.id }}" class="form-control form-control-sm" value="{{ app.appreciation or '' }}" placeholder="Appréciation...">
+                            </td>
+                            <td>
+                                <select name="decision_{{ app.id }}" class="form-select form-select-sm">
+                                    <option value="Passe" {% if app.decision == 'Passe' %}selected{% endif %}>Passe</option>
+                                    <option value="Redouble" {% if app.decision == 'Redouble' %}selected{% endif %}>Redouble</option>
+                                    <option value="Exclusion" {% if app.decision == 'Exclusion' %}selected{% endif %}>Exclusion</option>
+                                    <option value="Avertissement" {% if app.decision == 'Avertissement' %}selected{% endif %}>Avertissement</option>
+                                </select>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Observations générales -->
+    <div class="card shadow-sm mb-3">
+        <div class="card-body">
+            <label for="observations_generales" class="form-label fw-bold">Observations générales</label>
+            <textarea name="observations_generales" id="observations_generales" class="form-control" rows="4" placeholder="Observations générales du conseil de classe...">{{ conseil.observations_generales or '' }}</textarea>
+        </div>
+    </div>
+
+    <!-- Boutons -->
+    <div class="d-flex gap-2 mb-4">
+        <button type="submit" class="btn btn-success">
+            <i class="bi bi-check-circle"></i> Enregistrer tout
+        </button>
+        <a href="{{ url_for('conseil_bp.conseil') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-x-circle"></i> Annuler
+        </a>
+    </div>
+</form>
+{% endblock %}

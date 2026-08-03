@@ -150,8 +150,33 @@ with app.app_context():
                 print("[Migration] Colonne eleve.photo ajoutee")
             except Exception as e:
                 print(f"[Migration] Erreur photo: {e}")
+        if 'code_parent' not in cols_eleve:
+            try:
+                db.session.execute(text("ALTER TABLE eleve ADD COLUMN code_parent VARCHAR(20)"))
+                db.session.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS ix_eleve_code_parent ON eleve (code_parent)"))
+                print("[Migration] Colonne eleve.code_parent ajoutee")
+            except Exception as e:
+                print(f"[Migration] Erreur code_parent: {e}")
         db.session.commit()
     init_data()
+
+# ---- Nouveaux modules (apres init pour eviter import circulaire) ----
+# Protection contre double enregistrement lors du rechargement circulaire
+_new_blueprints = []
+from routes_messagerie import messages_bp; _new_blueprints.append(messages_bp)
+from routes_edt import edt_bp; _new_blueprints.append(edt_bp)
+from routes_examens import examens_bp; _new_blueprints.append(examens_bp)
+from routes_notifications import notifications_bp; _new_blueprints.append(notifications_bp)
+from routes_parent import parent_bp; _new_blueprints.append(parent_bp)
+from routes_cahier_texte import cahier_texte_bp; _new_blueprints.append(cahier_texte_bp)
+from routes_exports import exports_bp; _new_blueprints.append(exports_bp)
+from routes_archives import archives_bp; _new_blueprints.append(archives_bp)
+from routes_api import api_bp; _new_blueprints.append(api_bp)
+from routes_conseil import conseil_bp; _new_blueprints.append(conseil_bp)
+
+for bp in _new_blueprints:
+    if bp.name not in app.blueprints:
+        app.register_blueprint(bp)
 
 # Injecte has_licence dans tous les templates (pour la sidebar)
 # + info essai (jours restants, est un essai)
@@ -194,7 +219,11 @@ def verifier_licence_et_session():
                       'abonnement', 'abonnement_checkout', 'abonnement_payer',
                       'abonnement_callback', 'abonnement_essai', 'abonnement_facture',
                       'admin_paiements', 'admin_valider_paiement', 'admin_refuser_paiement',
-                      'admin_supprimer_paiement', 'admin_supprimer_transaction']
+                      'admin_supprimer_paiement', 'admin_supprimer_transaction',
+                      'parent_bp.parent_login', 'parent_bp.parent_acces',
+                     'parent_bp.parent_portail', 'parent_bp.parent_deconnexion',
+                     'api_bp.ecole_infos', 'api_bp.api_classes', 'api_bp.api_eleves', 'api_bp.api_eleve_detail',
+                     'api_bp.api_notes', 'api_bp.api_solde', 'api_bp.api_stats']
     if request.endpoint in routes_libres:
         return None
     

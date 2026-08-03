@@ -1,0 +1,319 @@
+{% extends "base.html" %}
+{% block title %}Emploi du Temps - {{ ecole.nom }}{% endblock %}
+{% block extra_css %}
+<style>
+    :root {
+        --edt-border: #dee2e6;
+        --edt-empty-bg: #f8f9fa;
+        --edt-header-bg: #1e1b4b;
+        --edt-time-bg: #f1f5f9;
+    }
+    .edt-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .edt-grid {
+        min-width: 700px;
+        border-collapse: collapse;
+        font-size: 0.7rem;
+    }
+    .edt-grid th,
+    .edt-grid td {
+        border: 1px solid var(--edt-border);
+        vertical-align: middle;
+        text-align: center;
+        padding: 4px 3px;
+        position: relative;
+    }
+    .edt-grid thead th {
+        background: var(--edt-header-bg);
+        color: #fff;
+        font-weight: 600;
+        font-size: 0.7rem;
+        letter-spacing: 0.02em;
+        position: sticky;
+        top: 0;
+        z-index: 2;
+    }
+    .edt-grid .edt-time {
+        background: var(--edt-time-bg);
+        font-weight: 600;
+        color: var(--neutral-600);
+        font-size: 0.65rem;
+        white-space: nowrap;
+        min-width: 70px;
+    }
+    .edt-grid .edt-cell {
+        min-width: 95px;
+        height: 48px;
+        transition: background 0.15s ease;
+    }
+    .edt-grid .edt-cell.has-slot {
+        color: #fff;
+        font-weight: 500;
+        cursor: default;
+        line-height: 1.25;
+    }
+    .edt-grid .edt-cell.has-slot .matiere-nom {
+        font-weight: 700;
+        font-size: 0.7rem;
+        display: block;
+    }
+    .edt-grid .edt-cell.has-slot .matiere-info {
+        font-size: 0.58rem;
+        opacity: 0.9;
+        display: block;
+    }
+    .edt-grid .edt-cell.empty {
+        background: var(--edt-empty-bg);
+    }
+    .edt-grid .edt-cell.empty:hover {
+        background: #e9ecef;
+    }
+    .btn-add-slot {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        font-size: 0.8rem;
+        line-height: 1;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.15s ease, transform 0.15s ease;
+    }
+    .edt-cell.empty:hover .btn-add-slot {
+        opacity: 1;
+    }
+    .btn-add-slot:active { transform: scale(0.9); }
+    .btn-del-slot {
+        position: absolute;
+        top: 1px;
+        right: 2px;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        font-size: 0.55rem;
+        line-height: 1;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.15s ease;
+        border: none;
+        background: rgba(0,0,0,0.25);
+        color: #fff;
+        cursor: pointer;
+    }
+    .edt-cell.has-slot:hover .btn-del-slot {
+        opacity: 1;
+    }
+    .btn-del-slot:hover {
+        background: rgba(220,38,38,0.8);
+    }
+    .modal-edt .modal-header {
+        padding: 8px 14px;
+        border-bottom: 1px solid #eee;
+    }
+    .modal-edt .modal-body {
+        padding: 10px 14px;
+    }
+    .modal-edt .modal-footer {
+        padding: 6px 14px;
+    }
+    .color-preset {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: transform 0.15s ease, border-color 0.15s ease;
+        display: inline-block;
+        margin: 1px 2px;
+    }
+    .color-preset:hover { transform: scale(1.2); }
+    .color-preset.active { border-color: #000; transform: scale(1.25); }
+    .legend-box {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 3px;
+        margin-right: 3px;
+        vertical-align: middle;
+    }
+</style>
+{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-1">
+    <div class="section-header"><i class="bi bi-calendar-week"></i> Emploi du Temps</div>
+</div>
+
+<form method="GET" action="{{ url_for('edt_bp.edt') }}" class="row g-2 align-items-end mb-2">
+    <div class="col-auto">
+        <label class="form-label mb-0 small fw-bold text-muted">Classe</label>
+        <select name="classe_id" class="form-select form-select-sm" onchange="this.form.submit()" style="min-width:160px;">
+            <option value="">-- Choisir --</option>
+            {% for c in classes %}
+            <option value="{{ c.id }}" {% if classe_id == c.id %}selected{% endif %}>{{ c.nom }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    {% if classe_id %}
+    <div class="col-auto">
+        <span class="badge bg-primary" style="font-size:0.7rem;">
+            <i class="bi bi-grid-3x3-gap"></i> {{ edt_list|length }} créneau{{ 'x' if edt_list|length != 1 else '' }}
+        </span>
+    </div>
+    {% endif %}
+</form>
+
+{% if not classe_id %}
+<div class="text-center text-muted py-5">
+    <i class="bi bi-arrow-up-circle" style="font-size:2.5rem; display:block; margin-bottom:0.5rem;"></i>
+    <span class="fw-medium">Sélectionnez une classe pour afficher son emploi du temps</span>
+</div>
+{% else %}
+<div class="edt-wrapper">
+    <table class="edt-grid w-100">
+        <thead>
+            <tr>
+                <th style="width:70px;">Heure</th>
+                {% for j in jours %}
+                <th>{{ j }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for creneau in creneaux %}
+            {% set parts = creneau.split('-') %}
+            <tr>
+                <td class="edt-time">{{ creneau }}</td>
+                {% for jour in jours %}
+                {% set slot = creneaux_edt.get((jour, parts[0])) %}
+                <td class="edt-cell {% if slot %}has-slot{% else %}empty{% endif %}"
+                    {% if slot %}style="background:{{ slot.couleur or '#3b82f6' }};"{% endif %}>
+                    {% if slot %}
+                        <span class="matiere-nom">{{ slot.matiere.nom if slot.matiere else '—' }}</span>
+                        <span class="matiere-info">
+                            {% if slot.enseignant %}{{ slot.enseignant }}{% endif %}
+                            {% if slot.salle %} · {{ slot.salle }}{% endif %}
+                        </span>
+                        <form method="POST" action="{{ url_for('edt_bp.edt_supprimer', id=slot.id) }}" style="display:inline;"
+                              onsubmit="return confirm('Supprimer ce créneau ?');">
+                            <button type="submit" class="btn-del-slot" title="Supprimer">×</button>
+                        </form>
+                    {% else %}
+                        <button class="btn btn-outline-success btn-sm btn-add-slot" title="Ajouter un créneau"
+                                onclick="openModal('{{ jour }}', '{{ parts[0] }}', '{{ parts[1] }}')">+</button>
+                    {% endif %}
+                </td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Légende -->
+{% set matieres_vues = {} %}
+{% for slot in edt_list %}
+{% if slot.matiere and slot.matiere.nom not in matieres_vues %}
+{% set _ = matieres_vues.update({slot.matiere.nom: slot.couleur}) %}
+{% endif %}
+{% endfor %}
+{% if matieres_vues|length > 0 %}
+<div class="mt-2 d-flex flex-wrap gap-2 align-items-center small">
+    <span class="text-muted fw-semibold" style="font-size:0.65rem;">Légende :</span>
+    {% for nom, coul in matieres_vues.items() %}
+    <span style="font-size:0.65rem;">
+        <span class="legend-box" style="background:{{ coul or '#3b82f6' }};"></span> {{ nom }}
+    </span>
+    {% endfor %}
+</div>
+{% endif %}
+{% endif %}
+
+<!-- Modal Ajouter un créneau -->
+<div class="modal fade modal-edt" id="modalAjoutCreneau" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('edt_bp.edt_ajouter') }}">
+                <input type="hidden" name="classe_id" value="{{ classe_id or '' }}">
+                <input type="hidden" name="jour" id="modalJour">
+                <input type="hidden" name="heure_debut" id="modalHeureDebut">
+                <input type="hidden" name="heure_fin" id="modalHeureFin">
+                <input type="hidden" name="couleur" id="modalCouleur" value="#3b82f6">
+                <div class="modal-header">
+                    <h6 class="modal-title" style="font-size:0.8rem;">
+                        <i class="bi bi-plus-circle"></i> Ajouter un créneau — <span id="modalTitreHoraire"></span>
+                    </h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" style="font-size:0.6rem;"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-2">
+                        <label class="form-label small mb-1 fw-semibold">Matière</label>
+                        <select name="matiere_id" class="form-select form-select-sm">
+                            <option value="">-- Sans matière --</option>
+                            {% for m in matieres %}
+                            <option value="{{ m.id }}">{{ m.nom }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small mb-1 fw-semibold">Enseignant</label>
+                        <input type="text" name="enseignant" class="form-control form-control-sm" placeholder="Nom de l'enseignant">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small mb-1 fw-semibold">Salle</label>
+                        <input type="text" name="salle" class="form-control form-control-sm" placeholder="N° ou nom de la salle">
+                    </div>
+                    <div class="mb-1">
+                        <label class="form-label small mb-1 fw-semibold">Couleur</label>
+                        <div id="colorPresets" class="d-flex flex-wrap gap-1">
+                            {% set couleurs = ['#3b82f6', '#ef4444', '#22c55e', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#6366f1', '#84cc16', '#06b6d4', '#e11d48'] %}
+                            {% for c in couleurs %}
+                            <span class="color-preset{% if loop.first %} active{% endif %}" style="background:{{ c }};" data-color="{{ c }}" onclick="selectColor(this, '{{ c }}')"></span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-check-lg"></i> Ajouter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+    var modalAjout;
+    document.addEventListener('DOMContentLoaded', function() {
+        modalAjout = new bootstrap.Modal(document.getElementById('modalAjoutCreneau'));
+    });
+
+    function openModal(jour, heureDebut, heureFin) {
+        document.getElementById('modalJour').value = jour;
+        document.getElementById('modalHeureDebut').value = heureDebut;
+        document.getElementById('modalHeureFin').value = heureFin;
+        document.getElementById('modalTitreHoraire').textContent = jour + ' ' + heureDebut + '–' + heureFin;
+        // Reset couleur to first preset
+        var firstPreset = document.querySelector('#colorPresets .color-preset');
+        if (firstPreset) {
+            selectColor(firstPreset, firstPreset.getAttribute('data-color'));
+        }
+        modalAjout.show();
+    }
+
+    function selectColor(el, color) {
+        document.querySelectorAll('#colorPresets .color-preset').forEach(function(p) {
+            p.classList.remove('active');
+        });
+        el.classList.add('active');
+        document.getElementById('modalCouleur').value = color;
+    }
+</script>
+{% endblock %}

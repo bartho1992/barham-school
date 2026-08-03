@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+{% block title %}Planning Examens - {{ ecole.nom }}{% endblock %}
+{% block extra_css %}
+<style>
+    .exam-table { font-size: 0.75rem; }
+    .exam-table th { background: #1E1B4B; color: #fff; font-weight: 600; white-space: nowrap; }
+    .exam-table td { vertical-align: middle; }
+    .exam-date { white-space: nowrap; font-weight: 500; }
+    .select-compact { font-size: 0.75rem; height: 30px; padding: 2px 6px; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <div class="section-header"><i class="bi bi-calendar-check"></i> Planning des Examens</div>
+    <span class="badge bg-warning text-dark">Année : {{ annee }}</span>
+</div>
+
+<!-- Filtres -->
+<div class="row g-2 mb-2 align-items-end">
+    <div class="col-auto">
+        <label class="form-label mb-0" style="font-size:0.7rem;font-weight:600;">Classe</label>
+        <select id="filtreClasse" class="form-select select-compact" onchange="chargerPlanning()">
+            <option value="">-- Choisir --</option>
+            {% for c in classes %}
+            <option value="{{ c.id }}" {% if classe_id==c.id|string %}selected{% endif %}>{{ c.nom }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-auto">
+        <label class="form-label mb-0" style="font-size:0.7rem;font-weight:600;">Trimestre</label>
+        <select id="filtreTrimestre" class="form-select select-compact" onchange="chargerPlanning()">
+            <option value="1" {% if trimestre=='1' %}selected{% endif %}>1er Trimestre</option>
+            <option value="2" {% if trimestre=='2' %}selected{% endif %}>2ème Trimestre</option>
+            <option value="3" {% if trimestre=='3' %}selected{% endif %}>3ème Trimestre</option>
+        </select>
+    </div>
+    <div class="col-auto">
+        <button class="btn btn-primary btn-sm" onclick="ouvrirModalAjout()">
+            <i class="bi bi-plus-lg"></i> Ajouter un examen
+        </button>
+    </div>
+</div>
+
+<!-- Tableau -->
+<div style="max-height:60vh;overflow:auto;">
+    <table class="table table-sm table-bordered align-middle exam-table bg-white">
+        <thead class="sticky-top">
+            <tr>
+                <th>Date</th>
+                <th>Heure</th>
+                <th>Matière</th>
+                <th>Type</th>
+                <th>Durée</th>
+                <th>Salle</th>
+                <th>Surveillant</th>
+                <th style="width:40px;">Actions</th>
+            </tr>
+        </thead>
+        <tbody id="examensBody">
+            <tr>
+                <td colspan="8" class="text-center text-muted py-3">
+                    <i class="bi bi-info-circle me-1"></i> Sélectionnez une classe et un trimestre
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal Ajout -->
+<div class="modal fade" id="modalExamen" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header py-2 px-3" style="background: #1E1B4B; color: #fff;">
+                <h6 class="modal-title mb-0" style="font-size:0.8rem;"><i class="bi bi-calendar-plus"></i> Ajouter un examen</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" style="font-size:0.6rem;"></button>
+            </div>
+            <form method="POST" action="{{ url_for('examens_bp.examen_ajouter') }}">
+                <div class="modal-body py-2 px-3">
+                    <div class="row g-1">
+                        <div class="col-6">
+                            <label class="form-label mb-0" style="font-size:0.7rem;">Classe</label>
+                            <select name="classe_id" id="modalClasse" class="form-select form-select-sm" style="font-size:0.75rem;" required>
+                                <option value="">--</option>
+                                {% for c in classes %}
+                                <option value="{{ c.id }}">{{ c.nom }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label mb-0" style="font-size:0.7rem;">Trimestre</label>
+                            <select name="trimestre" id="modalTrimestre" class="form-select form-select-sm" style="font-size:0.75rem;" required>
+                                <option value="1">1er Trimestre</option>
+                                <option value="2">2ème Trimestre</option>
+                                <option value="3">3ème Trimestre</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label mb-0" style="font-size:0.7rem;">Matière</label>
+                            <select name="matiere_id" class="form-select form-select-sm" style="font-size:0.75rem;" required>
+                                <option value="">-- Choisir --</option>
+                                {% for m in matieres %}
+                                <option value="{{ m.id }}">{{ m.nom }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label mb-0" style="font-size:0.7rem;">Type</label>
+                            <select name="type_examen" class="form-select form-select-sm" style="font-size:0.75rem;">
+                                <option value="Composition">Composition</option>
+                                <option value="Interrogation">Interrogation</option>
+                                <option value="Devoir">Devoir</option>
+                                <option value="Contrôle">Contrôle</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label mb-0" style="font-size:0.7rem;">Date</label>
+                            <input type="date" name="date_examen" class="form-control form-control-sm" style="font-size:0.75rem;" required>
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label mb-0" style="font-size:0.7rem;">Heure</label>
+                            <input type="time" name="heure_debut" class="form-control form-control-sm" style="font-size:0.75rem;" required>
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label mb-0" style="font-size:0.7rem;">Durée (min)</label>
+                            <input type="number" name="duree_minutes" class="form-control form-control-sm" style="font-size:0.75rem;" value="120" min="15" step="15">
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label mb-0" style="font-size:0.7rem;">Salle</label>
+                            <input type="text" name="salle" class="form-control form-control-sm" style="font-size:0.75rem;" placeholder="Ex: A1">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label mb-0" style="font-size:0.7rem;">Surveillant</label>
+                            <input type="text" name="surveillant" class="form-control form-control-sm" style="font-size:0.75rem;" placeholder="Nom du surveillant">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer py-2 px-3">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-check-lg"></i> Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+function chargerPlanning() {
+    var classeId = document.getElementById('filtreClasse').value;
+    var trimestre = document.getElementById('filtreTrimestre').value;
+    var tbody = document.getElementById('examensBody');
+    if (!classeId) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-3"><i class="bi bi-info-circle me-1"></i> Sélectionnez une classe et un trimestre</td></tr>';
+        return;
+    }
+    fetch('/examens/classe/' + classeId + '/' + trimestre)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-3"><i class="bi bi-inbox me-1"></i> Aucun examen planifié</td></tr>';
+                return;
+            }
+            var html = '';
+            data.forEach(function(e) {
+                html += '<tr>' +
+                    '<td class="exam-date">' + (e.date_examen || '') + '</td>' +
+                    '<td>' + (e.heure_debut || '') + '</td>' +
+                    '<td><strong>' + e.matiere + '</strong></td>' +
+                    '<td><span class="badge bg-secondary">' + e.type_examen + '</span></td>' +
+                    '<td class="text-center">' + e.duree_minutes + ' min</td>' +
+                    '<td>' + (e.salle || '-') + '</td>' +
+                    '<td>' + (e.surveillant || '-') + '</td>' +
+                    '<td class="text-center">' +
+                        '<form method="POST" action="/examens/supprimer/' + e.id + '" onsubmit="return confirm(\'Supprimer cet examen ?\')" class="d-inline">' +
+                            '<button class="btn btn-sm btn-outline-danger py-0 px-1" title="Supprimer" style="font-size:0.65rem;">' +
+                                '<i class="bi bi-trash"></i>' +
+                            '</button>' +
+                        '</form>' +
+                    '</td>' +
+                '</tr>';
+            });
+            tbody.innerHTML = html;
+        })
+        .catch(function() {
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger py-3">Erreur de chargement</td></tr>';
+        });
+}
+
+function ouvrirModalAjout() {
+    var classeId = document.getElementById('filtreClasse').value;
+    var trimestre = document.getElementById('filtreTrimestre').value;
+    document.getElementById('modalClasse').value = classeId || '';
+    document.getElementById('modalTrimestre').value = trimestre || '1';
+    var modal = new bootstrap.Modal(document.getElementById('modalExamen'));
+    modal.show();
+}
+
+// Pre-select depuis l'URL
+(function() {
+    var params = new URLSearchParams(window.location.search);
+    var cid = params.get('classe_id');
+    var tr = params.get('trimestre');
+    if (cid) document.getElementById('filtreClasse').value = cid;
+    if (tr) document.getElementById('filtreTrimestre').value = tr;
+    if (cid) chargerPlanning();
+})();
+</script>
+{% endblock %}

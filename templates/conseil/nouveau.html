@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Nouveau Conseil - {{ ecole.nom }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div class="section-header mb-0"><i class="bi bi-plus-circle me-1"></i> Nouveau Conseil de Classe</div>
+    <a href="{{ url_for('conseil_bp.conseil') }}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Retour
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="classe_id" class="form-label fw-bold">Classe</label>
+                        <select name="classe_id" id="classe_id" class="form-select" required>
+                            <option value="">-- Sélectionnez une classe --</option>
+                            {% for c in classes %}
+                            <option value="{{ c.id }}">{{ c.nom }} ({{ c.niveau or '' }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="trimestre" class="form-label fw-bold">Trimestre</label>
+                        <select name="trimestre" id="trimestre" class="form-select" required>
+                            <option value="">-- Sélectionnez un trimestre --</option>
+                            <option value="1">1er Trimestre</option>
+                            <option value="2">2ème Trimestre</option>
+                            <option value="3">3ème Trimestre</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="date_conseil" class="form-label fw-bold">Date du conseil</label>
+                        <input type="date" name="date_conseil" id="date_conseil" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label for="president" class="form-label fw-bold">Président</label>
+                        <input type="text" name="president" id="president" class="form-control" placeholder="Nom du président du conseil">
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Créer le conseil
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Statistiques Globales — {{ ecole.nom }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background: #f8fafc; color: #1e293b;
+        }
+        .print-container {
+            max-width: 210mm; margin: 0 auto; background: white;
+            padding: 20px 28px; min-height: 297mm;
+        }
+        .header-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        .header-table td { vertical-align: top; padding: 6px 0; }
+        .header-table .logo-cell { width: 70px; text-align: center; }
+        .header-table .school-name { font-size: 1.3rem; font-weight: 800; color: #1e3a5f; }
+        .header-table .school-details { font-size: 0.75rem; color: #475569; }
+        .header-table .title-cell { text-align: right; }
+        .header-table .doc-title {
+            font-size: 1rem; font-weight: 700; color: #7c3aed;
+            background: #f5f3ff; padding: 8px 16px; border-radius: 8px;
+            display: inline-block;
+        }
+        .divider { border: none; border-top: 2px solid #7c3aed; margin: 16px 0 20px; opacity: 0.3; }
+
+        h3 { font-size: 0.95rem; font-weight: 700; color: #1e3a5f; margin: 22px 0 10px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-bottom: 20px; }
+        .stat-card {
+            background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;
+            padding: 16px 18px; text-align: center;
+        }
+        .stat-card .stat-number { font-size: 2rem; font-weight: 800; color: #1e3a5f; line-height: 1.2; }
+        .stat-card .stat-label { font-size: 0.72rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+        .stat-card.accent-blue { border-left: 4px solid #2563eb; }
+        .stat-card.accent-green { border-left: 4px solid #059669; }
+        .stat-card.accent-purple { border-left: 4px solid #7c3aed; }
+        .stat-card.accent-orange { border-left: 4px solid #d97706; }
+
+        .gender-bar {
+            display: flex; border-radius: 12px; overflow: hidden;
+            height: 32px; margin-bottom: 10px;
+        }
+        .gender-bar .bar-m { background: #2563eb; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.7rem; font-weight: 700; }
+        .gender-bar .bar-f { background: #ec4899; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.7rem; font-weight: 700; }
+        .gender-legend { display: flex; gap: 20px; font-size: 0.78rem; margin-bottom: 16px; }
+        .gender-legend .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
+        .gender-legend .dot.m { background: #2563eb; }
+        .gender-legend .dot.f { background: #ec4899; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+        th { background: #f1f5f9; color: #334155; font-weight: 700; text-align: left; padding: 7px 10px; border-bottom: 2px solid #e2e8f0; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.3px; }
+        td { padding: 6px 10px; border-bottom: 1px solid #f1f5f9; }
+        tr:hover td { background: #f8fafc; }
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+
+        .recouvrement-bar {
+            height: 28px; border-radius: 8px; background: #f1f5f9;
+            overflow: hidden; margin: 8px 0;
+        }
+        .recouvrement-bar .fill {
+            height: 100%; border-radius: 8px;
+            background: linear-gradient(90deg, #059669, #10b981);
+            display: flex; align-items: center; justify-content: flex-end;
+            padding-right: 10px; color: white; font-weight: 700; font-size: 0.75rem;
+            min-width: 60px;
+        }
+        .footer-text { margin-top: 28px; font-size: 0.7rem; color: #94a3b8; text-align: center; border-top: 1px solid #f1f5f9; padding-top: 12px; }
+
+        .no-print { text-align: center; padding: 16px 0 0; }
+        .btn-print {
+            background: #7c3aed; color: white; border: none; border-radius: 8px;
+            padding: 10px 28px; font-size: 0.9rem; font-weight: 600; cursor: pointer;
+            transition: background 0.2s; display: inline-flex; align-items: center; gap: 8px;
+        }
+        .btn-print:hover { background: #6d28d9; }
+        .btn-back {
+            background: white; color: #475569; border: 1px solid #e2e8f0;
+            border-radius: 8px; padding: 10px 20px; font-size: 0.85rem;
+            text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+            margin-left: 10px; transition: background 0.2s;
+        }
+        .btn-back:hover { background: #f8fafc; color: #1e293b; }
+
+        @media print {
+            body { background: white; }
+            .print-container { max-width: 100%; margin: 0; padding: 10mm 12mm; box-shadow: none; }
+            .no-print { display: none !important; }
+            .divider { margin: 8px 0 14px; }
+            @page { size: A4; margin: 10mm; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="no-print" style="padding: 16px 28px 0; display: flex; gap: 10px;">
+    <button onclick="window.print()" class="btn-print">
+        <i class="bi bi-printer"></i> Imprimer
+    </button>
+    <a href="{{ url_for('exports_bp.index') }}" class="btn-back">
+        <i class="bi bi-arrow-left"></i> Retour aux exports
+    </a>
+</div>
+
+<div class="print-container">
+    <!-- En-tête -->
+    <table class="header-table">
+        <tr>
+            <td class="logo-cell">
+                <div style="width:56px;height:56px;background:#7c3aed;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:1.3rem;font-weight:800;">
+                    {{ ecole.nom[:2] if ecole else 'BS' }}
+                </div>
+            </td>
+            <td>
+                <div class="school-name">{{ ecole.nom if ecole else 'BARHAMSCOOL APP' }}</div>
+                <div class="school-details">
+                    {% if ecole and ecole.adresse %}{{ ecole.adresse }}{% endif %}
+                </div>
+            </td>
+            <td class="title-cell">
+                <span class="doc-title"><i class="bi bi-pie-chart-fill"></i> STATISTIQUES</span>
+                <div style="font-size:0.78rem;color:#64748b;margin-top:6px;">Année scolaire {{ annee }}</div>
+            </td>
+        </tr>
+    </table>
+
+    <hr class="divider">
+
+    <!-- Cartes de résumé -->
+    <div class="stats-grid">
+        <div class="stat-card accent-blue">
+            <div class="stat-number">{{ nb_eleves }}</div>
+            <div class="stat-label"><i class="bi bi-people-fill me-1"></i> Élèves</div>
+        </div>
+        <div class="stat-card accent-green">
+            <div class="stat-number">{{ nb_classes }}</div>
+            <div class="stat-label"><i class="bi bi-grid-3x3-gap-fill me-1"></i> Classes</div>
+        </div>
+    </div>
+
+    <!-- Répartition Filles/Garçons -->
+    <h3><i class="bi bi-gender-ambiguous me-1"></i> Répartition Filles / Garçons</h3>
+    <div class="gender-bar">
+        <div class="bar-m" style="width: {{ pct_garcons }}%;">{{ pct_garcons }}%</div>
+        <div class="bar-f" style="width: {{ pct_filles }}%;">{{ pct_filles }}%</div>
+    </div>
+    <div class="gender-legend">
+        <span><span class="dot m"></span> Garçons : <strong>{{ nb_garcons }}</strong> ({{ pct_garcons }}%)</span>
+        <span><span class="dot f"></span> Filles : <strong>{{ nb_filles }}</strong> ({{ pct_filles }}%)</span>
+    </div>
+
+    <!-- Effectif par classe -->
+    <h3><i class="bi bi-diagram-3 me-1"></i> Effectif par classe</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Classe</th>
+                <th class="text-center">Garçons</th>
+                <th class="text-center">Filles</th>
+                <th class="text-center">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for e in effectif_par_classe %}
+            <tr>
+                <td style="font-weight:600;">{{ e.classe.nom }}</td>
+                <td class="text-center">{{ e.garcons }}</td>
+                <td class="text-center">{{ e.filles }}</td>
+                <td class="text-center" style="font-weight:700;">{{ e.total }}</td>
+            </tr>
+            {% endfor %}
+            {% if not effectif_par_classe %}
+            <tr><td colspan="4" class="text-center text-muted">Aucune classe</td></tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+    <!-- Taux de recouvrement -->
+    <h3><i class="bi bi-cash-coin me-1"></i> Taux de recouvrement des paiements</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Indicateur</th>
+                <th class="text-right">Montant (FCFA)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Total attendu (scolarité + services)</td>
+                <td class="text-right">{{ "{:,.0f}".format(total_attendu) }}</td>
+            </tr>
+            <tr>
+                <td>Total perçu</td>
+                <td class="text-right">{{ "{:,.0f}".format(total_paye) }}</td>
+            </tr>
+            <tr>
+                <td>Reste à percevoir</td>
+                <td class="text-right">{{ "{:,.0f}".format(total_attendu - total_paye) if total_attendu > total_paye else 0 }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div style="margin-top: 14px;">
+        <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:#64748b;margin-bottom:4px;">
+            <span>Taux de recouvrement</span>
+            <span style="font-weight:700;color:#059669;">{{ taux_recouvrement }}%</span>
+        </div>
+        <div class="recouvrement-bar">
+            <div class="fill" style="width: {{ [taux_recouvrement, 100]|min }}%;">
+                {% if taux_recouvrement > 15 %}{{ taux_recouvrement }}%{% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-text">
+        Document généré le {{ current_annee.split('-')[0] if current_annee else '' }} | {{ ecole.nom if ecole else 'BARHAMSCOOL APP' }}
+    </div>
+</div>
+
+</body>
+</html>

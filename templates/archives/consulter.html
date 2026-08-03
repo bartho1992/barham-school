@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}Archives {{ annee }} - {{ ecole.nom }}{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div class="section-header mb-0">
+        <a href="{{ url_for('archives_bp.archives') }}" class="text-decoration-none me-2" title="Retour aux archives"><i class="bi bi-arrow-left"></i></a>
+        <i class="bi bi-folder2-open me-1"></i> Consultation archives — Année <strong>{{ annee }}</strong>
+    </div>
+</div>
+
+<!-- KPI row -->
+<div class="kpi-row mb-3">
+    <div class="kpi-item" style="border-left: 4px solid #3b82f6;">
+        <div class="val text-primary">{{ stats.total_eleves }}</div>
+        <div class="lbl">Élèves</div>
+    </div>
+    <div class="kpi-item" style="border-left: 4px solid #10b981;">
+        <div class="val text-success">{{ stats.total_classes }}</div>
+        <div class="lbl">Classes</div>
+    </div>
+    <div class="kpi-item" style="border-left: 4px solid #f59e0b;">
+        <div class="val text-warning">{{ "%.0f"|format(stats.total_paiements_montant) }}</div>
+        <div class="lbl">Total Paiements (F)</div>
+    </div>
+    <div class="kpi-item" style="border-left: 4px solid #8b5cf6;">
+        <div class="val" style="color:#8b5cf6;">{{ stats.total_notes }}</div>
+        <div class="lbl">Notes saisies</div>
+    </div>
+    <div class="kpi-item" style="border-left: 4px solid #ef4444;">
+        <div class="val text-danger">{{ stats.nb_assiduite }}</div>
+        <div class="lbl">Assiduités archivées</div>
+    </div>
+    <div class="kpi-item" style="border-left: 4px solid #06b6d4;">
+        <div class="val" style="color:#06b6d4;">{{ stats.nb_cahier }}</div>
+        <div class="lbl">Séances archivées</div>
+    </div>
+</div>
+
+<!-- Détail par classe -->
+<div class="card shadow-sm">
+    <div class="card-header bg-light d-flex align-items-center gap-2">
+        <i class="bi bi-diagram-3"></i> <strong>Détail par classe — {{ annee }}</strong>
+    </div>
+    <div class="card-body p-0">
+        {% if classes_data %}
+        <div class="table-responsive">
+            <table class="table table-hover table-sm align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-3">Classe</th>
+                        <th class="text-center">Nb Élèves</th>
+                        <th class="text-center">Nb Paiements</th>
+                        <th class="text-end">Montant Paiements</th>
+                        <th class="text-center">Nb Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cd in classes_data %}
+                    <tr>
+                        <td class="ps-3 fw-bold">{{ cd.nom }}</td>
+                        <td class="text-center">{{ cd.nb_eleves }}</td>
+                        <td class="text-center">{{ cd.nb_paiements }}</td>
+                        <td class="text-end">{{ "%.0f"|format(cd.montant_paiements) }} F</td>
+                        <td class="text-center">{{ cd.nb_notes }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot class="table-secondary fw-bold">
+                    <tr>
+                        <td class="ps-3">TOTAL</td>
+                        <td class="text-center">{{ stats.total_eleves }}</td>
+                        <td class="text-center">—</td>
+                        <td class="text-end">{{ "%.0f"|format(stats.total_paiements_montant) }} F</td>
+                        <td class="text-center">{{ stats.total_notes }}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        {% else %}
+        <div class="p-3 text-muted small">
+            <i class="bi bi-info-circle me-1"></i> Aucune donnée de classe trouvée pour cette année scolaire.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Données archivées -->
+<div class="row g-3 mt-2">
+    <div class="col-md-3">
+        <div class="card shadow-sm border-start border-danger border-3 h-100">
+            <div class="card-body text-center py-3">
+                <div class="fs-4 fw-bold text-danger">{{ stats.nb_assiduite }}</div>
+                <div class="small text-muted">Assiduités archivées</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-start border-info border-3 h-100">
+            <div class="card-body text-center py-3">
+                <div class="fs-4 fw-bold" style="color:#06b6d4;">{{ stats.nb_cahier }}</div>
+                <div class="small text-muted">Cahiers de texte archivés</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-start border-warning border-3 h-100">
+            <div class="card-body text-center py-3">
+                <div class="fs-4 fw-bold text-warning">{{ stats.nb_notifs }}</div>
+                <div class="small text-muted">Notifications archivées</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-start border-primary border-3 h-100">
+            <div class="card-body text-center py-3">
+                <div class="fs-4 fw-bold text-primary">{{ stats.nb_messages }}</div>
+                <div class="small text-muted">Messages archivés</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

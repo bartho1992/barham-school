@@ -77,6 +77,7 @@ class Eleve(db.Model):
     classe_id = db.Column(db.Integer, db.ForeignKey('classe.id'))
     ecole_id = db.Column(db.Integer, db.ForeignKey('ecole.id'), nullable=False, default=1)
     tel = db.Column(db.String(50))
+    code_parent = db.Column(db.String(20), unique=True, nullable=True)
     date_naissance = db.Column(db.String(50))
     lieu_naissance = db.Column(db.String(100))
     tuteur = db.Column(db.String(100))
@@ -392,6 +393,124 @@ class AbonnementService(db.Model):
     
     eleve = db.relationship('Eleve', backref='abonnements')
     categorie = db.relationship('CategorieTarif')
+
+# ============================================================
+# NOUVEAUX MODELES — Emploi du temps, Examens, Conseil, etc.
+# ============================================================
+
+class EmploiDuTemps(db.Model):
+    """Emploi du temps par classe"""
+    id = db.Column(db.Integer, primary_key=True)
+    classe_id = db.Column(db.Integer, db.ForeignKey('classe.id'), nullable=False)
+    matiere_id = db.Column(db.Integer, db.ForeignKey('matiere.id'), nullable=True)
+    enseignant = db.Column(db.String(150))
+    jour = db.Column(db.String(20), nullable=False)
+    heure_debut = db.Column(db.String(10), nullable=False)
+    heure_fin = db.Column(db.String(10), nullable=False)
+    salle = db.Column(db.String(50))
+    couleur = db.Column(db.String(20), default='#3b82f6')
+    annee_scolaire = db.Column(db.String(20), default='2024-2025')
+    ecole_id = db.Column(db.Integer, db.ForeignKey('ecole.id'), nullable=False, default=1)
+    
+    classe = db.relationship('Classe', backref='emploi_du_temps')
+    matiere = db.relationship('Matiere')
+    ecole = db.relationship('Ecole', backref='emplois_du_temps')
+
+class Examen(db.Model):
+    """Planning des examens / compositions"""
+    id = db.Column(db.Integer, primary_key=True)
+    classe_id = db.Column(db.Integer, db.ForeignKey('classe.id'), nullable=False)
+    matiere_id = db.Column(db.Integer, db.ForeignKey('matiere.id'), nullable=False)
+    type_examen = db.Column(db.String(30), default='Composition')
+    trimestre = db.Column(db.Integer, default=1)
+    date_examen = db.Column(db.String(20), nullable=False)
+    heure_debut = db.Column(db.String(10), nullable=False)
+    duree_minutes = db.Column(db.Integer, default=120)
+    salle = db.Column(db.String(50))
+    surveillant = db.Column(db.String(150))
+    coefficient = db.Column(db.Float, default=1)
+    annee_scolaire = db.Column(db.String(20), default='2024-2025')
+    ecole_id = db.Column(db.Integer, db.ForeignKey('ecole.id'), nullable=False, default=1)
+    
+    classe = db.relationship('Classe', backref='examens')
+    matiere = db.relationship('Matiere')
+    ecole = db.relationship('Ecole', backref='examens')
+
+class ConseilClasse(db.Model):
+    """Conseil de classe par classe/trimestre"""
+    id = db.Column(db.Integer, primary_key=True)
+    classe_id = db.Column(db.Integer, db.ForeignKey('classe.id'), nullable=False)
+    trimestre = db.Column(db.Integer, default=1)
+    date_conseil = db.Column(db.String(20))
+    president = db.Column(db.String(150))
+    observations_generales = db.Column(db.Text)
+    annee_scolaire = db.Column(db.String(20), default='2024-2025')
+    ecole_id = db.Column(db.Integer, db.ForeignKey('ecole.id'), nullable=False, default=1)
+    
+    classe = db.relationship('Classe', backref='conseils_classe')
+    ecole = db.relationship('Ecole', backref='conseils_classe')
+
+class AppreciationConseil(db.Model):
+    """Appreciation individuelle par eleve lors du conseil"""
+    id = db.Column(db.Integer, primary_key=True)
+    conseil_id = db.Column(db.Integer, db.ForeignKey('conseil_classe.id'), nullable=False)
+    eleve_id = db.Column(db.Integer, db.ForeignKey('eleve.id'), nullable=False)
+    appreciation = db.Column(db.Text)
+    decision = db.Column(db.String(50), default='Passe')
+    moyenne_generale = db.Column(db.Float)
+    rang = db.Column(db.Integer)
+    absences = db.Column(db.Integer, default=0)
+    retards = db.Column(db.Integer, default=0)
+    
+    conseil = db.relationship('ConseilClasse', backref='appreciations')
+    eleve = db.relationship('Eleve')
+
+class Message(db.Model):
+    """Messagerie interne entre utilisateurs"""
+    id = db.Column(db.Integer, primary_key=True)
+    expediteur_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    destinataire_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    sujet = db.Column(db.String(200), nullable=False)
+    contenu = db.Column(db.Text, nullable=False)
+    lu = db.Column(db.Boolean, default=False)
+    date_envoi = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    ecole_id = db.Column(db.Integer, db.ForeignKey('ecole.id'), nullable=False, default=1)
+    
+    expediteur = db.relationship('User', foreign_keys=[expediteur_id], backref='messages_envoyes')
+    destinataire = db.relationship('User', foreign_keys=[destinataire_id], backref='messages_recus')
+    ecole = db.relationship('Ecole', backref='messages')
+
+class CahierTexte(db.Model):
+    """Cahier de textes - suivi des lecons dispensees"""
+    id = db.Column(db.Integer, primary_key=True)
+    classe_id = db.Column(db.Integer, db.ForeignKey('classe.id'), nullable=False)
+    matiere_id = db.Column(db.Integer, db.ForeignKey('matiere.id'), nullable=False)
+    enseignant = db.Column(db.String(150))
+    date_seance = db.Column(db.String(20), nullable=False)
+    contenu = db.Column(db.Text, nullable=False)
+    devoirs = db.Column(db.Text)
+    observations = db.Column(db.Text)
+    annee_scolaire = db.Column(db.String(20), default='2024-2025')
+    ecole_id = db.Column(db.Integer, db.ForeignKey('ecole.id'), nullable=False, default=1)
+    
+    classe = db.relationship('Classe', backref='cahier_textes')
+    matiere = db.relationship('Matiere')
+    ecole = db.relationship('Ecole', backref='cahiers_textes')
+
+class NotificationParent(db.Model):
+    """Historique des notifications envoyees aux parents"""
+    id = db.Column(db.Integer, primary_key=True)
+    eleve_id = db.Column(db.Integer, db.ForeignKey('eleve.id'), nullable=False)
+    type_notif = db.Column(db.String(30), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    canal = db.Column(db.String(20), default='sms')
+    statut = db.Column(db.String(20), default='envoye')
+    date_envoi = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    ecole_id = db.Column(db.Integer, db.ForeignKey('ecole.id'), nullable=False, default=1)
+    
+    eleve = db.relationship('Eleve', backref='notifications_parents')
+    ecole = db.relationship('Ecole', backref='notifications_parents')
+
 
 def init_data():
     import random
