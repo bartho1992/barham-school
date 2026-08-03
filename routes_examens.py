@@ -11,9 +11,19 @@ def examens():
     ecole_id = get_current_ecole_id()
     annee = get_current_annee()
     ecole = Ecole.query.get(ecole_id)
+    classe_id = request.args.get('classe_id', '')
+    trimestre = request.args.get('trimestre', '1')
     classes = Classe.query.filter_by(ecole_id=ecole_id).order_by(Classe.ordre, Classe.nom).all()
     matieres = Matiere.query.filter_by(ecole_id=ecole_id).order_by(Matiere.nom).all()
-    return render_template('examens/index.html', ecole=ecole, classes=classes, matieres=matieres, annee=annee)
+    return render_template(
+        'examens/index.html',
+        ecole=ecole,
+        classes=classes,
+        matieres=matieres,
+        annee=annee,
+        classe_id=classe_id,
+        trimestre=trimestre
+    )
 
 @examens_bp.route('/ajouter', methods=['POST'])
 @login_required

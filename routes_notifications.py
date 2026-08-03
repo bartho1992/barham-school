@@ -7,7 +7,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from flask_login import login_required, current_user
 from models import db, Ecole, Eleve, Classe, NotificationParent
 from helpers import get_current_ecole_id
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 notifications_bp = Blueprint('notifications_bp', __name__, url_prefix='/notifications')
 
@@ -43,10 +43,16 @@ def notifications():
     if filtre_type:
         query = query.filter_by(type_notif=filtre_type)
     if filtre_date:
-        query = query.filter(
-            NotificationParent.date_envoi >= f"{filtre_date} 00:00:00",
-            NotificationParent.date_envoi <= f"{filtre_date} 23:59:59"
-        )
+        try:
+            date_filtre = datetime.strptime(filtre_date, '%Y-%m-%d')
+            debut_jour = date_filtre.replace(hour=0, minute=0, second=0, microsecond=0)
+            fin_jour = debut_jour + timedelta(days=1)
+            query = query.filter(
+                NotificationParent.date_envoi >= debut_jour,
+                NotificationParent.date_envoi < fin_jour
+            )
+        except ValueError:
+            flash('Format de date invalide pour le filtre.', 'warning')
     if filtre_recherche:
         query = query.join(Eleve).filter(
             db.or_(
@@ -174,10 +180,16 @@ def historique():
     if filtre_type:
         query = query.filter_by(type_notif=filtre_type)
     if filtre_date:
-        query = query.filter(
-            NotificationParent.date_envoi >= f"{filtre_date} 00:00:00",
-            NotificationParent.date_envoi <= f"{filtre_date} 23:59:59"
-        )
+        try:
+            date_filtre = datetime.strptime(filtre_date, '%Y-%m-%d')
+            debut_jour = date_filtre.replace(hour=0, minute=0, second=0, microsecond=0)
+            fin_jour = debut_jour + timedelta(days=1)
+            query = query.filter(
+                NotificationParent.date_envoi >= debut_jour,
+                NotificationParent.date_envoi < fin_jour
+            )
+        except ValueError:
+            return jsonify({'notifications': [], 'total': 0, 'error': 'Format de date invalide'}), 400
 
     notifs = query.order_by(NotificationParent.date_envoi.desc()).limit(500).all()
 

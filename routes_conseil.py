@@ -72,11 +72,13 @@ def conseil_nouveau():
             absences_count = Assiduite.query.filter_by(
                 eleve_id=el.id,
                 annee_scolaire=annee,
+                ecole_id=ecole_id,
                 type_evenement='Absent'
             ).count()
             retards_count = Assiduite.query.filter_by(
                 eleve_id=el.id,
                 annee_scolaire=annee,
+                ecole_id=ecole_id,
                 type_evenement='Retard'
             ).count()
 
