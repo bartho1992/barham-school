@@ -83,19 +83,19 @@
                         <span class="d-block px-2 text-white-50" style="font-size:0.5rem; text-transform:uppercase; letter-spacing:1px;">Vie Scolaire</span>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link d-flex align-items-center gap-2 py-1 px-2 {{ 'active' if request.endpoint and request.endpoint.startswith('edt_bp') }}" href="{{ url_for('edt_bp.index') }}" style="border-left: 3px solid #6366f1;">
+                        <a class="nav-link d-flex align-items-center gap-2 py-1 px-2 {{ 'active' if request.endpoint and request.endpoint.startswith('edt_bp') }}" href="{{ url_for('edt_bp.edt') }}" style="border-left: 3px solid #6366f1;">
                             <i class="bi bi-calendar3" style="font-size: 0.9rem; color: #6366f1;"></i>
                             <span style="font-size: 0.65rem; text-transform: uppercase; font-weight: 600;">EDT</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link d-flex align-items-center gap-2 py-1 px-2 {{ 'active' if request.endpoint and request.endpoint.startswith('examens_bp') }}" href="{{ url_for('examens_bp.index') }}" style="border-left: 3px solid #ef4444;">
+                        <a class="nav-link d-flex align-items-center gap-2 py-1 px-2 {{ 'active' if request.endpoint and request.endpoint.startswith('examens_bp') }}" href="{{ url_for('examens_bp.examens') }}" style="border-left: 3px solid #ef4444;">
                             <i class="bi bi-journal-check" style="font-size: 0.9rem; color: #ef4444;"></i>
                             <span style="font-size: 0.65rem; text-transform: uppercase; font-weight: 600;">Examens</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link d-flex align-items-center gap-2 py-1 px-2 {{ 'active' if request.endpoint and request.endpoint.startswith('cahier_texte_bp') }}" href="{{ url_for('cahier_texte_bp.index') }}" style="border-left: 3px solid #84cc16;">
+                        <a class="nav-link d-flex align-items-center gap-2 py-1 px-2 {{ 'active' if request.endpoint and request.endpoint.startswith('cahier_texte_bp') }}" href="{{ url_for('cahier_texte_bp.cahier_texte') }}" style="border-left: 3px solid #84cc16;">
                             <i class="bi bi-journal-text" style="font-size: 0.9rem; color: #84cc16;"></i>
                             <span style="font-size: 0.65rem; text-transform: uppercase; font-weight: 600;">Cahier texte</span>
                         </a>
@@ -112,14 +112,14 @@
                         <span class="d-block px-2 text-white-50" style="font-size:0.5rem; text-transform:uppercase; letter-spacing:1px;">Communication</span>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link d-flex align-items-center gap-2 py-1 px-2 {{ 'active' if request.endpoint and request.endpoint.startswith('messages_bp') }}" href="{{ url_for('messages_bp.index') }}" style="border-left: 3px solid #06b6d4;">
+                        <a class="nav-link d-flex align-items-center gap-2 py-1 px-2 {{ 'active' if request.endpoint and request.endpoint.startswith('messages_bp') }}" href="{{ url_for('messages_bp.messages') }}" style="border-left: 3px solid #06b6d4;">
                             <i class="bi bi-envelope" style="font-size: 0.9rem; color: #06b6d4;"></i>
                             <span style="font-size: 0.65rem; text-transform: uppercase; font-weight: 600;">Messages</span>
                             <span class="badge bg-danger ms-auto" id="msg-badge" style="font-size:0.5rem; display:none;">0</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link d-flex align-items-center gap-2 py-1 px-2 {{ 'active' if request.endpoint and request.endpoint.startswith('notifications_bp') }}" href="{{ url_for('notifications_bp.index') }}" style="border-left: 3px solid #22c55e;">
+                        <a class="nav-link d-flex align-items-center gap-2 py-1 px-2 {{ 'active' if request.endpoint and request.endpoint.startswith('notifications_bp') }}" href="{{ url_for('notifications_bp.notifications') }}" style="border-left: 3px solid #22c55e;">
                             <i class="bi bi-bell" style="font-size: 0.9rem; color: #22c55e;"></i>
                             <span style="font-size: 0.65rem; text-transform: uppercase; font-weight: 600;">Notifications</span>
                         </a>
@@ -136,7 +136,7 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link d-flex align-items-center gap-2 py-1 px-2 {{ 'active' if request.endpoint and request.endpoint.startswith('archives_bp') }}" href="{{ url_for('archives_bp.index') }}" style="border-left: 3px solid #78716c;">
+                        <a class="nav-link d-flex align-items-center gap-2 py-1 px-2 {{ 'active' if request.endpoint and request.endpoint.startswith('archives_bp') }}" href="{{ url_for('archives_bp.archives') }}" style="border-left: 3px solid #78716c;">
                             <i class="bi bi-archive" style="font-size: 0.9rem; color: #78716c;"></i>
                             <span style="font-size: 0.65rem; text-transform: uppercase; font-weight: 600;">Archives</span>
                         </a>
