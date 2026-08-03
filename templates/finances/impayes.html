@@ -16,13 +16,13 @@
 </div>
 
 <!-- Resume : barre de badges alignes -->
-{% set ns = namespace(nb_non_payes=0, total_du=0, total_avance=0, total_reste=0, total_mois=0) %}
+{% set ns = namespace(nb_non_payes=0, total_du=0, total_avance=0, total_reste=0, total_cumul=0) %}
 {% for lp in lignes %}
     {% if lp.total_paye <= 0 %}{% set ns.nb_non_payes = ns.nb_non_payes + 1 %}{% endif %}
-    {% set ns.total_du = ns.total_du + lp.total_du %}
-    {% set ns.total_avance = ns.total_avance + lp.total_paye %}
-    {% set ns.total_reste = ns.total_reste + lp.total_reste %}
-    {% set ns.total_mois = ns.total_mois + lp.montant_mois %}
+    {% set ns.total_du = ns.total_du + lp.du_affiche %}
+    {% set ns.total_avance = ns.total_avance + lp.avance_affiche %}
+    {% set ns.total_reste = ns.total_reste + lp.reste_affiche %}
+    {% set ns.total_cumul = ns.total_cumul + lp.cumul_affiche %}
 {% endfor %}
 <div class="d-flex flex-wrap gap-2 mb-2">
     {% set badges_top = [
@@ -30,8 +30,8 @@
         ('DÛ', '{:,.0f}'.format(ns.total_du).replace(',', ' '), '#198754', 'badge-du'),
         ('AVANCE', '{:,.0f}'.format(ns.total_avance).replace(',', ' '), '#20c997', 'badge-avance'),
         ('RESTE', '{:,.0f}'.format(ns.total_reste).replace(',', ' '), '#dc3545', 'total-impayes-card'),
-        ('CUMUL', '{:,.0f}'.format(ns.total_reste).replace(',', ' '), '#fd7e14', 'badge-cumul'),
-        ('SCOLARITÉ', '{:,.0f}'.format(ns.total_mois).replace(',', ' '), '#6f42c1', 'badge-scolarite')
+        ('CUMUL', '{:,.0f}'.format(ns.total_cumul).replace(',', ' '), '#fd7e14', 'badge-cumul'),
+        ('MOIS', '{:,.0f}'.format(ns.total_du).replace(',', ' '), '#6f42c1', 'badge-scolarite')
     ] %}
     {% for label, valeur, couleur, elid in badges_top %}
     <div style="flex:1 1 0;min-width:90px;background:{{ couleur }};color:#fff;border-radius:6px;padding:4px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.15);">
@@ -73,14 +73,14 @@
 <div id="filtre-count" class="small text-muted mb-1" style="display:none;"></div>
 
 <!-- Calcul des totaux -->
-{% set ns = namespace(total_du=0, total_avance=0, total_reste=0, total_mois=0) %}
+{% set ns = namespace(total_du=0, total_avance=0, total_reste=0, total_cumul=0) %}
 {% set ns.cats_sums = {} %}
 {% for cat in categories %}{% set _ = ns.cats_sums.update({cat.nom: 0}) %}{% endfor %}
 {% for ligne in lignes %}
-    {% set ns.total_du = ns.total_du + ligne.total_du %}
-    {% set ns.total_avance = ns.total_avance + (ligne.total_paye or 0) %}
-    {% set ns.total_reste = ns.total_reste + ligne.total_reste %}
-    {% set ns.total_mois = ns.total_mois + ligne.montant_mois %}
+    {% set ns.total_du = ns.total_du + ligne.du_affiche %}
+    {% set ns.total_avance = ns.total_avance + ligne.avance_affiche %}
+    {% set ns.total_reste = ns.total_reste + ligne.reste_affiche %}
+    {% set ns.total_cumul = ns.total_cumul + ligne.cumul_affiche %}
     {% for cl in ligne.cat_lines %}
         {% set cur = ns.cats_sums.get(cl.cat.nom, 0) %}
         {% set _ = ns.cats_sums.update({cl.cat.nom: cur + cl.reste}) %}
@@ -100,10 +100,10 @@
                 <td style="text-align:right;border:1px solid #b0c4de;padding:0;"><span style="display:inline-block;background:#198754;color:#fff;font-size:0.6rem;font-weight:bold;padding:1px 3px;line-height:1.2;border-radius:2px;">{{ '{:,.0f}'.format(ns.total_du).replace(',', ' ') }}</span></td>
                 <td style="text-align:right;border:1px solid #b0c4de;padding:0;"><span style="display:inline-block;background:#198754;color:#fff;font-size:0.6rem;font-weight:bold;padding:1px 3px;line-height:1.2;border-radius:2px;">{{ '{:,.0f}'.format(ns.total_avance).replace(',', ' ') }}</span></td>
                 <td style="text-align:right;border:1px solid #b0c4de;padding:0;"><span style="display:inline-block;background:#dc3545;color:#fff;font-size:0.6rem;font-weight:bold;padding:1px 3px;line-height:1.2;border-radius:2px;">{{ '{:,.0f}'.format(ns.total_reste).replace(',', ' ') }}</span></td>
-                <td style="text-align:right;border:1px solid #b0c4de;padding:0;"><span style="display:inline-block;background:#fd7e14;color:#fff;font-size:0.6rem;font-weight:bold;padding:1px 3px;line-height:1.2;border-radius:2px;">{{ '{:,.0f}'.format(ns.total_reste).replace(',', ' ') }}</span></td>
+                <td style="text-align:right;border:1px solid #b0c4de;padding:0;"><span style="display:inline-block;background:#fd7e14;color:#fff;font-size:0.6rem;font-weight:bold;padding:1px 3px;line-height:1.2;border-radius:2px;">{{ '{:,.0f}'.format(ns.total_cumul).replace(',', ' ') }}</span></td>
                 <td style="border:1px solid #b0c4de;padding:0;"></td>
                 <td style="border:1px solid #b0c4de;padding:0;"></td>
-                <td style="text-align:right;border:1px solid #b0c4de;padding:0;"><span style="display:inline-block;background:#0a58ca;color:#fff;font-size:0.6rem;font-weight:bold;padding:1px 3px;line-height:1.2;border-radius:2px;">{{ '{:,.0f}'.format(ns.total_mois).replace(',', ' ') }}</span></td>
+                <td style="text-align:center;border:1px solid #b0c4de;padding:0;"><span style="display:inline-block;background:#0a58ca;color:#fff;font-size:0.55rem;font-weight:bold;padding:1px 3px;line-height:1.2;border-radius:2px;">ECHEANCE</span></td>
                 {% for cat in categories %}
                 <td style="text-align:right;border:1px solid #b0c4de;padding:0;"><span style="display:inline-block;background:#0a58ca;color:#fff;font-size:0.5rem;font-weight:bold;padding:1px 2px;line-height:1.2;border-radius:2px;">{{ '{:,.0f}'.format(ns.cats_sums.get(cat.nom, 0)).replace(',', ' ') }}</span></td>
                 {% endfor %}
@@ -135,23 +135,23 @@
                 <td style="vertical-align:middle;">{{ e.prenom }}</td>
                 <td style="vertical-align:middle;">{{ e.nom }}</td>
                 <td style="text-align:center;vertical-align:middle;font-size:0.6rem;">{{ e.classe.nom }}</td>
-                <td style="text-align:right;vertical-align:middle;font-weight:bold;{% if ligne.total_du > 0 %}color:#1a5276;{% else %}color:#999;{% endif %}">
-                    {{ '{:,.0f}'.format(ligne.total_du).replace(',', ' ') if ligne.total_du > 0 else '-' }}
+                <td style="text-align:right;vertical-align:middle;font-weight:bold;{% if ligne.du_affiche > 0 %}color:#1a5276;{% else %}color:#999;{% endif %}">
+                    {{ '{:,.0f}'.format(ligne.du_affiche).replace(',', ' ') if ligne.du_affiche > 0 else '-' }}
                 </td>
-                <td style="text-align:right;vertical-align:middle;{% if ligne.total_paye > 0 %}color:#155724;{% else %}color:#999;{% endif %}">
-                    {{ '{:,.0f}'.format(ligne.total_paye).replace(',', ' ') if ligne.total_paye > 0 else '0' }}
+                <td style="text-align:right;vertical-align:middle;{% if ligne.avance_affiche > 0 %}color:#155724;{% else %}color:#999;{% endif %}">
+                    {{ '{:,.0f}'.format(ligne.avance_affiche).replace(',', ' ') if ligne.avance_affiche > 0 else '0' }}
                 </td>
                 <td style="text-align:right;vertical-align:middle;font-weight:bold;font-size:0.7rem;white-space:nowrap;
-                    {% if ligne.total_reste > 0 %}color:#c00;{% else %}color:#155724;{% endif %}">
-                    {% if ligne.total_reste > 0 %}{{ '{:,.0f}'.format(ligne.total_reste).replace(',', ' ') }}{% else %}✓{% endif %}
+                    {% if ligne.reste_affiche > 0 %}color:#c00;{% elif ligne.du_affiche > 0 %}color:#155724;{% else %}color:#999;{% endif %}">
+                    {% if ligne.reste_affiche > 0 %}{{ '{:,.0f}'.format(ligne.reste_affiche).replace(',', ' ') }}{% elif ligne.du_affiche > 0 %}✓{% else %}-{% endif %}
                 </td>
-                <td style="text-align:right;vertical-align:middle;{% if ligne.total_reste > 0 %}color:#c00;{% else %}color:#999;{% endif %}">
-                    {{ '{:,.0f}'.format(ligne.total_reste).replace(',', ' ') if ligne.total_reste > 0 else '-' }}
+                <td style="text-align:right;vertical-align:middle;{% if ligne.cumul_affiche > 0 %}color:#c00;font-weight:bold;{% else %}color:#999;{% endif %}">
+                    {{ '{:,.0f}'.format(ligne.cumul_affiche).replace(',', ' ') if ligne.cumul_affiche > 0 else '-' }}
                 </td>
                 <td style="text-align:center;vertical-align:middle;font-size:0.55rem;">{{ ligne.date_limite }}</td>
                 <td style="vertical-align:middle;font-size:0.55rem;">{{ e.tel or '-' }}</td>
-                <td style="text-align:right;vertical-align:middle;font-size:0.6rem;">
-                    {{ '{:,.0f}'.format(ligne.montant_mois).replace(',', ' ') if ligne.montant_mois > 0 else '-' }}
+                <td style="text-align:center;vertical-align:middle;font-size:0.6rem;">
+                    {{ ligne.mois_affiche }}
                 </td>
                 {% for cl in ligne.cat_lines %}
                 <td style="text-align:right;vertical-align:middle;font-size:0.6rem;white-space:nowrap;
@@ -170,7 +170,7 @@
     </table>
 </div>
 
-<p class="text-muted small mt-1 mb-0"><i class="bi bi-info-circle"></i> Cliquez sur une cellule rouge pour voir le detail. <strong>DU</strong> = Total du. <strong>AVANCE</strong> = Total paye. <strong>RESTE</strong> = DU - AVANCE. <strong>CUMUL</strong> = Reste total.</p>
+<p class="text-muted small mt-1 mb-0"><i class="bi bi-info-circle"></i> <strong>DU</strong> = montant de l'échéance affichée. <strong>AVANCE</strong> = déjà versé sur cette échéance. <strong>RESTE</strong> = reste de cette échéance. <strong>CUMUL</strong> = total général encore dû.</p>
 
 <script>
 function toggleAll(cb) {
@@ -282,7 +282,7 @@ function filtrer() {
                  }
                  cells[8].textContent = d.cumul > 0 ? Number(d.cumul).toLocaleString('fr-FR') : (d.due > 0 ? '\u2713' : '-');
                  cells[8].style.color = d.cumul > 0 ? '#c00' : (d.due > 0 ? '#155724' : '#999');
-                cells[11].textContent = d.due > 0 ? Number(d.due).toLocaleString('fr-FR') : '-';
+                cells[11].textContent = d.due > 0 || d.paye > 0 || d.reste > 0 ? mois : '-';
                 if (d.due === 0 && d.paye === 0 && d.reste === 0) show = false;
             }
         } else {
@@ -329,7 +329,7 @@ function filtrer() {
     }
     
     // Mettre a jour les badges selon les lignes visibles
-    var bNonPaye = 0, bDU = 0, bAV = 0, bRE = 0, bCU = 0, bMOIS = 0;
+    var bNonPaye = 0, bDU = 0, bAV = 0, bRE = 0, bCU = 0;
     rows.forEach(function(tr) {
         if (tr.style.display === 'none') return;
         var cells = tr.querySelectorAll('td');
@@ -342,8 +342,7 @@ function filtrer() {
         var av = toNum(cells[6].textContent);
         var re = toNum(cells[7].textContent);
         var cu = toNum(cells[8].textContent);
-        var mo = toNum(cells[11].textContent);
-        bDU += du; bAV += av; bRE += re; bCU += cu; bMOIS += mo;
+        bDU += du; bAV += av; bRE += re; bCU += cu;
         if (av <= 0) bNonPaye++;
     });
     var fmt = function(n) { return Number(n).toLocaleString('fr-FR'); };
@@ -356,7 +355,7 @@ function filtrer() {
     setBadge('badge-avance', bAV);
     setBadge('total-impayes-card', bRE);
     setBadge('badge-cumul', bCU);
-    setBadge('badge-scolarite', bMOIS);
+    setBadge('badge-scolarite', bDU);
 }
 
 function ouvrirPaiementGroupe() {

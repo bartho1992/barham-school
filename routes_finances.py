@@ -210,6 +210,18 @@ def _build_ligne_financiere(eleve, annee, categories, scolarites_map, tarifs_ser
         if details['paye'] > 0:
             mois_payes.add(mois)
 
+    mois_affiche = ''
+    for mois in MOIS_SCOLAIRES:
+        if mois_details[mois]['reste'] > 0:
+            mois_affiche = mois
+            break
+    if not mois_affiche:
+        for mois in reversed(MOIS_SCOLAIRES):
+            if mois_details[mois]['due'] > 0:
+                mois_affiche = mois
+                break
+    details_affiches = mois_details.get(mois_affiche, {'due': 0, 'paye': 0, 'reste': 0, 'cumul': 0})
+
     services_due = sum(cl['due'] for cl in cat_lines)
     services_paye = sum(cl['paye'] for cl in cat_lines)
     for cl in cat_lines:
@@ -244,6 +256,11 @@ def _build_ligne_financiere(eleve, annee, categories, scolarites_map, tarifs_ser
         'total_du': total_du,
         'total_paye': total_paye,
         'total_reste': total_reste,
+        'du_affiche': details_affiches['due'],
+        'avance_affiche': details_affiches['paye'],
+        'reste_affiche': details_affiches['reste'],
+        'cumul_affiche': total_reste,
+        'mois_affiche': mois_affiche or '-',
         'montant_mois': montant_mois,
         'date_limite': date_limite,
         'paye_au_moins_un': total_paye > 0,
