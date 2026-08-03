@@ -290,9 +290,11 @@ def finances_hub():
 @app.route('/finances')
 @login_required
 def finances():
+    import sys
     ecole_id = get_current_ecole_id()
     e = Ecole.query.get(ecole_id); annee = _annee_courante(e)
     embed = request.args.get('embed')
+    print(f"[DIAG-FINANCES] ecole_id={ecole_id}, annee={annee}", file=sys.stderr)
     recent_paiements = Paiement.query.filter_by(annee_scolaire=annee, ecole_id=ecole_id).options(
         joinedload(Paiement.eleve).joinedload(Eleve.classe)
     ).order_by(Paiement.date_paiement.desc()).limit(20).all()
@@ -308,7 +310,9 @@ def finances():
         db.or_(Eleve.annee_scolaire == annee, Eleve.annee_scolaire == None, Eleve.annee_scolaire == '')
     ).order_by(Eleve.nom).all()
     eleve_ids = [eleve.id for eleve in eleves]
+    print(f"[DIAG-FINANCES] eleves trouves={len(eleves)}, ids={eleve_ids[:5]}...", file=sys.stderr)
     scolarites_map = {s.classe_id: s for s in Scolarite.query.filter_by(annee_scolaire=annee, ecole_id=ecole_id).all()}
+    print(f"[DIAG-FINANCES] scolarites_map={list(scolarites_map.keys())[:5]}... nb={len(scolarites_map)}", file=sys.stderr)
     tarifs_services_map = {}
     for t in TarifService.query.filter_by(annee_scolaire=annee, ecole_id=ecole_id).all():
         tarifs_services_map[(t.classe_id, t.categorie_id)] = t
@@ -334,6 +338,11 @@ def finances():
         )
         if ligne:
             lignes_paiements.append(ligne)
+        else:
+            print(f"[DIAG-FINANCES] eleve {eleve.nom} skipped (pas de classe?)", file=sys.stderr)
+    if lignes_paiements:
+        first = lignes_paiements[0]
+        print(f"[DIAG-FINANCES] 1ere ligne: du_affiche={first['du_affiche']}, avance_affiche={first['avance_affiche']}, reste_affiche={first['reste_affiche']}, cumul_affiche={first['cumul_affiche']}, mois_affiche={first['mois_affiche']}, total_du={first['total_du']}", file=sys.stderr)
     
     mois_list = MOIS_SCOLAIRES
     
