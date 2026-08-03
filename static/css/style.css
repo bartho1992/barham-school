@@ -545,9 +545,17 @@ h5 { font-size: 0.95rem; }
     display: none !important;
 }
 
+.app-sidebar.collapsed .nav-item > span,
+.app-sidebar.collapsed .sidebar-footer .dropdown,
+.app-sidebar.collapsed .sidebar-footer .badge,
+.app-sidebar.collapsed .sidebar-menu .badge {
+    display: none !important;
+}
+
 .app-sidebar.collapsed .nav-link {
     justify-content: center !important;
     padding: 0.5rem 0 !important;
+    overflow: hidden;
 }
 
 .app-sidebar.collapsed .nav-link i {
@@ -713,6 +721,7 @@ h5 { font-size: 0.95rem; }
 /* Main content */
 .app-main {
     flex: 1;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -723,6 +732,8 @@ h5 { font-size: 0.95rem; }
 .app-main > .container-fluid {
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
+    min-width: 0;
     padding: 0 14px !important;
     margin: 0 !important;
     scroll-behavior: smooth;
