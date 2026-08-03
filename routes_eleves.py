@@ -67,6 +67,83 @@ def assiduite():
         joinedload(Assiduite.eleve).joinedload(Eleve.classe)
     ).order_by(Assiduite.date_evenement.desc(), Assiduite.created_at.desc()).limit(20).all()
 
+    resume_classe = {'absences': 0, 'retards': 0, 'justifiees': 0}
+    top_absents = []
+    top_retards = []
+    historique_classe = []
+    if classe_id:
+        resume_classe['absences'] = db.session.query(db.func.count(Assiduite.id)).filter_by(
+            ecole_id=ecole_id, annee_scolaire=annee, classe_id=classe_id, type_evenement='Absent'
+        ).scalar() or 0
+        resume_classe['retards'] = db.session.query(db.func.count(Assiduite.id)).filter_by(
+            ecole_id=ecole_id, annee_scolaire=annee, classe_id=classe_id, type_evenement='Retard'
+        ).scalar() or 0
+        resume_classe['justifiees'] = db.session.query(db.func.count(Assiduite.id)).filter_by(
+            ecole_id=ecole_id, annee_scolaire=annee, classe_id=classe_id, justifie=True
+        ).scalar() or 0
+
+        top_absents = db.session.query(
+            Eleve.id, Eleve.prenom, Eleve.nom, db.func.count(Assiduite.id).label('total')
+        ).join(Assiduite, Assiduite.eleve_id == Eleve.id).filter(
+            Eleve.ecole_id == ecole_id,
+            Eleve.classe_id == classe_id,
+            Assiduite.annee_scolaire == annee,
+            Assiduite.type_evenement == 'Absent'
+        ).group_by(Eleve.id, Eleve.prenom, Eleve.nom).order_by(db.desc('total'), Eleve.nom.asc()).limit(5).all()
+
+        top_retards = db.session.query(
+            Eleve.id, Eleve.prenom, Eleve.nom, db.func.count(Assiduite.id).label('total')
+        ).join(Assiduite, Assiduite.eleve_id == Eleve.id).filter(
+            Eleve.ecole_id == ecole_id,
+            Eleve.classe_id == classe_id,
+            Assiduite.annee_scolaire == annee,
+            Assiduite.type_evenement == 'Retard'
+        ).group_by(Eleve.id, Eleve.prenom, Eleve.nom).order_by(db.desc('total'), Eleve.nom.asc()).limit(5).all()
+
+        jours_recents = db.session.query(Assiduite.date_evenement).filter_by(
+            ecole_id=ecole_id, annee_scolaire=annee, classe_id=classe_id
+        ).distinct().order_by(Assiduite.date_evenement.desc()).limit(10).all()
+        dates_historiques = [item[0] for item in jours_recents]
+        if dates_historiques:
+            agregats = db.session.query(
+                Assiduite.date_evenement,
+                Assiduite.type_evenement,
+                db.func.count(Assiduite.id).label('total')
+            ).filter(
+                Assiduite.ecole_id == ecole_id,
+                Assiduite.annee_scolaire == annee,
+                Assiduite.classe_id == classe_id,
+                Assiduite.date_evenement.in_(dates_historiques)
+            ).group_by(Assiduite.date_evenement, Assiduite.type_evenement).all()
+            justifiees_agregats = db.session.query(
+                Assiduite.date_evenement,
+                db.func.count(Assiduite.id).label('total')
+            ).filter(
+                Assiduite.ecole_id == ecole_id,
+                Assiduite.annee_scolaire == annee,
+                Assiduite.classe_id == classe_id,
+                Assiduite.justifie == True,
+                Assiduite.date_evenement.in_(dates_historiques)
+            ).group_by(Assiduite.date_evenement).all()
+            historique_map = {}
+            for date_hist, type_evt, total in agregats:
+                historique_map.setdefault(date_hist, {'absences': 0, 'retards': 0, 'justifiees': 0})
+                if type_evt == 'Absent':
+                    historique_map[date_hist]['absences'] = int(total)
+                elif type_evt == 'Retard':
+                    historique_map[date_hist]['retards'] = int(total)
+            for date_hist, total in justifiees_agregats:
+                historique_map.setdefault(date_hist, {'absences': 0, 'retards': 0, 'justifiees': 0})
+                historique_map[date_hist]['justifiees'] = int(total)
+            for date_hist in dates_historiques:
+                valeurs = historique_map.get(date_hist, {'absences': 0, 'retards': 0, 'justifiees': 0})
+                historique_classe.append({
+                    'date': date_hist,
+                    'absences': valeurs['absences'],
+                    'retards': valeurs['retards'],
+                    'justifiees': valeurs['justifiees']
+                })
+
     return render_template(
         'eleves/assiduite.html',
         ecole=e,
@@ -77,7 +154,11 @@ def assiduite():
         search=search,
         statuts=statuts,
         stats=stats,
-        recent_events=recent_events
+        recent_events=recent_events,
+        resume_classe=resume_classe,
+        top_absents=top_absents,
+        top_retards=top_retards,
+        historique_classe=historique_classe
     )
 
 @app.route('/assiduite/enregistrer', methods=['POST'])

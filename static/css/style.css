@@ -562,6 +562,26 @@ h5 { font-size: 0.95rem; }
     padding-top: 0.3rem;
 }
 
+.app-sidebar.collapsed .user-profile-block {
+    width: 32px;
+    min-width: 32px;
+    height: 32px;
+    padding: 0 !important;
+    justify-content: center !important;
+    border-radius: 10px !important;
+    overflow: hidden;
+}
+
+.app-sidebar.collapsed .user-profile-block > div {
+    gap: 0 !important;
+}
+
+.app-sidebar.collapsed .user-profile-block .avatar {
+    width: 20px !important;
+    height: 20px !important;
+    margin: 0 !important;
+}
+
 .app-sidebar.collapsed .dropdown-menu {
     left: 54px !important;
     top: auto !important;
