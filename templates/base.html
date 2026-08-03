@@ -29,9 +29,6 @@
         
         <!-- Barre latérale à gauche -->
         <aside class="app-sidebar text-white" id="appSidebar">
-            <button class="sidebar-collapse-btn d-none d-md-flex" id="sidebarCollapseBtn" title="Réduire le menu">
-                <i class="bi bi-chevron-left"></i>
-            </button>
             <div class="sidebar-brand">
                 <div class="brand-icon bg-warning text-dark rounded-circle me-1 flex-shrink-0" style="width:26px; height:26px; display:flex; align-items:center; justify-content:center;">
                     <i class="bi bi-mortarboard-fill" style="font-size: 0.8rem;"></i>
@@ -325,26 +322,6 @@
                     overlay.classList.remove('active');
                 });
             }
-        })();
-        
-        // Sidebar collapse/expand (icones seulement)
-        (function() {
-            var btn = document.getElementById('sidebarCollapseBtn');
-            var sidebar = document.getElementById('appSidebar');
-            if (!btn || !sidebar) return;
-            // Restaurer l'état
-            var saved = localStorage.getItem('sidebarCollapsed');
-            if (saved === 'true') {
-                sidebar.classList.add('collapsed');
-                btn.querySelector('i').className = 'bi bi-chevron-right';
-            }
-            btn.addEventListener('click', function() {
-                sidebar.classList.toggle('collapsed');
-                var isCollapsed = sidebar.classList.contains('collapsed');
-                var icon = btn.querySelector('i');
-                icon.className = isCollapsed ? 'bi bi-chevron-right' : 'bi bi-chevron-left';
-                localStorage.setItem('sidebarCollapsed', isCollapsed);
-            });
         })();
         
         // Automatic logout after 30 minutes of inactivity
