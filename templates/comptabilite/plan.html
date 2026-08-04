@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}Plan Comptable SYSCOHADA - {{ ecole.nom }}{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2 animate-in">
+    <div class="section-header mb-0"><i class="bi bi-book me-1"></i> Plan Comptable SYSCOHADA</div>
+    <div>
+        <label class="small fw-bold text-muted me-1" style="font-size:0.65rem;">Filtrer par nature :</label>
+        <select id="filtre-nature" class="form-select form-select-sm d-inline-block" style="width:auto;font-size:0.7rem;height:28px;" onchange="filtrerPlan()">
+            <option value="">Tous</option>
+            <option value="actif">Actif</option>
+            <option value="passif">Passif</option>
+            <option value="charge">Charge</option>
+            <option value="produit">Produit</option>
+        </select>
+    </div>
+</div>
+
+<div class="accordion animate-in" id="accordionPlan">
+    {% set classes_data = {
+        '1': {'nom': 'COMPTES DE CAPITAUX PROPRES ET PASSIFS NON COURANTS', 'nature': 'passif'},
+        '2': {'nom': 'COMPTES D\'IMMOBILISATIONS', 'nature': 'actif'},
+        '3': {'nom': 'COMPTES DE STOCKS ET EN-COURS', 'nature': 'actif'},
+        '4': {'nom': 'COMPTES DE TIERS', 'nature': 'passif'},
+        '5': {'nom': 'COMPTES DE TRESORERIE', 'nature': 'actif'},
+        '6': {'nom': 'COMPTES DE CHARGES D\'EXPLOITATION', 'nature': 'charge'},
+        '7': {'nom': 'COMPTES DE PRODUITS', 'nature': 'produit'},
+        '8': {'nom': 'COMPTES DE CHARGES ET PRODUITS H.A.O.', 'nature': 'charge'},
+        '9': {'nom': 'COMPTES DE CONTREPARTIE', 'nature': 'hors_bilan'}
+    } %}
+    {% for classe_id in range(1, 10) %}
+    {% set classe_str = classe_id|string %}
+    {% set classe_nature = classes_data[classe_str]['nature'] %}
+    {% set comptes_classe = comptes|selectattr('numero', 'startswith', classe_str)|list %}
+    <div class="accordion-item" data-nature="{{ classe_nature }}">
+        <h2 class="accordion-header" id="heading{{ classe_id }}">
+            <button class="accordion-button collapsed py-1" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ classe_id }}" aria-expanded="false" aria-controls="collapse{{ classe_id }}" style="font-size:0.7rem;font-weight:700;">
+                <span class="badge me-2" style="font-size:0.6rem;background:{% if classe_nature == 'actif' %}#198754{% elif classe_nature == 'passif' %}#0d6efd{% elif classe_nature == 'charge' %}#dc3545{% elif classe_nature == 'produit' %}#20c997{% else %}#6c757d{% endif %};color:#fff;">Classe {{ classe_id }}</span>
+                {{ classes_data[classe_str]['nom'] }}
+                <span class="badge bg-light text-dark ms-2" style="font-size:0.55rem;">{{ comptes_classe|length }} comptes</span>
+            </button>
+        </h2>
+        <div id="collapse{{ classe_id }}" class="accordion-collapse collapse" aria-labelledby="heading{{ classe_id }}" data-bs-parent="#accordionPlan">
+            <div class="accordion-body p-1">
+                <table class="table table-sm table-bordered mb-0" style="font-size:0.7rem;">
+                    <thead class="bg-light">
+                        <tr>
+                            <th style="width:100px;">Numéro</th>
+                            <th>Libellé</th>
+                            <th style="width:80px;">Nature</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for compte in comptes_classe|sort(attribute='numero') %}
+                        <tr data-nature="{{ compte.nature }}" class="compte-row">
+                            <td style="padding-left:{{ (compte.niveau - 1) * 16 + 8 }}px;">
+                                <a href="{{ url_for('comptabilite.compte_detail', id=compte.id) }}" class="text-decoration-none fw-bold" style="color:{% if compte.nature == 'actif' %}#198754{% elif compte.nature == 'passif' %}#0d6efd{% elif compte.nature == 'charge' %}#dc3545{% elif compte.nature == 'produit' %}#20c997{% else %}#333{% endif %};">
+                                    {{ compte.numero }}
+                                </a>
+                            </td>
+                            <td style="padding-left:{{ (compte.niveau - 1) * 16 + 8 }}px;">{{ compte.libelle }}</td>
+                            <td>
+                                <span class="badge" style="font-size:0.55rem;background:{% if compte.nature == 'actif' %}#198754{% elif compte.nature == 'passif' %}#0d6efd{% elif compte.nature == 'charge' %}#dc3545{% elif compte.nature == 'produit' %}#20c997{% else %}#6c757d{% endif %};color:#fff;">
+                                    {{ compte.nature }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="3" class="text-center py-2 text-muted" style="font-size:0.7rem;">Aucun compte dans cette classe.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+function filtrerPlan() {
+    var nature = document.getElementById('filtre-nature').value;
+    document.querySelectorAll('#accordionPlan .accordion-item').forEach(function(item) {
+        var itemNature = item.getAttribute('data-nature');
+        if (!nature || itemNature === nature) {
+            item.style.display = '';
+            // Filtrer les lignes à l'intérieur
+            item.querySelectorAll('tr.compte-row').forEach(function(row) {
+                var rowNature = row.getAttribute('data-nature');
+                if (!nature || rowNature === nature) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
+</script>
+
+{% endblock %}

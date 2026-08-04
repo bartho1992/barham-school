@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}Nouvelle Écriture - {{ ecole.nom }}{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2 animate-in">
+    <div class="section-header mb-0"><i class="bi bi-pencil-square me-1"></i> Nouvelle Écriture</div>
+    <a href="{{ url_for('comptabilite.ecritures') }}" class="btn btn-outline-secondary btn-sm py-0" style="font-size:0.65rem;"><i class="bi bi-x-lg"></i> Annuler</a>
+</div>
+
+<div class="card shadow-sm border-0 animate-in">
+    <div class="card-body p-3">
+        <form method="POST" action="{{ url_for('comptabilite.ecriture_nouvelle') }}" onsubmit="return validerEcriture()">
+            <div class="row g-2 mb-2">
+                <div class="col-md-3">
+                    <label class="form-label mb-0" style="font-size:0.65rem;font-weight:700;">Date <span class="text-danger">*</span></label>
+                    <input type="date" name="date_ecriture" class="form-control form-control-sm" style="font-size:0.7rem;height:30px;" required value="{{ today|default('') }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label mb-0" style="font-size:0.65rem;font-weight:700;">Référence</label>
+                    <input type="text" name="reference" class="form-control form-control-sm" style="font-size:0.7rem;height:30px;" placeholder="N° pièce, facture...">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label mb-0" style="font-size:0.65rem;font-weight:700;">Montant <span class="text-danger">*</span></label>
+                    <input type="number" name="montant" id="montant" class="form-control form-control-sm" style="font-size:0.7rem;height:30px;" step="0.01" min="0.01" required placeholder="0.00">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label mb-0" style="font-size:0.65rem;font-weight:700;">Type d'écriture</label>
+                    <select name="type_ecriture" class="form-select form-select-sm" style="font-size:0.7rem;height:30px;">
+                        <option value="manuelle">Manuelle</option>
+                        <option value="paiement_scolarite">Paiement scolarité</option>
+                        <option value="salaire">Salaire</option>
+                        <option value="achat">Achat</option>
+                        <option value="autre">Autre</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="mb-2">
+                <label class="form-label mb-0" style="font-size:0.65rem;font-weight:700;">Libellé <span class="text-danger">*</span></label>
+                <textarea name="libelle" class="form-control form-control-sm" style="font-size:0.7rem;height:50px;" required placeholder="Description de l'écriture..."></textarea>
+            </div>
+
+            <div class="row g-2 mb-3">
+                <div class="col-md-6">
+                    <label class="form-label mb-0" style="font-size:0.65rem;font-weight:700;">Compte Débit <span class="text-danger">*</span></label>
+                    <select name="compte_debit_id" id="compte_debit" class="form-select form-select-sm" style="font-size:0.7rem;height:30px;" required onchange="verifierComptes()">
+                        <option value="">-- Sélectionner --</option>
+                        {% set current_classe = namespace(val='') %}
+                        {% for compte in comptes|default([])|sort(attribute='numero') %}
+                        {% set classe_debut = compte.numero[0] %}
+                        {% if classe_debut != current_classe.val %}
+                            {% if current_classe.val != '' %}</optgroup>{% endif %}
+                            {% set current_classe.val = classe_debut %}
+                            <optgroup label="Classe {{ classe_debut }}">
+                        {% endif %}
+                        <option value="{{ compte.id }}">{{ compte.numero }} - {{ compte.libelle }}</option>
+                        {% endfor %}
+                        {% if current_classe.val != '' %}</optgroup>{% endif %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label mb-0" style="font-size:0.65rem;font-weight:700;">Compte Crédit <span class="text-danger">*</span></label>
+                    <select name="compte_credit_id" id="compte_credit" class="form-select form-select-sm" style="font-size:0.7rem;height:30px;" required onchange="verifierComptes()">
+                        <option value="">-- Sélectionner --</option>
+                        {% set current_classe2 = namespace(val='') %}
+                        {% for compte in comptes|default([])|sort(attribute='numero') %}
+                        {% set classe_debut = compte.numero[0] %}
+                        {% if classe_debut != current_classe2.val %}
+                            {% if current_classe2.val != '' %}</optgroup>{% endif %}
+                            {% set current_classe2.val = classe_debut %}
+                            <optgroup label="Classe {{ classe_debut }}">
+                        {% endif %}
+                        <option value="{{ compte.id }}">{{ compte.numero }} - {{ compte.libelle }}</option>
+                        {% endfor %}
+                        {% if current_classe2.val != '' %}</optgroup>{% endif %}
+                    </select>
+                </div>
+            </div>
+
+            <div id="erreur-comptes" class="alert alert-danger py-1 mb-2" style="font-size:0.65rem;display:none;">
+                <i class="bi bi-exclamation-triangle-fill me-1"></i> Le compte débit et le compte crédit doivent être différents.
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-success btn-sm px-3" style="font-size:0.7rem;">
+                    <i class="bi bi-check-lg me-1"></i> Enregistrer
+                </button>
+                <a href="{{ url_for('comptabilite.ecritures') }}" class="btn btn-outline-secondary btn-sm px-3" style="font-size:0.7rem;">
+                    <i class="bi bi-x-lg me-1"></i> Annuler
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function verifierComptes() {
+    var debit = document.getElementById('compte_debit').value;
+    var credit = document.getElementById('compte_credit').value;
+    var erreur = document.getElementById('erreur-comptes');
+    if (debit && credit && debit === credit) {
+        erreur.style.display = 'block';
+    } else {
+        erreur.style.display = 'none';
+    }
+}
+
+function validerEcriture() {
+    var debit = document.getElementById('compte_debit').value;
+    var credit = document.getElementById('compte_credit').value;
+    var montant = parseFloat(document.getElementById('montant').value);
+    if (debit === credit) {
+        alert('Le compte débit et le compte crédit doivent être différents.');
+        return false;
+    }
+    if (isNaN(montant) || montant <= 0) {
+        alert('Le montant doit être supérieur à 0.');
+        return false;
+    }
+    return true;
+}
+</script>
+
+{% endblock %}

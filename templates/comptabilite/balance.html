@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Balance des Comptes - {{ ecole.nom }}{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2 animate-in">
+    <div class="section-header mb-0"><i class="bi bi-bar-chart-steps me-1"></i> Balance des Comptes</div>
+    <button onclick="window.print()" class="btn btn-outline-secondary btn-sm py-0" style="font-size:0.65rem;"><i class="bi bi-printer"></i> Imprimer</button>
+</div>
+
+<!-- Filtre période -->
+<div class="card shadow-sm border-0 mb-2 animate-in">
+    <div class="card-body p-2">
+        <form method="GET" class="row g-2 align-items-end">
+            <div class="col-md-3 col-6">
+                <label class="form-label mb-0" style="font-size:0.6rem;font-weight:700;">Date début</label>
+                <input type="date" name="date_debut" class="form-control form-control-sm" style="font-size:0.7rem;height:28px;" value="{{ request.args.get('date_debut', '') }}">
+            </div>
+            <div class="col-md-3 col-6">
+                <label class="form-label mb-0" style="font-size:0.6rem;font-weight:700;">Date fin</label>
+                <input type="date" name="date_fin" class="form-control form-control-sm" style="font-size:0.7rem;height:28px;" value="{{ request.args.get('date_fin', '') }}">
+            </div>
+            <div class="col-md-2 col-6">
+                <button type="submit" class="btn btn-primary btn-sm py-0" style="font-size:0.65rem;height:28px;"><i class="bi bi-funnel"></i> Filtrer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Balance -->
+<div class="card shadow-sm border-0 animate-in">
+    <div class="table-responsive" style="max-height:60vh;overflow-y:auto;">
+        <table class="table table-sm table-bordered mb-0" style="font-size:0.7rem;">
+            <thead class="bg-light" style="position:sticky;top:0;z-index:2;">
+                <tr>
+                    <th>N° Compte</th>
+                    <th>Libellé</th>
+                    <th class="text-end">Total Débit</th>
+                    <th class="text-end">Total Crédit</th>
+                    <th class="text-end">Solde Débiteur</th>
+                    <th class="text-end">Solde Créditeur</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% set grand_total_debit = 0 %}
+                {% set grand_total_credit = 0 %}
+                {% set grand_solde_debit = 0 %}
+                {% set grand_solde_credit = 0 %}
+                {% for classe_data in balance|default([]) %}
+                <!-- Sous-total Classe -->
+                <tr style="background:#e9ecef;font-weight:700;">
+                    <td colspan="2">
+                        <span class="badge me-1" style="font-size:0.6rem;background:{% if classe_data.nature == 'actif' %}#198754{% elif classe_data.nature == 'passif' %}#0d6efd{% elif classe_data.nature == 'charge' %}#dc3545{% elif classe_data.nature == 'produit' %}#20c997{% else %}#6c757d{% endif %};color:#fff;">Classe {{ classe_data.classe }}</span>
+                        {{ classe_data.nom_classe }}
+                    </td>
+                    <td class="text-end">{{ '{:,.0f}'.format(classe_data.total_debit|default(0)).replace(',', ' ') }}</td>
+                    <td class="text-end">{{ '{:,.0f}'.format(classe_data.total_credit|default(0)).replace(',', ' ') }}</td>
+                    <td class="text-end">{{ '{:,.0f}'.format(classe_data.solde_debit|default(0)).replace(',', ' ') }}</td>
+                    <td class="text-end">{{ '{:,.0f}'.format(classe_data.solde_credit|default(0)).replace(',', ' ') }}</td>
+                </tr>
+                {% set grand_total_debit = grand_total_debit + (classe_data.total_debit|default(0)) %}
+                {% set grand_total_credit = grand_total_credit + (classe_data.total_credit|default(0)) %}
+                {% set grand_solde_debit = grand_solde_debit + (classe_data.solde_debit|default(0)) %}
+                {% set grand_solde_credit = grand_solde_credit + (classe_data.solde_credit|default(0)) %}
+                {% for ligne in classe_data.comptes %}
+                <tr>
+                    <td style="padding-left:16px;">{{ ligne.numero }}</td>
+                    <td style="padding-left:16px;">{{ ligne.libelle }}</td>
+                    <td class="text-end">{{ '{:,.0f}'.format(ligne.total_debit|default(0)).replace(',', ' ') }}</td>
+                    <td class="text-end">{{ '{:,.0f}'.format(ligne.total_credit|default(0)).replace(',', ' ') }}</td>
+                    <td class="text-end fw-bold" style="color:#198754;">{{ '{:,.0f}'.format(ligne.solde_debit|default(0)).replace(',', ' ') if ligne.solde_debit|default(0) > 0 else '-' }}</td>
+                    <td class="text-end fw-bold" style="color:#0d6efd;">{{ '{:,.0f}'.format(ligne.solde_credit|default(0)).replace(',', ' ') if ligne.solde_credit|default(0) > 0 else '-' }}</td>
+                </tr>
+                {% endfor %}
+                {% endfor %}
+            </tbody>
+            <tfoot style="background:#e9ecef;font-weight:700;font-size:0.75rem;">
+                <tr>
+                    <td colspan="2" class="text-end">TOTAL GÉNÉRAL</td>
+                    <td class="text-end">{{ '{:,.0f}'.format(grand_total_debit).replace(',', ' ') }}</td>
+                    <td class="text-end">{{ '{:,.0f}'.format(grand_total_credit).replace(',', ' ') }}</td>
+                    <td class="text-end" style="color:#198754;">{{ '{:,.0f}'.format(grand_solde_debit).replace(',', ' ') }}</td>
+                    <td class="text-end" style="color:#0d6efd;">{{ '{:,.0f}'.format(grand_solde_credit).replace(',', ' ') }}</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    <div class="card-footer bg-white py-1 text-end">
+        <small class="text-muted" style="font-size:0.65rem;">
+            <span style="color:#198754;">■ Solde débiteur</span>
+            <span class="ms-2" style="color:#0d6efd;">■ Solde créditeur</span>
+            {% if grand_total_debit == grand_total_credit %}
+            <span class="badge bg-success ms-2" style="font-size:0.6rem;"><i class="bi bi-check-circle"></i> Balance équilibrée</span>
+            {% else %}
+            <span class="badge bg-danger ms-2" style="font-size:0.6rem;"><i class="bi bi-exclamation-circle"></i> Déséquilibre</span>
+            {% endif %}
+        </small>
+    </div>
+</div>
+
+{% endblock %}

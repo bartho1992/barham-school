@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Écritures Comptables - {{ ecole.nom }}{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2 animate-in">
+    <div class="section-header mb-0"><i class="bi bi-journal-text me-1"></i> Écritures Comptables</div>
+    <a href="{{ url_for('comptabilite.ecriture_nouvelle') }}" class="btn btn-success btn-sm py-0 px-2" style="font-size:0.65rem;">
+        <i class="bi bi-plus-lg"></i> Nouvelle écriture
+    </a>
+</div>
+
+<!-- Filtres -->
+<div class="card shadow-sm border-0 mb-2 animate-in">
+    <div class="card-body p-2">
+        <form method="GET" class="row g-2 align-items-end">
+            <div class="col-lg-3 col-md-4 col-6">
+                <label class="form-label mb-0" style="font-size:0.6rem;font-weight:700;">Date début</label>
+                <input type="date" name="date_debut" class="form-control form-control-sm" style="font-size:0.7rem;height:28px;" value="{{ request.args.get('date_debut', '') }}">
+            </div>
+            <div class="col-lg-3 col-md-4 col-6">
+                <label class="form-label mb-0" style="font-size:0.6rem;font-weight:700;">Date fin</label>
+                <input type="date" name="date_fin" class="form-control form-control-sm" style="font-size:0.7rem;height:28px;" value="{{ request.args.get('date_fin', '') }}">
+            </div>
+            <div class="col-lg-3 col-md-4 col-6">
+                <label class="form-label mb-0" style="font-size:0.6rem;font-weight:700;">Compte</label>
+                <select name="compte_id" class="form-select form-select-sm" style="font-size:0.7rem;height:28px;">
+                    <option value="">Tous les comptes</option>
+                    {% for compte in comptes|default([])|sort(attribute='numero') %}
+                    <option value="{{ compte.id }}" {{ 'selected' if request.args.get('compte_id')|string == compte.id|string }}>{{ compte.numero }} - {{ compte.libelle }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-4 col-6">
+                <label class="form-label mb-0" style="font-size:0.6rem;font-weight:700;">Type</label>
+                <select name="type_ecriture" class="form-select form-select-sm" style="font-size:0.7rem;height:28px;">
+                    <option value="">Tous</option>
+                    <option value="manuelle" {{ 'selected' if request.args.get('type_ecriture') == 'manuelle' }}>Manuelle</option>
+                    <option value="paiement_scolarite" {{ 'selected' if request.args.get('type_ecriture') == 'paiement_scolarite' }}>Paiement scolarité</option>
+                    <option value="salaire" {{ 'selected' if request.args.get('type_ecriture') == 'salaire' }}>Salaire</option>
+                </select>
+            </div>
+            <div class="col-lg-1 col-md-4 col-6 d-flex align-items-end gap-1">
+                <button type="submit" class="btn btn-primary btn-sm py-0" style="font-size:0.65rem;height:28px;"><i class="bi bi-funnel"></i></button>
+                <a href="{{ url_for('comptabilite.ecritures') }}" class="btn btn-outline-secondary btn-sm py-0" style="font-size:0.65rem;height:28px;"><i class="bi bi-x"></i></a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Tableau des écritures -->
+<div class="card shadow-sm border-0 animate-in">
+    <div class="table-responsive" style="max-height:55vh;overflow-y:auto;">
+        <table class="table table-sm table-bordered mb-0" style="font-size:0.7rem;">
+            <thead class="bg-light" style="position:sticky;top:0;z-index:2;">
+                <tr>
+                    <th>Date</th>
+                    <th>Libellé</th>
+                    <th>Compte Débit</th>
+                    <th>Compte Crédit</th>
+                    <th class="text-end">Montant</th>
+                    <th>Type</th>
+                    <th>Référence</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ecriture in ecritures|default([]) %}
+                <tr>
+                    <td style="white-space:nowrap;">{{ ecriture.date_ecriture.strftime('%d/%m/%Y') if ecriture.date_ecriture else '-' }}</td>
+                    <td>{{ ecriture.libelle }}</td>
+                    <td>
+                        <a href="{{ url_for('comptabilite.compte_detail', id=ecriture.compte_debit_id) }}" class="text-decoration-none" style="font-size:0.65rem;">
+                            <span class="badge bg-light text-dark border" style="font-size:0.55rem;">{{ ecriture.compte_debit.numero }}</span>
+                        </a>
+                        {{ ecriture.compte_debit.libelle }}
+                    </td>
+                    <td>
+                        <a href="{{ url_for('comptabilite.compte_detail', id=ecriture.compte_credit_id) }}" class="text-decoration-none" style="font-size:0.65rem;">
+                            <span class="badge bg-light text-dark border" style="font-size:0.55rem;">{{ ecriture.compte_credit.numero }}</span>
+                        </a>
+                        {{ ecriture.compte_credit.libelle }}
+                    </td>
+                    <td class="text-end fw-bold">{{ '{:,.0f}'.format(ecriture.montant).replace(',', ' ') }}</td>
+                    <td><span class="badge bg-secondary" style="font-size:0.6rem;">{{ ecriture.type_ecriture }}</span></td>
+                    <td><span class="badge bg-light text-dark border" style="font-size:0.55rem;">{{ ecriture.reference or '-' }}</span></td>
+                </tr>
+                {% else %}
+                <tr><td colspan="7" class="text-center py-3 text-muted" style="font-size:0.7rem;">Aucune écriture trouvée.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="card-footer bg-white py-1 text-end">
+        <small class="text-muted" style="font-size:0.65rem;">{{ ecritures|default([])|length }} écriture(s)</small>
+    </div>
+</div>
+
+{% endblock %}

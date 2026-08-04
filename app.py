@@ -1,7 +1,7 @@
 import os
 from flask import Flask, session, request, redirect, url_for, send_from_directory, render_template, flash
 from flask_login import login_required
-from models import db, init_data, Ecole, AnneeScolaire
+from models import db, init_data, init_comptes_syscohada, Ecole, AnneeScolaire
 
 from datetime import timedelta, datetime
 app = Flask(__name__)
@@ -115,6 +115,7 @@ from routes_admin import *
 from routes_documents import *
 from routes_licence import *
 from routes_saas import *
+from routes_comptabilite import *
 
 with app.app_context():
     db.create_all()
@@ -159,6 +160,9 @@ with app.app_context():
                 print(f"[Migration] Erreur code_parent: {e}")
         db.session.commit()
     init_data()
+    # Initialiser le plan comptable SYSCOHADA pour chaque ecole existante
+    for ecole in Ecole.query.all():
+        init_comptes_syscohada(ecole.id)
 
 # ---- Nouveaux modules (apres init pour eviter import circulaire) ----
 # Protection contre double enregistrement lors du rechargement circulaire

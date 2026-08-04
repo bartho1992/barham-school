@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}Grand Livre - {{ ecole.nom }}{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2 animate-in">
+    <div class="section-header mb-0"><i class="bi bi-journal-text me-1"></i> Grand Livre</div>
+    <button onclick="window.print()" class="btn btn-outline-secondary btn-sm py-0" style="font-size:0.65rem;"><i class="bi bi-printer"></i> Imprimer</button>
+</div>
+
+<!-- Sélecteur de compte -->
+<div class="card shadow-sm border-0 mb-2 animate-in">
+    <div class="card-body p-2">
+        <form method="GET" class="row g-2 align-items-end">
+            <div class="col-md-6">
+                <label class="form-label mb-0" style="font-size:0.6rem;font-weight:700;">Sélectionner un compte</label>
+                <select name="compte_id" class="form-select form-select-sm" style="font-size:0.7rem;height:30px;" onchange="this.form.submit()">
+                    <option value="">-- Choisir un compte --</option>
+                    {% set current_classe = namespace(val='') %}
+                    {% for compte in comptes|default([])|sort(attribute='numero') %}
+                    {% set classe_debut = compte.numero[0] %}
+                    {% if classe_debut != current_classe.val %}
+                        {% if current_classe.val != '' %}</optgroup>{% endif %}
+                        {% set current_classe.val = classe_debut %}
+                        <optgroup label="Classe {{ classe_debut }}">
+                    {% endif %}
+                    <option value="{{ compte.id }}" {{ 'selected' if compte_selected and compte_selected.id == compte.id }}>{{ compte.numero }} - {{ compte.libelle }}</option>
+                    {% endfor %}
+                    {% if current_classe.val != '' %}</optgroup>{% endif %}
+                </select>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if compte_selected %}
+<div class="card shadow-sm border-0 animate-in">
+    <div class="card-header bg-white py-2 d-flex justify-content-between align-items-center">
+        <span class="fw-bold" style="font-size:0.75rem;">
+            <i class="bi bi-bookmark-fill me-1" style="color:{% if compte_selected.nature == 'actif' %}#198754{% elif compte_selected.nature == 'passif' %}#0d6efd{% elif compte_selected.nature == 'charge' %}#dc3545{% elif compte_selected.nature == 'produit' %}#20c997{% else %}#333{% endif %};"></i>
+            {{ compte_selected.numero }} — {{ compte_selected.libelle }}
+            <span class="badge ms-1" style="font-size:0.55rem;background:{% if compte_selected.nature == 'actif' %}#198754{% elif compte_selected.nature == 'passif' %}#0d6efd{% elif compte_selected.nature == 'charge' %}#dc3545{% elif compte_selected.nature == 'produit' %}#20c997{% else %}#6c757d{% endif %};color:#fff;">{{ compte_selected.nature }}</span>
+        </span>
+    </div>
+    <div class="table-responsive" style="max-height:55vh;overflow-y:auto;">
+        <table class="table table-sm table-bordered mb-0" style="font-size:0.7rem;">
+            <thead class="bg-light" style="position:sticky;top:0;z-index:1;">
+                <tr>
+                    <th>Date</th>
+                    <th>Libellé</th>
+                    <th>Référence</th>
+                    <th class="text-end">Débit</th>
+                    <th class="text-end">Crédit</th>
+                    <th class="text-end">Solde</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% set solde_progressif = 0 %}
+                {% set est_actif_ou_charge = compte_selected.nature in ('actif', 'charge') %}
+                {% for ecriture in ecritures|default([]) %}
+                {% if ecriture.compte_debit_id == compte_selected.id %}
+                    {% set solde_progressif = solde_progressif + ecriture.montant %}
+                {% else %}
+                    {% set solde_progressif = solde_progressif - ecriture.montant %}
+                {% endif %}
+                <tr>
+                    <td style="white-space:nowrap;">{{ ecriture.date_ecriture.strftime('%d/%m/%Y') if ecriture.date_ecriture else '-' }}</td>
+                    <td>{{ ecriture.libelle }}</td>
+                    <td><span class="badge bg-light text-dark border" style="font-size:0.55rem;">{{ ecriture.reference or '-' }}</span></td>
+                    <td class="text-end" style="color:#198754;">{% if ecriture.compte_debit_id == compte_selected.id %}{{ '{:,.0f}'.format(ecriture.montant).replace(',', ' ') }}{% else %}-{% endif %}</td>
+                    <td class="text-end" style="color:#0d6efd;">{% if ecriture.compte_credit_id == compte_selected.id %}{{ '{:,.0f}'.format(ecriture.montant).replace(',', ' ') }}{% else %}-{% endif %}</td>
+                    <td class="text-end fw-bold" style="color:{% if solde_progressif >= 0 %}#198754{% else %}#dc3545{% endif %};">
+                        {{ '{:,.0f}'.format(solde_progressif).replace(',', ' ') }}
+                        <span style="font-size:0.55rem;">({{ 'D' if solde_progressif >= 0 else 'C' }})</span>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6" class="text-center py-3 text-muted" style="font-size:0.7rem;">Aucune écriture pour ce compte.</td></tr>
+                {% endfor %}
+            </tbody>
+            {% if ecritures|default([])|length > 0 %}
+            <tfoot class="bg-light fw-bold">
+                <tr>
+                    <td colspan="3" class="text-end">Soldes totaux :</td>
+                    <td class="text-end" style="color:#198754;">{{ '{:,.0f}'.format(total_debit|default(0)).replace(',', ' ') }}</td>
+                    <td class="text-end" style="color:#0d6efd;">{{ '{:,.0f}'.format(total_credit|default(0)).replace(',', ' ') }}</td>
+                    <td class="text-end" style="color:{% if solde_progressif >= 0 %}#198754{% else %}#dc3545{% endif %};">
+                        {{ '{:,.0f}'.format(solde_progressif).replace(',', ' ') }}
+                    </td>
+                </tr>
+            </tfoot>
+            {% endif %}
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="text-center py-5 text-muted animate-in" style="font-size:0.75rem;">
+    <i class="bi bi-arrow-up-circle" style="font-size:2rem;display:block;margin-bottom:8px;"></i>
+    Veuillez sélectionner un compte pour afficher son grand livre.
+</div>
+{% endif %}
+
+{% endblock %}

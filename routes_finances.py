@@ -78,6 +78,53 @@ def _index_mois_scolaire(mois):
     except ValueError:
         return None
 
+def _creer_ecriture_paiement(paiement):
+    """Cree automatiquement une ecriture comptable pour un paiement"""
+    from models import CompteComptable, EcritureComptable
+    ecole_id = paiement.ecole_id
+    annee = paiement.annee_scolaire
+    mode = (paiement.mode_paiement or '').lower()
+    
+    # Compte de debit : Caisse (53) ou Banque (51)
+    if mode in ('banque', 'virement', 'cheque'):
+        compte_debit = CompteComptable.query.filter_by(numero='51', ecole_id=ecole_id).first()
+    else:
+        compte_debit = CompteComptable.query.filter_by(numero='53', ecole_id=ecole_id).first()
+    
+    # Compte de credit selon le type de paiement
+    type_p = (paiement.type_paiement or '').strip()
+    comptes_par_defaut = {
+        'Inscription': '7063',
+        'Frais de scolarite': '7061',
+    }
+    numero_credit = comptes_par_defaut.get(type_p)
+    if not numero_credit:
+        # Si le type est un mois scolaire -> scolarite
+        if type_p in MOIS_SCOLAIRES:
+            numero_credit = '7061'
+        else:
+            # Sinon, categorie de service -> services annexes
+            numero_credit = '7062'
+    
+    compte_credit = CompteComptable.query.filter_by(numero=numero_credit, ecole_id=ecole_id).first()
+    
+    if not compte_debit or not compte_credit:
+        return  # Comptes non trouves, on ignore
+    
+    ecriture = EcritureComptable(
+        ecole_id=ecole_id,
+        date_ecriture=paiement.date_paiement or datetime.now(),
+        libelle=f"Paiement {type_p} - {paiement.eleve.prenom} {paiement.eleve.nom}",
+        reference=f"PAIE-{paiement.id}",
+        montant=paiement.montant,
+        compte_debit_id=compte_debit.id,
+        compte_credit_id=compte_credit.id,
+        type_ecriture='paiement_scolarite',
+        paiement_id=paiement.id,
+        annee_scolaire=annee
+    )
+    db.session.add(ecriture)
+
 def _build_ligne_financiere(eleve, annee, categories, scolarites_map, tarifs_services_map, abonnements_by_eleve, paiements):
     if not eleve.classe:
         return None
@@ -665,6 +712,7 @@ def paiement_groupe():
             mode_paiement=mode_paiement
         )
         db.session.add(p)
+        _creer_ecriture_paiement(p)
         total_percu += montant
         nb_ok += 1
     
@@ -735,6 +783,7 @@ def paiement_ajouter():
             mode_paiement=request.form.get('mode_paiement', 'Especes')
         )
         db.session.add(p)
+        _creer_ecriture_paiement(p)
         db.session.commit()
         flash('Paiement enregistre avec succes', 'success')
         return redirect(url_for('paiement_recu', id=p.id))
@@ -756,6 +805,9 @@ def paiement_annuler(id):
     check = _check_parametres_access(ecole_id)
     if check: return check
     p = Paiement.query.get_or_404(id)
+    # Supprimer l'ecriture comptable liee
+    from models import EcritureComptable
+    EcritureComptable.query.filter_by(paiement_id=p.id).delete()
     db.session.delete(p)
     db.session.commit()
     flash('Paiement annule avec succes', 'success')

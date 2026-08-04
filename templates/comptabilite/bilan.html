@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block title %}Bilan Comptable - {{ ecole.nom }}{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2 animate-in">
+    <div class="section-header mb-0"><i class="bi bi-file-earmark-bar-graph me-1"></i> Bilan Comptable</div>
+    <button onclick="window.print()" class="btn btn-outline-secondary btn-sm py-0" style="font-size:0.65rem;"><i class="bi bi-printer"></i> Imprimer</button>
+</div>
+
+<div class="row g-2 animate-in">
+    <!-- Colonne ACTIF -->
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header py-1" style="background:#198754;color:#fff;">
+                <span class="fw-bold" style="font-size:0.75rem;"><i class="bi bi-box-arrow-in-right me-1"></i> ACTIF</span>
+            </div>
+            <div class="card-body p-1">
+                <table class="table table-sm table-bordered mb-0" style="font-size:0.7rem;">
+                    <thead class="bg-light">
+                        <tr>
+                            <th>Libellé</th>
+                            <th class="text-end">Brut</th>
+                            <th class="text-end">Amort./Prov.</th>
+                            <th class="text-end">Net</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% set total_actif_brut = 0 %}
+                        {% set total_actif_amort = 0 %}
+                        {% set total_actif_net = 0 %}
+
+                        <!-- Classe 2 - Immobilisations -->
+                        {% for ligne in bilan_actif|default([]) %}
+                        <tr>
+                            <td>{{ ligne.libelle }}</td>
+                            <td class="text-end">{{ '{:,.0f}'.format(ligne.brut|default(0)).replace(',', ' ') }}</td>
+                            <td class="text-end text-muted">{{ '{:,.0f}'.format(ligne.amortissement|default(0)).replace(',', ' ') }}</td>
+                            <td class="text-end fw-bold">{{ '{:,.0f}'.format(ligne.net|default(0)).replace(',', ' ') }}</td>
+                        </tr>
+                        {% set total_actif_brut = total_actif_brut + (ligne.brut|default(0)) %}
+                        {% set total_actif_amort = total_actif_amort + (ligne.amortissement|default(0)) %}
+                        {% set total_actif_net = total_actif_net + (ligne.net|default(0)) %}
+                        {% endfor %}
+
+                        <!-- Perte si résultat < 0 -->
+                        {% if resultat_net|default(0) < 0 %}
+                        <tr>
+                            <td class="fw-bold text-danger">PERTE (Résultat déficitaire)</td>
+                            <td></td>
+                            <td></td>
+                            <td class="text-end fw-bold text-danger">{{ '{:,.0f}'.format((resultat_net|default(0))|abs).replace(',', ' ') }}</td>
+                        </tr>
+                        {% set total_actif_net = total_actif_net + (resultat_net|default(0))|abs %}
+                        {% endif %}
+                    </tbody>
+                    <tfoot style="background:#e9ecef;font-weight:700;">
+                        <tr>
+                            <td class="text-end">TOTAL ACTIF</td>
+                            <td class="text-end">{{ '{:,.0f}'.format(total_actif_brut).replace(',', ' ') }}</td>
+                            <td class="text-end">{{ '{:,.0f}'.format(total_actif_amort).replace(',', ' ') }}</td>
+                            <td class="text-end" style="color:#198754;">{{ '{:,.0f}'.format(total_actif_net).replace(',', ' ') }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Colonne PASSIF -->
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header py-1" style="background:#0d6efd;color:#fff;">
+                <span class="fw-bold" style="font-size:0.75rem;"><i class="bi bi-box-arrow-in-left me-1"></i> PASSIF</span>
+            </div>
+            <div class="card-body p-1">
+                <table class="table table-sm table-bordered mb-0" style="font-size:0.7rem;">
+                    <thead class="bg-light">
+                        <tr>
+                            <th>Libellé</th>
+                            <th class="text-end">Montant</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% set total_passif = 0 %}
+                        {% for ligne in bilan_passif|default([]) %}
+                        <tr>
+                            <td>{{ ligne.libelle }}</td>
+                            <td class="text-end fw-bold">{{ '{:,.0f}'.format(ligne.montant|default(0)).replace(',', ' ') }}</td>
+                        </tr>
+                        {% set total_passif = total_passif + (ligne.montant|default(0)) %}
+                        {% endfor %}
+
+                        <!-- Résultat -->
+                        {% if resultat_net|default(0) > 0 %}
+                        <tr>
+                            <td class="fw-bold text-success">BÉNÉFICE (Résultat de l'exercice)</td>
+                            <td class="text-end fw-bold text-success">{{ '{:,.0f}'.format(resultat_net|default(0)).replace(',', ' ') }}</td>
+                        </tr>
+                        {% set total_passif = total_passif + (resultat_net|default(0)) %}
+                        {% endif %}
+                    </tbody>
+                    <tfoot style="background:#e9ecef;font-weight:700;">
+                        <tr>
+                            <td class="text-end">TOTAL PASSIF</td>
+                            <td class="text-end" style="color:#0d6efd;">{{ '{:,.0f}'.format(total_passif).replace(',', ' ') }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Vérification d'équilibre -->
+<div class="text-center mt-2 animate-in">
+    {% if total_actif_net == total_passif %}
+    <span class="badge bg-success px-3 py-1" style="font-size:0.7rem;">
+        <i class="bi bi-check-circle-fill me-1"></i> Bilan équilibré — Total Actif = Total Passif = {{ '{:,.0f}'.format(total_actif_net).replace(',', ' ') }} FCFA
+    </span>
+    {% else %}
+    <span class="badge bg-danger px-3 py-1" style="font-size:0.7rem;">
+        <i class="bi bi-exclamation-triangle-fill me-1"></i> Bilan déséquilibré — Écart : {{ '{:,.0f}'.format((total_actif_net - total_passif)|abs).replace(',', ' ') }} FCFA
+    </span>
+    {% endif %}
+</div>
+
+{% endblock %}

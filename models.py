@@ -512,6 +512,207 @@ class NotificationParent(db.Model):
     ecole = db.relationship('Ecole', backref='notifications_parents')
 
 
+class CompteComptable(db.Model):
+    """Plan comptable SYSCOHADA"""
+    id = db.Column(db.Integer, primary_key=True)
+    numero = db.Column(db.String(20), nullable=False)
+    libelle = db.Column(db.String(300), nullable=False)
+    parent_id = db.Column(db.Integer, db.ForeignKey('compte_comptable.id'), nullable=True)
+    niveau = db.Column(db.Integer, default=1)
+    nature = db.Column(db.String(20))
+    ecole_id = db.Column(db.Integer, db.ForeignKey('ecole.id'), nullable=False, default=1)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    
+    parent = db.relationship('CompteComptable', remote_side=[id], backref='enfants')
+    ecole = db.relationship('Ecole', backref='comptes_comptables')
+    
+    def __repr__(self):
+        return f'<Compte {self.numero} {self.libelle}>'
+
+class EcritureComptable(db.Model):
+    """Ecritures comptables (partie double)"""
+    id = db.Column(db.Integer, primary_key=True)
+    ecole_id = db.Column(db.Integer, db.ForeignKey('ecole.id'), nullable=False, default=1)
+    date_ecriture = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+    libelle = db.Column(db.String(300), nullable=False)
+    reference = db.Column(db.String(100))
+    montant = db.Column(db.Float, nullable=False)
+    compte_debit_id = db.Column(db.Integer, db.ForeignKey('compte_comptable.id'), nullable=False)
+    compte_credit_id = db.Column(db.Integer, db.ForeignKey('compte_comptable.id'), nullable=False)
+    type_ecriture = db.Column(db.String(30), default='manuelle')
+    paiement_id = db.Column(db.Integer, db.ForeignKey('paiement.id'), nullable=True)
+    annee_scolaire = db.Column(db.String(20))
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    
+    compte_debit = db.relationship('CompteComptable', foreign_keys=[compte_debit_id])
+    compte_credit = db.relationship('CompteComptable', foreign_keys=[compte_credit_id])
+    ecole = db.relationship('Ecole', backref='ecritures_comptables')
+    paiement = db.relationship('Paiement', backref='ecriture_comptable')
+    
+    def __repr__(self):
+        return f'<Ecriture {self.id}: {self.libelle} {self.montant}>'
+
+PLAN_SYSCOHADA = [
+    ("10", "CAPITAL", "passif", 1, None),
+    ("101", "Capital social", "passif", 2, "10"),
+    ("11", "RESERVES", "passif", 1, None),
+    ("111", "Reserve legale", "passif", 2, "11"),
+    ("118", "Autres reserves", "passif", 2, "11"),
+    ("12", "REPORT A NOUVEAU", "passif", 1, None),
+    ("13", "RESULTAT NET DE L'EXERCICE", "passif", 1, None),
+    ("131", "Resultat net : benefice", "passif", 2, "13"),
+    ("139", "Resultat net : perte", "passif", 2, "13"),
+    ("14", "SUBVENTIONS D'INVESTISSEMENT", "passif", 1, None),
+    ("16", "EMPRUNTS ET DETTES ASSIMILEES", "passif", 1, None),
+    ("161", "Emprunts obligataires", "passif", 2, "16"),
+    ("162", "Emprunts aupres des etab. de credit", "passif", 2, "16"),
+    ("168", "Autres emprunts", "passif", 2, "16"),
+    ("18", "COMPTES DE LIAISON", "passif", 1, None),
+    ("19", "PROVISIONS POUR RISQUES ET CHARGES", "passif", 1, None),
+    ("20", "CHARGES IMMOBILISEES", "actif", 1, None),
+    ("201", "Frais d'etablissement", "actif", 2, "20"),
+    ("21", "IMMOBILISATIONS CORPORELLES", "actif", 1, None),
+    ("211", "Terrains", "actif", 2, "21"),
+    ("212", "Batiments", "actif", 2, "21"),
+    ("213", "Amenagements et installations", "actif", 2, "21"),
+    ("214", "Materiel et mobilier", "actif", 2, "21"),
+    ("215", "Materiel de transport", "actif", 2, "21"),
+    ("218", "Autres immobilisations corporelles", "actif", 2, "21"),
+    ("22", "IMMOBILISATIONS CORPORELLES (SUITE)", "actif", 1, None),
+    ("222", "Materiel et outillage", "actif", 2, "22"),
+    ("223", "Materiel informatique", "actif", 2, "22"),
+    ("23", "IMMOBILISATIONS EN COURS", "actif", 1, None),
+    ("24", "IMMOBILISATIONS INCORPORELLES", "actif", 1, None),
+    ("241", "Logiciels", "actif", 2, "24"),
+    ("25", "IMMOBILISATIONS FINANCIERES", "actif", 1, None),
+    ("28", "AMORTISSEMENTS", "actif", 1, None),
+    ("281", "Amort. immobilisations corporelles", "actif", 2, "28"),
+    ("284", "Amort. immobilisations incorporelles", "actif", 2, "28"),
+    ("29", "PROVISIONS POUR DEPRECIATION", "actif", 1, None),
+    ("31", "MATIERES PREMIERES ET FOURNITURES", "actif", 1, None),
+    ("32", "AUTRES APPROVISIONNEMENTS", "actif", 1, None),
+    ("321", "Fournitures scolaires", "actif", 2, "32"),
+    ("322", "Fournitures de bureau", "actif", 2, "32"),
+    ("36", "MARCHANDISES", "actif", 1, None),
+    ("39", "DEPRECIATION DES STOCKS", "actif", 1, None),
+    ("40", "FOURNISSEURS ET COMPTES RATTACHES", "passif", 1, None),
+    ("401", "Fournisseurs de biens et services", "passif", 2, "40"),
+    ("408", "Fournisseurs - factures non parvenues", "passif", 2, "40"),
+    ("409", "Fournisseurs - avances et acomptes", "actif", 2, "40"),
+    ("41", "CLIENTS ET COMPTES RATTACHES", "actif", 1, None),
+    ("411", "Clients", "actif", 2, "41"),
+    ("416", "Clients douteux", "actif", 2, "41"),
+    ("419", "Clients - avances et acomptes", "passif", 2, "41"),
+    ("42", "PERSONNEL", "passif", 1, None),
+    ("421", "Personnel - remunerations dues", "passif", 2, "42"),
+    ("422", "Personnel - avances et acomptes", "actif", 2, "42"),
+    ("43", "ORGANISMES SOCIAUX", "passif", 1, None),
+    ("431", "Securite sociale (CSS)", "passif", 2, "43"),
+    ("432", "Caisse de retraite (IPRES)", "passif", 2, "43"),
+    ("44", "ETAT", "passif", 1, None),
+    ("441", "Etat - impots sur les benefices", "passif", 2, "44"),
+    ("443", "Etat - TVA", "passif", 2, "44"),
+    ("447", "Etat - autres impots et taxes", "passif", 2, "44"),
+    ("46", "ASSOCIES ET GROUPE", "passif", 1, None),
+    ("47", "DEBITEURS ET CREDITEURS DIVERS", "passif", 1, None),
+    ("471", "Comptes d'attente", "passif", 2, "47"),
+    ("48", "CREANCES ET DETTES H.A.O.", "passif", 1, None),
+    ("49", "PROVISIONS DEPRECIATION COMPTES TIERS", "actif", 1, None),
+    ("50", "TITRES DE PLACEMENT", "actif", 1, None),
+    ("51", "BANQUES", "actif", 1, None),
+    ("511", "Banque principale", "actif", 2, "51"),
+    ("518", "Autres banques", "actif", 2, "51"),
+    ("52", "CHEQUES POSTAUX / MOBILE MONEY", "actif", 1, None),
+    ("53", "CAISSE", "actif", 1, None),
+    ("531", "Caisse principale", "actif", 2, "53"),
+    ("532", "Caisse secondaire", "actif", 2, "53"),
+    ("57", "CAISSE (AUTRES)", "actif", 1, None),
+    ("58", "VIREMENTS INTERNES", "actif", 1, None),
+    ("59", "PROVISIONS DEPRECIATION TRESORERIE", "actif", 1, None),
+    ("60", "ACHATS ET VARIATIONS DE STOCKS", "charge", 1, None),
+    ("601", "Achats de marchandises", "charge", 2, "60"),
+    ("602", "Achats de matieres et fournitures", "charge", 2, "60"),
+    ("604", "Achats de fournitures scolaires", "charge", 2, "60"),
+    ("605", "Achats de fournitures de bureau", "charge", 2, "60"),
+    ("608", "Autres achats", "charge", 2, "60"),
+    ("61", "TRANSPORTS", "charge", 1, None),
+    ("611", "Transport du personnel", "charge", 2, "61"),
+    ("618", "Autres transports", "charge", 2, "61"),
+    ("62", "SERVICES EXTERIEURS", "charge", 1, None),
+    ("621", "Location et charges locatives", "charge", 2, "62"),
+    ("622", "Entretien et reparations", "charge", 2, "62"),
+    ("623", "Assurances", "charge", 2, "62"),
+    ("624", "Documentation et fournitures pedagogiques", "charge", 2, "62"),
+    ("625", "Eau et electricite", "charge", 2, "62"),
+    ("626", "Frais postaux et telecommunications", "charge", 2, "62"),
+    ("627", "Services bancaires", "charge", 2, "62"),
+    ("628", "Publicite et relations publiques", "charge", 2, "62"),
+    ("63", "IMPOTS ET TAXES", "charge", 1, None),
+    ("631", "Patente et licences", "charge", 2, "63"),
+    ("635", "Autres impots et taxes", "charge", 2, "63"),
+    ("64", "CHARGES DE PERSONNEL", "charge", 1, None),
+    ("641", "Salaires et appointements", "charge", 2, "64"),
+    ("642", "Primes et gratifications", "charge", 2, "64"),
+    ("643", "Charges sociales (CSS)", "charge", 2, "64"),
+    ("644", "Charges de retraite (IPRES)", "charge", 2, "64"),
+    ("648", "Autres charges sociales", "charge", 2, "64"),
+    ("65", "AUTRES CHARGES", "charge", 1, None),
+    ("651", "Redevances et droits", "charge", 2, "65"),
+    ("658", "Charges diverses", "charge", 2, "65"),
+    ("66", "CHARGES FINANCIERES", "charge", 1, None),
+    ("661", "Interets des emprunts", "charge", 2, "66"),
+    ("668", "Autres charges financieres", "charge", 2, "66"),
+    ("67", "PERTES DE CHANGE", "charge", 1, None),
+    ("68", "DOTATIONS AUX AMORTISSEMENTS", "charge", 1, None),
+    ("681", "Dotations aux amort. d'exploitation", "charge", 2, "68"),
+    ("69", "DOTATIONS AUX PROVISIONS", "charge", 1, None),
+    ("70", "VENTES ET PRESTATIONS DE SERVICES", "produit", 1, None),
+    ("701", "Ventes de marchandises", "produit", 2, "70"),
+    ("706", "Prestations de services", "produit", 2, "70"),
+    ("7061", "Frais de scolarite", "produit", 3, "706"),
+    ("7062", "Services annexes (cantine, transport)", "produit", 3, "706"),
+    ("7063", "Frais d'inscription", "produit", 3, "706"),
+    ("707", "Autres produits d'exploitation", "produit", 2, "70"),
+    ("71", "SUBVENTIONS D'EXPLOITATION", "produit", 1, None),
+    ("73", "PRODUITS ACCESSOIRES", "produit", 1, None),
+    ("75", "AUTRES PRODUITS", "produit", 1, None),
+    ("758", "Produits divers", "produit", 2, "75"),
+    ("76", "PRODUITS FINANCIERS", "produit", 1, None),
+    ("77", "GAINS DE CHANGE", "produit", 1, None),
+    ("78", "REPRISES SUR AMORTISSEMENTS", "produit", 1, None),
+    ("79", "REPRISES SUR PROVISIONS", "produit", 1, None),
+    ("81", "VALEURS COMPTABLES DES CESSIONS", "charge", 1, None),
+    ("82", "PRODUITS DES CESSIONS", "produit", 1, None),
+    ("83", "CHARGES HORS ACTIVITES ORDINAIRES", "charge", 1, None),
+    ("84", "PRODUITS HORS ACTIVITES ORDINAIRES", "produit", 1, None),
+    ("85", "DOTATIONS H.A.O.", "charge", 1, None),
+    ("86", "REPRISES H.A.O.", "produit", 1, None),
+    ("88", "SUBVENTIONS D'EQUILIBRE", "produit", 1, None),
+    ("89", "IMPOTS SUR LE RESULTAT", "charge", 1, None),
+    ("891", "Impots sur les benefices (IBIC)", "charge", 2, "89"),
+    ("90", "ENGAGEMENTS RECUS", "hors_bilan", 1, None),
+    ("91", "ENGAGEMENTS DONNES", "hors_bilan", 1, None),
+]
+
+def init_comptes_syscohada(ecole_id=1):
+    """Initialise le plan comptable SYSCOHADA pour une ecole"""
+    from app import app
+    with app.app_context():
+        existing = CompteComptable.query.filter_by(ecole_id=ecole_id).first()
+        if existing:
+            return
+        comptes_map = {}
+        for numero, libelle, nature, niveau, parent_num in PLAN_SYSCOHADA:
+            parent_id = comptes_map.get(parent_num) if parent_num else None
+            compte = CompteComptable(
+                numero=numero, libelle=libelle, nature=nature,
+                niveau=niveau, parent_id=parent_id, ecole_id=ecole_id
+            )
+            db.session.add(compte)
+            db.session.flush()
+            comptes_map[numero] = compte.id
+        db.session.commit()
+
 def init_data():
     import random
     import string
