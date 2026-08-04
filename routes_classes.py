@@ -19,6 +19,7 @@ def classe_ajouter():
     if request.method == 'POST':
         mode = request.form.get('mode', 'simple')
         niveau = request.form.get('niveau', '')
+        type_classe = request.form.get('type_classe', 'secondaire')
         if mode == 'multiple':
             noms_texte = request.form.get('noms', '').strip()
             if not noms_texte:
@@ -34,7 +35,7 @@ def classe_ajouter():
                 if Classe.query.filter_by(nom=nom, ecole_id=ecole_id).first():
                     ignores.append(nom)
                     continue
-                db.session.add(Classe(nom=nom, niveau=niveau, ecole_id=ecole_id))
+                db.session.add(Classe(nom=nom, niveau=niveau, type_classe=type_classe, ecole_id=ecole_id))
                 ajoutes += 1
             db.session.commit()
             if ajoutes > 0:
@@ -43,7 +44,7 @@ def classe_ajouter():
                 flash(f'{len(ignores)} deja existante(s) : {", ".join(ignores)}', 'info')
             return redirect(url_for('classes', embed=embed))
         else:
-            db.session.add(Classe(nom=request.form.get('nom'), niveau=niveau, ecole_id=ecole_id))
+            db.session.add(Classe(nom=request.form.get('nom'), niveau=niveau, type_classe=type_classe, ecole_id=ecole_id))
             db.session.commit(); flash('Classe ajoutee','success'); return redirect(url_for('classes', embed=embed))
     return render_template('classes/form.html', ecole=e, embed=embed)
 
@@ -55,7 +56,7 @@ def classe_modifier(id):
     embed = request.args.get('embed')
     if c.ecole_id != ecole_id: flash('Accès non autorisé','danger'); return redirect(url_for('classes', embed=embed))
     if request.method == 'POST':
-        c.nom=request.form.get('nom'); c.niveau=request.form.get('niveau')
+        c.nom=request.form.get('nom'); c.niveau=request.form.get('niveau'); c.type_classe=request.form.get('type_classe', 'secondaire')
         db.session.commit(); flash('Classe modifiée','success'); return redirect(url_for('classes', embed=embed))
     return render_template('classes/form.html', classe=c, ecole=e, embed=embed)
 

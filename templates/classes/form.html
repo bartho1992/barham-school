@@ -21,6 +21,13 @@
             <option value="Secondaire" {% if classe.niveau=='Secondaire' %}selected{% endif %}>Secondaire</option>
         </select>
     </div>
+    <div class="mb-3">
+        <label class="form-label fw-bold">Type de classe</label>
+        <select name="type_classe" class="form-select">
+            <option value="secondaire" {% if classe.type_classe=='secondaire' %}selected{% endif %}>Secondaire (plusieurs profs par classe)</option>
+            <option value="primaire" {% if classe.type_classe=='primaire' %}selected{% endif %}>Primaire (un seul maitre par classe)</option>
+        </select>
+    </div>
     <hr>
     <div class="d-flex gap-2">
         <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Enregistrer</button>
@@ -52,6 +59,13 @@
                         <option value="Secondaire">Secondaire</option>
                     </select>
                 </div>
+                <div class="mb-2">
+                    <label class="form-label fw-bold">Type de classe</label>
+                    <select name="type_classe" class="form-select">
+                        <option value="secondaire">Secondaire (plusieurs profs)</option>
+                        <option value="primaire">Primaire (un seul maitre)</option>
+                    </select>
+                </div>
                 <button type="submit" class="btn btn-primary w-100"><i class="bi bi-check-lg"></i> Ajouter</button>
             </form>
         </div></div>
@@ -72,6 +86,13 @@
                         <option value="Elementaire">Elementaire</option>
                         <option value="Moyen Secondaire">Moyen Secondaire</option>
                         <option value="Secondaire">Secondaire</option>
+                    </select>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label fw-bold">Type de classe</label>
+                    <select name="type_classe" class="form-select">
+                        <option value="secondaire">Secondaire (plusieurs profs)</option>
+                        <option value="primaire">Primaire (un seul maitre)</option>
                     </select>
                 </div>
                 <div class="mb-2">

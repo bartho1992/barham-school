@@ -97,6 +97,7 @@ class Classe(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nom = db.Column(db.String(50), nullable=False)
     niveau = db.Column(db.String(50))
+    type_classe = db.Column(db.String(20), default='secondaire')  # 'primaire' ou 'secondaire'
     effectif = db.Column(db.Integer, default=0)
     ordre = db.Column(db.Integer, default=0)
     ecole_id = db.Column(db.Integer, db.ForeignKey('ecole.id'), nullable=False, default=1)

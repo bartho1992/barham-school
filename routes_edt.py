@@ -25,27 +25,26 @@ def edt():
     personnels = Personnel.query.filter_by(ecole_id=ecole_id).order_by(Personnel.nom, Personnel.prenom).all()
 
     classe_id = request.args.get('classe_id', type=int)
+    classe_selectionnee = None
     creneaux_edt = {}
     edt_list = []
+    personnels = Personnel.query.filter_by(ecole_id=ecole_id).order_by(Personnel.nom).all()
     grille = {}
-
     if classe_id:
+        classe_selectionnee = Classe.query.filter_by(id=classe_id, ecole_id=ecole_id).first()
         edt_list = EmploiDuTemps.query.filter_by(
             classe_id=classe_id, ecole_id=ecole_id, annee_scolaire=annee
         ).order_by(EmploiDuTemps.jour, EmploiDuTemps.heure_debut).all()
         for e in edt_list:
             creneaux_edt[(e.jour, e.heure_debut)] = e
-
-        grille_entries = GrilleHoraire.query.filter_by(
-            classe_id=classe_id, ecole_id=ecole_id
-        ).all()
+        grille_entries = GrilleHoraire.query.filter_by(classe_id=classe_id, ecole_id=ecole_id).all()
         grille = {g.matiere_id: g.heures_par_semaine for g in grille_entries}
 
     return render_template('edt/index.html',
         ecole=ecole, classes=classes, matieres=matieres,
-        classe_id=classe_id, jours=JOURS, creneaux=CRENEAUX,
-        creneaux_edt=creneaux_edt, edt_list=edt_list,
-        personnels=personnels, grille=grille)
+        classe_id=classe_id, classe_selectionnee=classe_selectionnee,
+        jours=JOURS, creneaux=CRENEAUX,
+        creneaux_edt=creneaux_edt, edt_list=edt_list, personnels=personnels, grille=grille)
 
 
 @edt_bp.route('/ajouter', methods=['POST'])

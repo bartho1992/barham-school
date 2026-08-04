@@ -177,6 +177,7 @@
 {% else %}
 {% if classe_id %}
 <div class="d-flex flex-wrap gap-2 align-items-center mb-2">
+    {% if classe_selectionnee and classe_selectionnee.type_classe != 'primaire' %}
     <a href="{{ url_for('edt_bp.edt_grille', classe_id=classe_id) }}" class="btn btn-sm btn-outline-primary">
         <i class="bi bi-sliders"></i> Grille horaire
     </a>
@@ -193,6 +194,11 @@
         <span class="text-warning">Grille horaire non configurée</span>
         {% endif %}
     </small>
+    {% else %}
+    <span class="badge bg-info" style="font-size:0.65rem;">
+        <i class="bi bi-person"></i> Classe primaire — saisie manuelle des créneaux
+    </span>
+    {% endif %}
 </div>
 {% endif %}
 <div class="edt-wrapper">
@@ -298,12 +304,16 @@
                     </div>
                     <div class="mb-2">
                         <label class="form-label small mb-1 fw-semibold">Professeur</label>
+                        {% if classe_selectionnee and classe_selectionnee.type_classe == 'primaire' %}
+                        <input type="text" name="enseignant" class="form-control form-control-sm" placeholder="Nom de l'enseignant">
+                        {% else %}
                         <select name="personnel_id" class="form-select form-select-sm">
                             <option value="">-- Sélectionner --</option>
                             {% for p in personnels %}
                             <option value="{{ p.id }}">{{ p.prenom }} {{ p.nom }} {% if p.fonction %}({{ p.fonction }}){% endif %}</option>
                             {% endfor %}
                         </select>
+                        {% endif %}
                     </div>
                     <div class="mb-2">
                         <label class="form-label small mb-1 fw-semibold">Salle</label>
