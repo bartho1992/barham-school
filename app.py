@@ -159,6 +159,25 @@ with app.app_context():
             except Exception as e:
                 print(f"[Migration] Erreur code_parent: {e}")
         db.session.commit()
+    # Migration — Ajouter colonnes pour classes et EDT auto
+    if 'classe' in inspector.get_table_names():
+        cols_classe = [c['name'] for c in inspector.get_columns('classe')]
+        if 'type_classe' not in cols_classe:
+            try:
+                db.session.execute(text("ALTER TABLE classe ADD COLUMN type_classe VARCHAR(20) DEFAULT 'secondaire'"))
+                print("[Migration] Colonne classe.type_classe ajoutee")
+            except Exception as e:
+                print(f"[Migration] Erreur type_classe: {e}")
+        db.session.commit()
+    if 'emploi_du_temps' in inspector.get_table_names():
+        cols_edt = [c['name'] for c in inspector.get_columns('emploi_du_temps')]
+        if 'personnel_id' not in cols_edt:
+            try:
+                db.session.execute(text("ALTER TABLE emploi_du_temps ADD COLUMN personnel_id INTEGER"))
+                print("[Migration] Colonne emploi_du_temps.personnel_id ajoutee")
+            except Exception as e:
+                print(f"[Migration] Erreur personnel_id EDT: {e}")
+        db.session.commit()
     init_data()
     # Initialiser le plan comptable SYSCOHADA pour chaque ecole existante
     for ecole in Ecole.query.all():
