@@ -403,6 +403,7 @@ class EmploiDuTemps(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     classe_id = db.Column(db.Integer, db.ForeignKey('classe.id'), nullable=False)
     matiere_id = db.Column(db.Integer, db.ForeignKey('matiere.id'), nullable=True)
+    personnel_id = db.Column(db.Integer, db.ForeignKey('personnel.id'), nullable=True)
     enseignant = db.Column(db.String(150))
     jour = db.Column(db.String(20), nullable=False)
     heure_debut = db.Column(db.String(10), nullable=False)
@@ -414,6 +415,38 @@ class EmploiDuTemps(db.Model):
     
     classe = db.relationship('Classe', backref='emploi_du_temps')
     matiere = db.relationship('Matiere')
+    professeur = db.relationship('Personnel', backref='creneaux_edt')
+
+class DisponibiliteEnseignant(db.Model):
+    """Disponibilites des enseignants par jour et creneau"""
+    id = db.Column(db.Integer, primary_key=True)
+    personnel_id = db.Column(db.Integer, db.ForeignKey('personnel.id'), nullable=False)
+    jour = db.Column(db.String(20), nullable=False)
+    heure_debut = db.Column(db.String(10), nullable=False)
+    heure_fin = db.Column(db.String(10), nullable=False)
+    disponible = db.Column(db.Boolean, default=True)
+    ecole_id = db.Column(db.Integer, db.ForeignKey('ecole.id'), nullable=False, default=1)
+    
+    personnel = db.relationship('Personnel', backref='disponibilites')
+    
+    __table_args__ = (
+        db.UniqueConstraint('personnel_id', 'jour', 'heure_debut', 'heure_fin', name='uq_dispo_ens'),
+    )
+
+class GrilleHoraire(db.Model):
+    """Nombre d'heures par matiere et par classe pour la generation auto de l'EDT"""
+    id = db.Column(db.Integer, primary_key=True)
+    classe_id = db.Column(db.Integer, db.ForeignKey('classe.id'), nullable=False)
+    matiere_id = db.Column(db.Integer, db.ForeignKey('matiere.id'), nullable=False)
+    heures_par_semaine = db.Column(db.Integer, default=1)
+    ecole_id = db.Column(db.Integer, db.ForeignKey('ecole.id'), nullable=False, default=1)
+    
+    classe = db.relationship('Classe', backref='grille_horaire')
+    matiere = db.relationship('Matiere')
+    
+    __table_args__ = (
+        db.UniqueConstraint('classe_id', 'matiere_id', 'ecole_id', name='uq_grille_classe_matiere'),
+    )
     ecole = db.relationship('Ecole', backref='emplois_du_temps')
 
 class Examen(db.Model):

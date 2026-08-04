@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Grille horaire — {{ classe.nom }}{% endblock %}
+{% block extra_css %}
+<style>
+    .grille-grid {
+        border-collapse: collapse;
+        font-size: 0.7rem;
+    }
+    .grille-grid th,
+    .grille-grid td {
+        border: 1px solid #dee2e6;
+        vertical-align: middle;
+        padding: 4px 8px;
+    }
+    .grille-grid thead th {
+        background: #1e1b4b;
+        color: #fff;
+        font-weight: 600;
+        font-size: 0.7rem;
+    }
+    .grille-grid tbody tr:hover {
+        background: #f8f9fa;
+    }
+    .grille-grid input[type="number"] {
+        width: 60px;
+        text-align: center;
+        font-size: 0.7rem;
+    }
+</style>
+{% endblock %}
+{% block content %}
+<div class="card shadow-sm border-0">
+    <div class="card-header d-flex justify-content-between align-items-center py-2" style="background: #1e1b4b; color: #fff;">
+        <span style="font-size:0.8rem; font-weight:700;"><i class="bi bi-sliders"></i> Grille horaire — {{ classe.nom }}</span>
+        <span class="badge bg-light text-dark" style="font-size:0.65rem;">{{ matieres|length }} matière(s)</span>
+    </div>
+    <div class="card-body p-2">
+        <form method="POST" action="/edt/grille/sauvegarder">
+            <input type="hidden" name="classe_id" value="{{ classe.id }}">
+            <div class="edt-wrapper">
+                <table class="grille-grid w-100">
+                    <thead>
+                        <tr>
+                            <th style="width:40px;">#</th>
+                            <th>Matière</th>
+                            <th style="width:100px;">Heures / semaine</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for m in matieres %}
+                        <tr>
+                            <td style="text-align:center;">{{ loop.index }}</td>
+                            <td>{{ m.nom }}</td>
+                            <td style="text-align:center;">
+                                <input type="number" min="0" max="30" name="heures_{{ m.id }}"
+                                       value="{{ grille.get(m.id, 0) }}" class="form-control form-control-sm mx-auto">
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% if matieres|length == 0 %}
+                        <tr>
+                            <td colspan="3" class="text-center text-muted py-3">Aucune matière définie pour cette école.</td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="d-flex gap-2 mt-3">
+                <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-check-lg"></i> Enregistrer</button>
+                <a href="{{ url_for('edt_bp.edt', classe_id=classe.id) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i> Retour à l'EDT</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

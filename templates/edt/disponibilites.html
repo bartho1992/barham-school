@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}Disponibilités — {{ personnel.prenom }} {{ personnel.nom }}{% endblock %}
+{% block extra_css %}
+<style>
+    .dispo-grid {
+        border-collapse: collapse;
+        font-size: 0.7rem;
+    }
+    .dispo-grid th,
+    .dispo-grid td {
+        border: 1px solid #dee2e6;
+        vertical-align: middle;
+        text-align: center;
+        padding: 6px 4px;
+    }
+    .dispo-grid thead th {
+        background: #1e1b4b;
+        color: #fff;
+        font-weight: 600;
+        font-size: 0.7rem;
+    }
+    .dispo-grid .dispo-time {
+        background: #f1f5f9;
+        font-weight: 600;
+        color: #475569;
+        font-size: 0.65rem;
+        white-space: nowrap;
+        min-width: 85px;
+    }
+    .dispo-grid td input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+    }
+    .dispo-grid td.has-check {
+        background: #d4edda;
+    }
+    .dispo-grid td.no-check {
+        background: #fce4e4;
+    }
+    .dispo-grid td.has-check:hover,
+    .dispo-grid td.no-check:hover {
+        filter: brightness(0.95);
+    }
+</style>
+{% endblock %}
+{% block content %}
+<div class="card shadow-sm border-0">
+    <div class="card-header d-flex justify-content-between align-items-center py-2" style="background: #1e1b4b; color: #fff;">
+        <span style="font-size:0.8rem; font-weight:700;"><i class="bi bi-person-check"></i> Disponibilités — {{ personnel.prenom }} {{ personnel.nom }}</span>
+        <span class="badge bg-light text-dark" style="font-size:0.65rem;">{{ personnel.fonction or 'Personnel' }}</span>
+    </div>
+    <div class="card-body p-2">
+        <form method="POST" action="/edt/disponibilites/sauvegarder">
+            <input type="hidden" name="personnel_id" value="{{ personnel.id }}">
+            <div class="edt-wrapper">
+                <table class="dispo-grid w-100">
+                    <thead>
+                        <tr>
+                            <th style="width:85px;">Créneau</th>
+                            {% for j in jours %}
+                            <th>{{ j }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for creneau in creneaux %}
+                        {% set debut = creneau.split('-')[0] %}
+                        {% set fin = creneau.split('-')[1] %}
+                        <tr>
+                            <td class="dispo-time">{{ creneau }}</td>
+                            {% for jour in jours %}
+                            {% set key = jour ~ '|' ~ debut ~ '|' ~ fin %}
+                            {% set checked = dispo_dict.get(key, False) %}
+                            <td class="{{ 'has-check' if checked else 'no-check' }}">
+                                <input type="checkbox" name="dispo_{{ jour }}|{{ debut }}|{{ fin }}" 
+                                       {% if checked %}checked{% endif %}>
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="d-flex flex-wrap gap-2 mt-3 align-items-center">
+                <button type="button" class="btn btn-sm btn-outline-success" onclick="cocherTout(true)"><i class="bi bi-check-all"></i> Tout cocher</button>
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="cocherTout(false)"><i class="bi bi-x-lg"></i> Tout décocher</button>
+                <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-check-lg"></i> Enregistrer</button>
+                <a href="{{ url_for('edt_bp.edt') }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i> Retour à l'EDT</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+    function cocherTout(etat) {
+        document.querySelectorAll('.dispo-grid input[type="checkbox"]').forEach(function(cb) {
+            cb.checked = etat;
+            var td = cb.parentElement;
+            if (etat) {
+                td.classList.add('has-check');
+                td.classList.remove('no-check');
+            } else {
+                td.classList.add('no-check');
+                td.classList.remove('has-check');
+            }
+        });
+    }
+    // Update cell background on manual checkbox change
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.dispo-grid input[type="checkbox"]').forEach(function(cb) {
+            cb.addEventListener('change', function() {
+                var td = this.parentElement;
+                if (this.checked) {
+                    td.classList.add('has-check');
+                    td.classList.remove('no-check');
+                } else {
+                    td.classList.add('no-check');
+                    td.classList.remove('has-check');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

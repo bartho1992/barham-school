@@ -175,6 +175,26 @@
     <span class="fw-medium">Sélectionnez une classe pour afficher son emploi du temps</span>
 </div>
 {% else %}
+{% if classe_id %}
+<div class="d-flex flex-wrap gap-2 align-items-center mb-2">
+    <a href="{{ url_for('edt_bp.edt_grille', classe_id=classe_id) }}" class="btn btn-sm btn-outline-primary">
+        <i class="bi bi-sliders"></i> Grille horaire
+    </a>
+    <form method="POST" action="{{ url_for('edt_bp.edt_generer', classe_id=classe_id) }}" 
+          onsubmit="return confirm('Cela va supprimer l\'EDT existant et le regenerer automatiquement. Confirmer ?');">
+        <button type="submit" class="btn btn-sm btn-success">
+            <i class="bi bi-magic"></i> Générer automatiquement
+        </button>
+    </form>
+    <small class="text-muted ms-2" style="font-size:0.6rem;">
+        {% if grille %}
+        {{ grille|length }} matière(s) configurée(s)
+        {% else %}
+        <span class="text-warning">Grille horaire non configurée</span>
+        {% endif %}
+    </small>
+</div>
+{% endif %}
 <div class="edt-wrapper">
     <table class="edt-grid w-100">
         <thead>
@@ -197,7 +217,7 @@
                     {% if slot %}
                         <span class="matiere-nom">{{ slot.matiere.nom if slot.matiere else '—' }}</span>
                         <span class="matiere-info">
-                            {% if slot.enseignant %}{{ slot.enseignant }}{% endif %}
+                            {{ slot.professeur.prenom ~ ' ' ~ slot.professeur.nom if slot.professeur else slot.enseignant or '' }}
                             {% if slot.salle %} · {{ slot.salle }}{% endif %}
                         </span>
                         <form method="POST" action="{{ url_for('edt_bp.edt_supprimer', id=slot.id) }}" style="display:inline;"
@@ -233,6 +253,21 @@
     {% endfor %}
 </div>
 {% endif %}
+
+<div class="mt-2">
+    <small class="text-muted" style="font-size:0.6rem;">
+        <a href="#" onclick="document.getElementById('selectProfDispo').style.display='inline-block';return false;">
+            <i class="bi bi-person-check"></i> Gérer disponibilités
+        </a>
+    </small>
+    <select id="selectProfDispo" class="form-select form-select-sm" style="display:none;width:auto;min-width:200px;" 
+            onchange="if(this.value)window.location.href='/edt/disponibilites/'+this.value;">
+        <option value="">-- Choisir un professeur --</option>
+        {% for p in personnels %}
+        <option value="{{ p.id }}">{{ p.prenom }} {{ p.nom }}</option>
+        {% endfor %}
+    </select>
+</div>
 {% endif %}
 
 <!-- Modal Ajouter un créneau -->
@@ -262,8 +297,13 @@
                         </select>
                     </div>
                     <div class="mb-2">
-                        <label class="form-label small mb-1 fw-semibold">Enseignant</label>
-                        <input type="text" name="enseignant" class="form-control form-control-sm" placeholder="Nom de l'enseignant">
+                        <label class="form-label small mb-1 fw-semibold">Professeur</label>
+                        <select name="personnel_id" class="form-select form-select-sm">
+                            <option value="">-- Sélectionner --</option>
+                            {% for p in personnels %}
+                            <option value="{{ p.id }}">{{ p.prenom }} {{ p.nom }} {% if p.fonction %}({{ p.fonction }}){% endif %}</option>
+                            {% endfor %}
+                        </select>
                     </div>
                     <div class="mb-2">
                         <label class="form-label small mb-1 fw-semibold">Salle</label>
