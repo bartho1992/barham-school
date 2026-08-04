@@ -88,6 +88,10 @@ def comptabilite_accueil():
         .limit(10).all()
 
     return render_template('comptabilite/index.html',
+                           total_actif=totaux_nature.get('actif', 0),
+                           total_passif=totaux_nature.get('passif', 0),
+                           total_charges=totaux_nature.get('charge', 0),
+                           total_produits=totaux_nature.get('produit', 0),
                            totaux_nature=totaux_nature,
                            dernieres_ecritures=dernieres_ecritures,
                            format_montant=_format_montant)

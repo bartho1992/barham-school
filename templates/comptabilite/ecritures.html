@@ -4,7 +4,7 @@
 
 <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2 animate-in">
     <div class="section-header mb-0"><i class="bi bi-journal-text me-1"></i> Écritures Comptables</div>
-    <a href="{{ url_for('comptabilite.ecriture_nouvelle') }}" class="btn btn-success btn-sm py-0 px-2" style="font-size:0.65rem;">
+    <a href="{{ url_for('comptabilite_ecriture_nouvelle') }}" class="btn btn-success btn-sm py-0 px-2" style="font-size:0.65rem;">
         <i class="bi bi-plus-lg"></i> Nouvelle écriture
     </a>
 </div>
@@ -41,7 +41,7 @@
             </div>
             <div class="col-lg-1 col-md-4 col-6 d-flex align-items-end gap-1">
                 <button type="submit" class="btn btn-primary btn-sm py-0" style="font-size:0.65rem;height:28px;"><i class="bi bi-funnel"></i></button>
-                <a href="{{ url_for('comptabilite.ecritures') }}" class="btn btn-outline-secondary btn-sm py-0" style="font-size:0.65rem;height:28px;"><i class="bi bi-x"></i></a>
+                <a href="{{ url_for('comptabilite_ecritures') }}" class="btn btn-outline-secondary btn-sm py-0" style="font-size:0.65rem;height:28px;"><i class="bi bi-x"></i></a>
             </div>
         </form>
     </div>
@@ -68,13 +68,13 @@
                     <td style="white-space:nowrap;">{{ ecriture.date_ecriture.strftime('%d/%m/%Y') if ecriture.date_ecriture else '-' }}</td>
                     <td>{{ ecriture.libelle }}</td>
                     <td>
-                        <a href="{{ url_for('comptabilite.compte_detail', id=ecriture.compte_debit_id) }}" class="text-decoration-none" style="font-size:0.65rem;">
+                        <a href="{{ url_for('comptabilite_compte_detail', id=ecriture.compte_debit_id) }}" class="text-decoration-none" style="font-size:0.65rem;">
                             <span class="badge bg-light text-dark border" style="font-size:0.55rem;">{{ ecriture.compte_debit.numero }}</span>
                         </a>
                         {{ ecriture.compte_debit.libelle }}
                     </td>
                     <td>
-                        <a href="{{ url_for('comptabilite.compte_detail', id=ecriture.compte_credit_id) }}" class="text-decoration-none" style="font-size:0.65rem;">
+                        <a href="{{ url_for('comptabilite_compte_detail', id=ecriture.compte_credit_id) }}" class="text-decoration-none" style="font-size:0.65rem;">
                             <span class="badge bg-light text-dark border" style="font-size:0.55rem;">{{ ecriture.compte_credit.numero }}</span>
                         </a>
                         {{ ecriture.compte_credit.libelle }}
