@@ -32,11 +32,11 @@
             </div>
             <div class="col-lg-2 col-md-4 col-6">
                 <label class="form-label mb-0" style="font-size:0.6rem;font-weight:700;">Type</label>
-                <select name="type_ecriture" class="form-select form-select-sm" style="font-size:0.7rem;height:28px;">
+                <select name="type" class="form-select form-select-sm" style="font-size:0.7rem;height:28px;">
                     <option value="">Tous</option>
-                    <option value="manuelle" {{ 'selected' if request.args.get('type_ecriture') == 'manuelle' }}>Manuelle</option>
-                    <option value="paiement_scolarite" {{ 'selected' if request.args.get('type_ecriture') == 'paiement_scolarite' }}>Paiement scolarité</option>
-                    <option value="salaire" {{ 'selected' if request.args.get('type_ecriture') == 'salaire' }}>Salaire</option>
+                    <option value="manuelle" {{ 'selected' if request.args.get('type') == 'manuelle' }}>Manuelle</option>
+                    <option value="paiement_scolarite" {{ 'selected' if request.args.get('type') == 'paiement_scolarite' }}>Paiement scolarité</option>
+                    <option value="salaire" {{ 'selected' if request.args.get('type') == 'salaire' }}>Salaire</option>
                 </select>
             </div>
             <div class="col-lg-1 col-md-4 col-6 d-flex align-items-end gap-1">

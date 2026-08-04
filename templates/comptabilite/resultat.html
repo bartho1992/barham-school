@@ -23,13 +23,11 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% set total_charges = 0 %}
-                        {% for ligne in charges|default([]) %}
+                        {% for code, ligne in charges.items() %}
                         <tr>
                             <td>{{ ligne.libelle }}</td>
-                            <td class="text-end fw-bold">{{ '{:,.0f}'.format(ligne.montant|default(0)).replace(',', ' ') }}</td>
+                            <td class="text-end fw-bold">{{ '{:,.0f}'.format(ligne.solde|default(0)).replace(',', ' ') }}</td>
                         </tr>
-                        {% set total_charges = total_charges + (ligne.montant|default(0)) %}
                         {% endfor %}
                     </tbody>
                     <tfoot style="background:#fce4e4;font-weight:700;">
@@ -58,13 +56,11 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% set total_produits = 0 %}
-                        {% for ligne in produits|default([]) %}
+                        {% for code, ligne in produits.items() %}
                         <tr>
                             <td>{{ ligne.libelle }}</td>
-                            <td class="text-end fw-bold">{{ '{:,.0f}'.format(ligne.montant|default(0)).replace(',', ' ') }}</td>
+                            <td class="text-end fw-bold">{{ '{:,.0f}'.format(ligne.solde|default(0)).replace(',', ' ') }}</td>
                         </tr>
-                        {% set total_produits = total_produits + (ligne.montant|default(0)) %}
                         {% endfor %}
                     </tbody>
                     <tfoot style="background:#d4f5ed;font-weight:700;">
@@ -80,7 +76,6 @@
 </div>
 
 <!-- RÉSULTAT -->
-{% set resultat_net = total_produits - total_charges %}
 <div class="text-center mt-3 animate-in">
     <div class="card shadow-sm border-0 d-inline-block" style="min-width:300px;">
         <div class="card-body py-2 px-4">

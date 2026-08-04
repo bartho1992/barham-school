@@ -478,7 +478,48 @@ def comptabilite_bilan():
     total_passif = sum(passif_dict.values())
     passif_dict['TOTAL PASSIF'] = total_passif
 
+    # Variables attendues par le template
+    bilan_actif = []
+    for libelle, montant in actif.items():
+        if libelle == 'TOTAL ACTIF':
+            continue
+        bilan_actif.append({
+            'libelle': libelle,
+            'brut': montant,
+            'amortissement': 0,
+            'net': montant
+        })
+
+    bilan_passif = []
+    for libelle, montant in passif_dict.items():
+        if libelle == 'TOTAL PASSIF':
+            continue
+        bilan_passif.append({
+            'libelle': libelle,
+            'montant': montant
+        })
+
+    # Resultat de l'exercice pour affichage bilan
+    total_charges = 0.0
+    for c in CompteComptable.query.filter_by(ecole_id=ecole_id, nature='charge', niveau=1).filter(
+        db.or_(CompteComptable.numero.like('6%'), CompteComptable.numero.like('8%'))
+    ).all():
+        solde, _, _ = _solde_compte(c, ecole_id)
+        total_charges += solde if solde > 0 else 0
+
+    total_produits = 0.0
+    for c in CompteComptable.query.filter_by(ecole_id=ecole_id, nature='produit', niveau=1).filter(
+        db.or_(CompteComptable.numero.like('7%'), CompteComptable.numero.like('8%'))
+    ).all():
+        solde, _, _ = _solde_compte(c, ecole_id)
+        total_produits += -solde if solde < 0 else 0
+
+    resultat_net = total_produits - total_charges
+
     return render_template('comptabilite/bilan.html',
+                           bilan_actif=bilan_actif,
+                           bilan_passif=bilan_passif,
+                           resultat_net=resultat_net,
                            actif=actif,
                            passif_dict=passif_dict,
                            format_montant=_format_montant)

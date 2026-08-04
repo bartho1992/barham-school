@@ -25,9 +25,9 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% set total_actif_brut = 0 %}
+                        {% set total_actif_brut = actif.get('TOTAL ACTIF', 0) %}
                         {% set total_actif_amort = 0 %}
-                        {% set total_actif_net = 0 %}
+                        {% set total_actif_net = actif.get('TOTAL ACTIF', 0) %}
 
                         <!-- Classe 2 - Immobilisations -->
                         {% for ligne in bilan_actif|default([]) %}
@@ -37,9 +37,6 @@
                             <td class="text-end text-muted">{{ '{:,.0f}'.format(ligne.amortissement|default(0)).replace(',', ' ') }}</td>
                             <td class="text-end fw-bold">{{ '{:,.0f}'.format(ligne.net|default(0)).replace(',', ' ') }}</td>
                         </tr>
-                        {% set total_actif_brut = total_actif_brut + (ligne.brut|default(0)) %}
-                        {% set total_actif_amort = total_actif_amort + (ligne.amortissement|default(0)) %}
-                        {% set total_actif_net = total_actif_net + (ligne.net|default(0)) %}
                         {% endfor %}
 
                         <!-- Perte si résultat < 0 -->
@@ -50,7 +47,6 @@
                             <td></td>
                             <td class="text-end fw-bold text-danger">{{ '{:,.0f}'.format((resultat_net|default(0))|abs).replace(',', ' ') }}</td>
                         </tr>
-                        {% set total_actif_net = total_actif_net + (resultat_net|default(0))|abs %}
                         {% endif %}
                     </tbody>
                     <tfoot style="background:#e9ecef;font-weight:700;">
@@ -81,13 +77,12 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% set total_passif = 0 %}
+                        {% set total_passif = passif_dict.get('TOTAL PASSIF', 0) %}
                         {% for ligne in bilan_passif|default([]) %}
                         <tr>
                             <td>{{ ligne.libelle }}</td>
                             <td class="text-end fw-bold">{{ '{:,.0f}'.format(ligne.montant|default(0)).replace(',', ' ') }}</td>
                         </tr>
-                        {% set total_passif = total_passif + (ligne.montant|default(0)) %}
                         {% endfor %}
 
                         <!-- Résultat -->
@@ -96,7 +91,6 @@
                             <td class="fw-bold text-success">BÉNÉFICE (Résultat de l'exercice)</td>
                             <td class="text-end fw-bold text-success">{{ '{:,.0f}'.format(resultat_net|default(0)).replace(',', ' ') }}</td>
                         </tr>
-                        {% set total_passif = total_passif + (resultat_net|default(0)) %}
                         {% endif %}
                     </tbody>
                     <tfoot style="background:#e9ecef;font-weight:700;">

@@ -234,9 +234,15 @@ def edt_disponibilites(personnel_id):
     for d in dispo_entries:
         disponibilites[(d.jour, d.heure_debut)] = d.disponible
 
+    dispo_dict = {}
+    for jour in JOURS:
+        for creneau in CRENEAUX:
+            debut, fin = creneau.split('-')
+            dispo_dict[f"{jour}|{debut}|{fin}"] = disponibilites.get((jour, debut), False)
+
     return render_template('edt/disponibilites.html',
         personnel=personnel, jours=JOURS, creneaux=CRENEAUX,
-        disponibilites=disponibilites)
+        dispo_dict=dispo_dict)
 
 
 @edt_bp.route('/disponibilites/sauvegarder', methods=['POST'])
@@ -258,7 +264,7 @@ def edt_disponibilites_sauvegarder():
         for creneau in CRENEAUX:
             debut = creneau.split('-')[0]
             fin = creneau.split('-')[1]
-            field_name = f"dispo[{jour}|{debut}]"
+            field_name = f"dispo_{jour}|{debut}|{fin}"
             est_disponible = request.form.get(field_name) == 'on'
 
             dispo = DisponibiliteEnseignant(
