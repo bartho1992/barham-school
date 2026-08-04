@@ -53,7 +53,7 @@
                             <td>{{ m.nom }}</td>
                             <td style="text-align:center;">
                                 <input type="number" min="0" max="30" name="heures_{{ m.id }}"
-                                       value="{{ grille.get(m.id, 0) }}" class="form-control form-control-sm mx-auto">
+                                       value="{{ grille_existante.get(m.id, 0) }}" class="form-control form-control-sm mx-auto">
                             </td>
                         </tr>
                         {% endfor %}

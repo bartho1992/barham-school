@@ -181,7 +181,6 @@ def edt_grille(classe_id):
 def edt_grille_sauvegarder():
     ecole_id = get_current_ecole_id()
     classe_id = request.form.get('classe_id', type=int)
-    heures = request.form.getlist('heures')
 
     classe = Classe.query.filter_by(id=classe_id, ecole_id=ecole_id).first()
     if not classe:
@@ -189,27 +188,14 @@ def edt_grille_sauvegarder():
         return redirect(url_for('edt_bp.edt'))
 
     heures_dict = {}
-    for entry in heures:
-        if '[' in entry and ']' in entry:
-            key_part = entry.split('[')[1].split(']')[0]
-            if ':' in key_part:
-                matiere_id_str, h_str = key_part.split(':', 1)
-                try:
-                    matiere_id = int(matiere_id_str)
-                    heures_dict[matiere_id] = int(h_str)
-                except ValueError:
-                    pass
-
-    if not heures_dict:
-        heures_dict = {}
-        for key in request.form:
-            if key.startswith('heures[') and key.endswith(']'):
-                matiere_id_str = key[len('heures['):-1]
-                try:
-                    matiere_id = int(matiere_id_str)
-                    heures_dict[matiere_id] = int(request.form.get(key, 0))
-                except ValueError:
-                    pass
+    for key in request.form:
+        if key.startswith('heures_'):
+            matiere_id_str = key[len('heures_'):]
+            try:
+                matiere_id = int(matiere_id_str)
+                heures_dict[matiere_id] = int(request.form.get(key, 0) or 0)
+            except ValueError:
+                pass
 
     GrilleHoraire.query.filter_by(classe_id=classe_id, ecole_id=ecole_id).delete()
 
