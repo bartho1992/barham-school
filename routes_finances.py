@@ -830,8 +830,10 @@ def paiement_annuler(id):
 def paiements_annuler():
     """Page d'annulation de paiement : selectionner un eleve, voir ses versements, annuler"""
     ecole_id = get_current_ecole_id()
-    e = Ecole.query.get(ecole_id); annee = _annee_courante(e)
     embed = request.args.get('embed')
+    if not embed:
+        return redirect(url_for('finances_hub'))
+    e = Ecole.query.get(ecole_id); annee = _annee_courante(e)
     
     eleve_id = request.args.get('eleve_id', type=int)
     paiements_eleve = []
