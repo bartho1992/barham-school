@@ -794,9 +794,11 @@ def paiement_ajouter():
             eleve_id=eleve_id, montant=montant_verse, type_paiement=mois,
             montant_attendu=montant_attendu, montant_restant=montant_restant,
             caissier=current_user.username, annee_scolaire=annee,
-            mode_paiement=request.form.get('mode_paiement', 'Especes')
+            mode_paiement=request.form.get('mode_paiement', 'Especes'),
+            ecole_id=ecole_id
         )
         db.session.add(p)
+        db.session.flush()
         _creer_ecriture_paiement(p)
         db.session.commit()
         flash('Paiement enregistre avec succes', 'success')

@@ -15,7 +15,7 @@
                 <h6 class="mb-0 text-center fw-bold" style="font-size:0.85rem;"><i class="bi bi-cash-coin"></i> Enregistrer un Paiement</h6>
             </div>
             <div class="card-body py-2 px-3">
-                <form method="POST" id="paiementForm">
+                <form method="POST" id="paiementForm" action="{{ url_for('paiement_ajouter') }}">
                     <!-- Étape 1: Recherche élève -->
                     <div class="mb-2">
                         <label class="form-label fw-bold text-primary mb-1" style="font-size:0.72rem;"><i class="bi bi-search"></i> 1. Rechercher l'élève</label>

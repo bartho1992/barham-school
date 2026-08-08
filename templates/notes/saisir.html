@@ -45,7 +45,7 @@
 </div>
 
 {% else %}
-<form method="POST">
+<form method="POST" action="{{ url_for('notes_saisir', classe_id=classe.id, trimestre=trimestre, embed=embed) }}">
     <input type="hidden" name="matiere_id" value="{{ selected_matiere_id }}">
     <div style="max-height:60vh;overflow-y:auto;overflow-x:hidden;">
         <table class="table table-sm align-middle bg-white mb-0 w-100">

@@ -229,6 +229,7 @@ def api_eleves_search():
 @login_required
 def eleve_ajouter():
     ecole_id = get_current_ecole_id()
+    embed = request.args.get('embed')
     e = Ecole.query.get(ecole_id); classes = Classe.query.filter_by(ecole_id=ecole_id).all(); annee = _annee_courante(e)
     
     # Generate automatic code
@@ -242,7 +243,7 @@ def eleve_ajouter():
         code = request.form.get('code') or auto_code
         if Eleve.query.filter_by(code=code, ecole_id=ecole_id).first() and not request.form.get('id'):
             flash('Code existe déjà pour cet établissement','danger')
-            return render_template('eleves/form.html', classes=classes, ecole=e, auto_code=auto_code)
+            return render_template('eleves/form.html', classes=classes, ecole=e, auto_code=auto_code, embed=embed)
         
         el = Eleve(code=code, prenom=request.form.get('prenom'), nom=request.form.get('nom'),
             sexe=request.form.get('sexe'), classe_id=request.form.get('classe_id') or None,
@@ -269,7 +270,7 @@ def eleve_ajouter():
             if cls: cls.effectif = Eleve.query.filter_by(classe_id=el.classe_id).count()
         db.session.commit()
         flash('Élève ajouté','success'); return redirect(url_for('eleves'))
-    return render_template('eleves/form.html', classes=classes, ecole=e, auto_code=auto_code)
+    return render_template('eleves/form.html', classes=classes, ecole=e, auto_code=auto_code, embed=embed)
 
 @app.route('/eleves/modifier/<int:id>', methods=['GET','POST'])
 @login_required

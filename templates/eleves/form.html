@@ -23,7 +23,7 @@
 
 <div class="card shadow-sm mb-5 animate-in" style="animation-delay: 0.05s;">
     <div class="card-body p-4" style="padding-bottom: 80px !important;">
-        <form method="POST" enctype="multipart/form-data">
+        <form method="POST" enctype="multipart/form-data" action="{{ url_for('eleve_ajouter', embed=embed) }}">
             
             <!-- SECTION 1 : PHOTO & IDENTITÉ -->
             <div class="form-section-title">
