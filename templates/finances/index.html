@@ -52,6 +52,9 @@
 }
 /* Coins arrondis retires pour un rendu tableur */
 #table-suivi-paiement { border-radius: 0 !important; }
+/* Colonnes detaillees (masquees en vue simplifiee) */
+.col-detail { display: table-cell; }
+.vue-simple .col-detail { display: none; }
 /* En-tete de colonnes facon Excel (lettres) */
 .excel-colhead td {
     background: #e6e6e6 !important;
@@ -61,6 +64,12 @@
     font-weight: 700 !important;
     border: 1px solid #b0b0b0 !important;
     padding: 1px !important;
+}
+/* Toggle vue simplifiee/detaillee */
+.btn-view-toggle {
+    font-size: 0.75rem;
+    padding: 3px 10px;
+    border-radius: 20px;
 }
 </style>
 <!-- Barre de badges recapitulatifs -->
@@ -95,8 +104,8 @@
     {% endfor %}
 </div>
 
-<!-- DIAGNOSTIC -->
-<div style="background:#fff3cd;border:1px solid #ffc107;padding:6px 10px;margin-bottom:8px;border-radius:4px;font-size:0.65rem;font-family:monospace;">
+<!-- DIAGNOSTIC (masque par defaut) -->
+<div id="diag-bar" style="display:none;background:#fff3cd;border:1px solid #ffc107;padding:6px 10px;margin-bottom:8px;border-radius:4px;font-size:0.7rem;font-family:monospace;">
     <strong>DIAG:</strong> 
     ecole_id={{ diag_ecole_id }} | annee={{ diag_annee }} |
     eleves_bdd={{ diag_nb_eleves }} | scolarites_bdd={{ diag_nb_scolarites }} |
@@ -116,6 +125,14 @@
 <div class="card shadow-sm border-0">
     <div class="card-header bg-white py-2 d-flex justify-content-between align-items-center">
         <h6 class="mb-0 fw-bold"><i class="bi bi-credit-card"></i> Suivi des Paiements</h6>
+        <div class="d-flex gap-2 align-items-center">
+            <button class="btn btn-sm btn-outline-secondary btn-view-toggle" id="btnToggleVue" onclick="toggleVue()" title="Basculer vue simplifiée / détaillée">
+                <i class="bi bi-layout-sidebar"></i> <span id="btnToggleLabel">Vue détaillée</span>
+            </button>
+            <button class="btn btn-sm btn-outline-warning btn-view-toggle" id="btnDiag" onclick="toggleDiag()" title="Afficher diagnostic technique">
+                <i class="bi bi-bug"></i>
+            </button>
+        </div>
     </div>
     <!-- FILTRES -->
     <div class="d-flex align-items-center gap-1 mb-1 px-2 pt-1 flex-wrap">
@@ -141,8 +158,8 @@
         <button class="btn btn-outline-secondary btn-sm py-0" onclick="document.getElementById('filtre-classe').value='';document.getElementById('filtre-mois').value='';document.getElementById('filtre-nom').value='';filtrerSuivi();"><i class="bi bi-x"></i> Reinit.</button>
     </div>
     <div id="filtre-count" class="small text-muted mb-1 px-2" style="display:none;"></div>
-    <div style="max-height:55vh;overflow:auto;">
-        <table class="table table-sm table-bordered mb-0 bg-white" id="table-suivi-paiement" style="font-size:0.65rem;table-layout:auto;white-space:nowrap;">
+    <div id="table-wrapper" class="vue-simple" style="max-height:55vh;overflow:auto;">
+        <table class="table table-sm table-bordered mb-0 bg-white" id="table-suivi-paiement" style="font-size:0.8rem;table-layout:auto;white-space:nowrap;">
             <thead class="bg-light" style="position:sticky;top:0;z-index:2;">
                 <tr>
                     <th style="width:22px;text-align:center;vertical-align:middle;background:#f8f9fa !important;"></th>
@@ -154,11 +171,11 @@
                     <th style="width:65px;vertical-align:middle;text-align:right;background:#198754 !important;color:#fff;">AVANCE</th>
                     <th style="width:65px;vertical-align:middle;text-align:right;background:#dc3545 !important;color:#fff;">RESTE</th>
                     <th style="width:65px;vertical-align:middle;text-align:right;background:#fd7e14 !important;color:#fff;">CUMUL</th>
-                    <th style="width:55px;vertical-align:middle;text-align:center;background:#6f42c1 !important;color:#fff;">LIMITE</th>
-                    <th style="width:65px;vertical-align:middle;background:#6f42c1 !important;color:#fff;">TEL</th>
-                    <th style="width:65px;vertical-align:middle;text-align:right;background:#0a58ca !important;color:#fff;">MOIS</th>
+                    <th style="width:55px;vertical-align:middle;text-align:center;background:#6f42c1 !important;color:#fff;" class="col-detail">LIMITE</th>
+                    <th style="width:65px;vertical-align:middle;background:#6f42c1 !important;color:#fff;" class="col-detail">TEL</th>
+                    <th style="width:65px;vertical-align:middle;text-align:right;background:#0a58ca !important;color:#fff;" class="col-detail">MOIS</th>
                     {% for cat in categories %}
-                    <th style="width:55px;vertical-align:middle;text-align:right;font-size:0.55rem;background:#0a58ca !important;color:#fff;" title="{{ cat.nom }}">{{ cat.nom|upper|truncate(8,true,'') }}</th>
+                    <th style="width:55px;vertical-align:middle;text-align:right;font-size:0.65rem;background:#0a58ca !important;color:#fff;" class="col-detail" title="{{ cat.nom }}">{{ cat.nom|upper|truncate(8,true,'') }}</th>
                     {% endfor %}
                 </tr>
             </thead>
@@ -175,11 +192,11 @@
                     <td style="text-align:right;vertical-align:middle;{% if lp.avance_affiche > 0 %}color:#155724;font-weight:bold;{% else %}color:#ccc;{% endif %}">{% if lp.avance_affiche > 0 %}{{ '{:,.0f}'.format(lp.avance_affiche).replace(',', ' ') }}{% else %}-{% endif %}</td>
                     <td style="text-align:right;vertical-align:middle;{% if lp.reste_affiche > 0 %}color:#c00;font-weight:bold;font-size:0.7rem;{% elif lp.du_affiche > 0 %}color:#155724;{% else %}color:#999;{% endif %}">{% if lp.reste_affiche > 0 %}{{ '{:,.0f}'.format(lp.reste_affiche).replace(',', ' ') }}{% elif lp.du_affiche > 0 %}✓{% else %}-{% endif %}</td>
                     <td style="text-align:right;vertical-align:middle;{% if lp.cumul_affiche > 0 %}color:#c00;font-weight:bold;{% else %}color:#999;{% endif %}">{{ '{:,.0f}'.format(lp.cumul_affiche).replace(',', ' ') if lp.cumul_affiche > 0 else '-' }}</td>
-                    <td style="text-align:center;vertical-align:middle;font-size:0.55rem;">{{ lp.date_limite }}</td>
-                    <td style="vertical-align:middle;font-size:0.55rem;">{{ e.tel or '-' }}</td>
-                    <td style="text-align:center;vertical-align:middle;font-size:0.6rem;">{{ lp.mois_affiche }}</td>
+                    <td style="text-align:center;vertical-align:middle;font-size:0.55rem;" class="col-detail">{{ lp.date_limite }}</td>
+                    <td style="vertical-align:middle;font-size:0.55rem;" class="col-detail">{{ e.tel or '-' }}</td>
+                    <td style="text-align:center;vertical-align:middle;font-size:0.6rem;" class="col-detail">{{ lp.mois_affiche }}</td>
                     {% for cl in lp.cat_lines %}
-                    <td style="text-align:right;vertical-align:middle;font-size:0.6rem;{% if cl.reste > 0 %}color:#c00;font-weight:bold;{% elif cl.paye > 0 %}color:#155724;{% else %}color:#ccc;{% endif %}">{% if cl.reste > 0 %}{{ '{:,.0f}'.format(cl.reste).replace(',', ' ') }}{% elif cl.paye > 0 %}✓{% else %}&#9866;{% endif %}</td>
+                    <td style="text-align:right;vertical-align:middle;font-size:0.6rem;{% if cl.reste > 0 %}color:#c00;font-weight:bold;{% elif cl.paye > 0 %}color:#155724;{% else %}color:#ccc;{% endif %}" class="col-detail">{% if cl.reste > 0 %}{{ '{:,.0f}'.format(cl.reste).replace(',', ' ') }}{% elif cl.paye > 0 %}✓{% else %}&#9866;{% endif %}</td>
                     {% endfor %}
                 </tr>
                 {% else %}
@@ -198,6 +215,32 @@
 </div>
 
 <script>
+function toggleVue() {
+    var wrapper = document.getElementById('table-wrapper');
+    var label = document.getElementById('btnToggleLabel');
+    if (wrapper.classList.contains('vue-simple')) {
+        wrapper.classList.remove('vue-simple');
+        label.textContent = 'Vue simplifiée';
+    } else {
+        wrapper.classList.add('vue-simple');
+        label.textContent = 'Vue détaillée';
+    }
+}
+// Demarrer en vue simplifiee
+(function() {
+    document.getElementById('table-wrapper').classList.add('vue-simple');
+    document.getElementById('btnToggleLabel').textContent = 'Vue détaillée';
+})();
+
+function toggleDiag() {
+    var diag = document.getElementById('diag-bar');
+    if (diag.style.display === 'none') {
+        diag.style.display = 'block';
+    } else {
+        diag.style.display = 'none';
+    }
+}
+
 function sauvegarderOrigines() {
     // Sauvegarder les valeurs des lignes
     document.querySelectorAll('#table-suivi-paiement tbody tr:not(:has(td[colspan]))').forEach(function(row) {

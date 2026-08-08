@@ -18,6 +18,9 @@
         border: 1px solid rgba(255,255,255,0.25);
     }
     #table-eleves tbody tr { cursor: pointer; }
+    /* Colonnes detaillees (masquees en vue simplifiee) */
+    .col-detail { display: table-cell; }
+    .vue-simple .col-detail { display: none; }
 </style>
 {% endblock %}
 
@@ -26,6 +29,9 @@
 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2 animate-in">
     <div class="section-header mb-0"><i class="bi bi-people-fill me-1"></i> Gestion des Eleves</div>
     <div class="d-flex flex-wrap gap-1">
+        <button class="btn btn-sm btn-outline-secondary" id="btnToggleVue" onclick="toggleVue()" title="Basculer vue simplifiée / détaillée">
+            <i class="bi bi-layout-sidebar"></i> <span id="btnToggleLabel">Vue détaillée</span>
+        </button>
         <button id="btnSupprimerBulk" class="btn btn-sm btn-danger d-none animate-in" onclick="supprimerSelection()">
             <i class="bi bi-trash"></i> Supprimer la selection
         </button>
@@ -91,7 +97,7 @@
 </div>
 
 <form id="formBulk" method="POST" action="{{ url_for('eleves_supprimer_bulk') }}" class="animate-in" style="animation-delay:0.1s;">
-<div class="table-responsive-stack" style="max-height:65vh; overflow-y:auto; border-radius:var(--radius-md); box-shadow:var(--shadow-sm);">
+<div id="table-wrapper" class="table-responsive-stack vue-simple" style="max-height:65vh; overflow-y:auto; border-radius:var(--radius-md); box-shadow:var(--shadow-sm);">
     <table class="table table-sm table-hover align-middle bg-white mb-0" id="table-eleves">
         <thead>
             <tr>
@@ -102,10 +108,10 @@
                 <th>Sexe</th>
                 <th>Classe</th>
                 <th>Téléphone</th>
-                <th>Date naiss.</th>
-                <th>Lieu naiss.</th>
-                <th>Tuteur</th>
-                <th>Adresse</th>
+                <th class="col-detail">Date naiss.</th>
+                <th class="col-detail">Lieu naiss.</th>
+                <th class="col-detail">Tuteur</th>
+                <th class="col-detail">Adresse</th>
                 <th>Situation</th>
             </tr>
         </thead>
@@ -124,10 +130,10 @@
                 </td>
                 <td class="td-classe"><span class="badge bg-secondary bg-opacity-10 text-secondary">{{ e.classe.nom if e.classe else '-' }}</span></td>
                 <td class="td-long text-muted" title="{{ e.tel or '' }}">{{ e.tel or '-' }}</td>
-                <td class="td-long text-muted" title="{{ e.date_naissance or '' }}">{{ (e.date_naissance or '-')[:10] }}</td>
-                <td class="td-long text-muted" title="{{ e.lieu_naissance or '' }}">{{ e.lieu_naissance or '-' }}</td>
-                <td class="td-long text-muted" title="{{ e.tuteur or '' }}">{{ e.tuteur or '-' }}</td>
-                <td class="td-long text-muted" title="{{ e.adresse or '' }}">{{ e.adresse or '-' }}</td>
+                <td class="td-long text-muted col-detail" title="{{ e.date_naissance or '' }}">{{ (e.date_naissance or '-')[:10] }}</td>
+                <td class="td-long text-muted col-detail" title="{{ e.lieu_naissance or '' }}">{{ e.lieu_naissance or '-' }}</td>
+                <td class="td-long text-muted col-detail" title="{{ e.tuteur or '' }}">{{ e.tuteur or '-' }}</td>
+                <td class="td-long text-muted col-detail" title="{{ e.adresse or '' }}">{{ e.adresse or '-' }}</td>
                 <td class="td-sit">
                     {% if e.situation == 'Inscrit' %}<span class="badge bg-success bg-opacity-15 text-success">{{ e.situation }}</span>
                     {% else %}<span class="badge bg-warning bg-opacity-15 text-warning">{{ e.situation }}</span>{% endif %}
@@ -152,6 +158,18 @@
 </div>
 
 <script>
+function toggleVue() {
+    var wrapper = document.getElementById('table-wrapper');
+    var label = document.getElementById('btnToggleLabel');
+    if (wrapper.classList.contains('vue-simple')) {
+        wrapper.classList.remove('vue-simple');
+        label.textContent = 'Vue simplifiée';
+    } else {
+        wrapper.classList.add('vue-simple');
+        label.textContent = 'Vue détaillée';
+    }
+}
+
 function toggleAll(source) {
     document.querySelectorAll('.eleve-check').forEach(function(cb) { cb.checked = source.checked; });
     updateActionBar();

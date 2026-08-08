@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+{% block title %}Assistant de démarrage - {{ ecole.nom }}{% endblock %}
+{% block extra_css %}
+<style>
+    :root {
+        --wiz-primary: #4f46e5;
+        --wiz-done: #22c55e;
+        --wiz-pending: #94a3b8;
+        --wiz-active: #f59e0b;
+    }
+    .wizard-container {
+        max-width: 750px;
+        margin: 0 auto;
+        padding: 1rem 0;
+    }
+    .wizard-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    .wizard-header h2 {
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: #1e1b4b;
+        margin-bottom: 0.25rem;
+    }
+    .wizard-header p {
+        color: #64748b;
+        font-size: 0.9rem;
+        margin-bottom: 1.5rem;
+    }
+    /* Progress bar */
+    .wiz-progress {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0;
+        margin-bottom: 2rem;
+    }
+    .wiz-step-dot {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        flex-shrink: 0;
+    }
+    .wiz-step-dot.done {
+        background: var(--wiz-done);
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+    }
+    .wiz-step-dot.active {
+        background: var(--wiz-active);
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+        animation: pulse 2s infinite;
+    }
+    .wiz-step-dot.pending {
+        background: #e2e8f0;
+        color: #94a3b8;
+    }
+    .wiz-step-line {
+        width: 60px;
+        height: 3px;
+        border-radius: 2px;
+        transition: background 0.5s ease;
+    }
+    .wiz-step-line.done { background: var(--wiz-done); }
+    .wiz-step-line.pending { background: #e2e8f0; }
+    /* Cards */
+    .wiz-card {
+        background: #fff;
+        border-radius: 14px;
+        padding: 1.5rem 1.8rem;
+        margin-bottom: 1rem;
+        border: 2px solid #e2e8f0;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 1.2rem;
+        animation: fadeInUp 0.5s ease backwards;
+    }
+    .wiz-card:nth-child(1) { animation-delay: 0.1s; }
+    .wiz-card:nth-child(2) { animation-delay: 0.2s; }
+    .wiz-card:nth-child(3) { animation-delay: 0.3s; }
+    .wiz-card:hover {
+        border-color: var(--wiz-primary);
+        box-shadow: 0 8px 24px rgba(79, 70, 229, 0.12);
+        transform: translateY(-2px);
+    }
+    .wiz-card.done {
+        border-color: var(--wiz-done);
+        background: #f0fdf4;
+    }
+    .wiz-card.active {
+        border-color: var(--wiz-active);
+        box-shadow: 0 8px 24px rgba(245, 158, 11, 0.15);
+    }
+    .wiz-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        flex-shrink: 0;
+    }
+    .wiz-icon.step1 { background: #dbeafe; color: #3b82f6; }
+    .wiz-icon.step2 { background: #dcfce7; color: #22c55e; }
+    .wiz-icon.step3 { background: #fef3c7; color: #f59e0b; }
+    .wiz-icon.final { background: #ede9fe; color: #8b5cf6; }
+    .wiz-card-body { flex: 1; min-width: 0; }
+    .wiz-card-body h5 {
+        font-family: 'Outfit', sans-serif;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0.2rem;
+    }
+    .wiz-card-body p {
+        font-size: 0.82rem;
+        color: #64748b;
+        margin-bottom: 0;
+        line-height: 1.4;
+    }
+    .wiz-card-body .wiz-status {
+        display: inline-block;
+        font-size: 0.7rem;
+        font-weight: 700;
+        border-radius: 20px;
+        padding: 2px 10px;
+        margin-top: 0.3rem;
+    }
+    .wiz-status.fait { background: #dcfce7; color: #15803d; }
+    .wiz-status.en-cours { background: #fef3c7; color: #b45309; }
+    .wiz-status.a-faire { background: #f1f5f9; color: #64748b; }
+    .wiz-btn {
+        padding: 0.5rem 1.2rem;
+        font-size: 0.85rem;
+        font-weight: 700;
+        border-radius: 10px;
+        flex-shrink: 0;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+    .wiz-btn-primary {
+        background: var(--wiz-primary);
+        color: #fff !important;
+        border: none;
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    }
+    .wiz-btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4);
+        color: #fff !important;
+    }
+    .wiz-btn-success {
+        background: var(--wiz-done);
+        color: #fff !important;
+        border: none;
+        box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+    }
+    .wiz-btn-success:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+        color: #fff !important;
+    }
+    .wiz-skip {
+        text-align: center;
+        margin-top: 1.5rem;
+    }
+    .wiz-skip a {
+        color: #94a3b8;
+        font-size: 0.8rem;
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+    .wiz-skip a:hover { color: #64748b; text-decoration: underline; }
+    .wiz-done-badge {
+        font-size: 0.65rem;
+        font-weight: 700;
+        color: #15803d;
+        background: #dcfce7;
+        padding: 3px 10px;
+        border-radius: 20px;
+    }
+    @media (max-width: 768px) {
+        .wiz-card {
+            flex-direction: column;
+            text-align: center;
+            padding: 1.2rem;
+            gap: 0.8rem;
+        }
+        .wiz-header h2 { font-size: 1.2rem; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="wizard-container">
+    <div class="wizard-header">
+        <h2><i class="bi bi-rocket-takeoff text-warning me-2"></i>Bienvenue sur Barham School !</h2>
+        <p>Configurons votre établissement en quelques étapes simples.</p>
+    </div>
+
+    <!-- Barre de progression -->
+    <div class="wiz-progress">
+        {% set s1 = 'done' if etape > 1 else 'active' %}
+        {% set s2 = 'done' if etape > 2 else ('active' if etape == 2 else 'pending') %}
+        {% set s3 = 'active' if etape == 3 else 'pending' %}
+        
+        <div class="wiz-step-dot {{ s1 }}">
+            {% if etape > 1 %}<i class="bi bi-check-lg"></i>{% else %}1{% endif %}
+        </div>
+        <div class="wiz-step-line {{ 'done' if etape > 1 else 'pending' }}"></div>
+        <div class="wiz-step-dot {{ s2 }}">
+            {% if etape > 2 %}<i class="bi bi-check-lg"></i>{% else %}2{% endif %}
+        </div>
+        <div class="wiz-step-line {{ 'done' if etape > 2 else 'pending' }}"></div>
+        <div class="wiz-step-dot {{ s3 }}">
+            {% if etape == 3 and nb_classes > 0 and nb_eleves > 0 %}<i class="bi bi-flag-fill"></i>{% else %}3{% endif %}
+        </div>
+    </div>
+
+    <!-- Étape 1 : Créer une classe -->
+    <div class="wiz-card {{ 'done' if etape > 1 else 'active' }}">
+        <div class="wiz-icon step1"><i class="bi bi-building"></i></div>
+        <div class="wiz-card-body">
+            <h5>1. Créez vos classes</h5>
+            <p>Définissez les classes de votre établissement (ex: 6ème A, CE1, Terminale S2). Vous pourrez en ajouter plusieurs à la fois.</p>
+            <span class="wiz-status {{ 'fait' if nb_classes > 0 else 'en-cours' }}">
+                {% if nb_classes > 0 %}<i class="bi bi-check-circle me-1"></i>{{ nb_classes }} classe(s) créée(s){% else %}À faire{% endif %}
+            </span>
+        </div>
+        {% if nb_classes == 0 %}
+        <a href="{{ url_for('classe_ajouter') }}" class="wiz-btn wiz-btn-primary">
+            <i class="bi bi-plus-circle"></i> Créer une classe
+        </a>
+        {% else %}
+        <span class="wiz-done-badge"><i class="bi bi-check-circle me-1"></i>Fait</span>
+        {% endif %}
+    </div>
+
+    <!-- Étape 2 : Inscrire un élève -->
+    <div class="wiz-card {{ 'done' if etape > 2 else ('active' if etape == 2 else '') }}">
+        <div class="wiz-icon step2"><i class="bi bi-person-plus"></i></div>
+        <div class="wiz-card-body">
+            <h5>2. Inscrivez votre premier élève</h5>
+            <p>Ajoutez les informations de votre premier élève : nom, prénom, classe, contacts. Vous pourrez ensuite importer une liste complète via Excel.</p>
+            <span class="wiz-status {{ 'fait' if nb_eleves > 0 else ('en-cours' if etape == 2 else 'a-faire') }}">
+                {% if nb_eleves > 0 %}<i class="bi bi-check-circle me-1"></i>{{ nb_eleves }} élève(s) inscrit(s){% elif etape == 2 %}En cours{% else %}À faire{% endif %}
+            </span>
+        </div>
+        {% if nb_eleves == 0 and nb_classes > 0 %}
+        <a href="{{ url_for('eleve_ajouter') }}" class="wiz-btn wiz-btn-primary">
+            <i class="bi bi-person-plus"></i> Inscrire un élève
+        </a>
+        {% elif nb_eleves > 0 %}
+        <span class="wiz-done-badge"><i class="bi bi-check-circle me-1"></i>Fait</span>
+        {% else %}
+        <span class="wiz-done-badge" style="background:#f1f5f9;color:#94a3b8;">Créez d'abord une classe</span>
+        {% endif %}
+    </div>
+
+    <!-- Étape 3 : Configurer la scolarité -->
+    <div class="wiz-card {{ 'active' if etape == 3 else '' }}">
+        <div class="wiz-icon step3"><i class="bi bi-cash-coin"></i></div>
+        <div class="wiz-card-body">
+            <h5>3. Définissez les frais de scolarité</h5>
+            <p>Configurez les montants mensuels par classe dans Paramètres > Scolarité. C'est indispensable pour le suivi des paiements.</p>
+            <span class="wiz-status {{ 'fait' if etape == 3 and nb_classes > 0 and nb_eleves > 0 else 'en-cours' }}">
+                {% if etape == 3 and nb_classes > 0 and nb_eleves > 0 %}Dernière étape{% else %}À faire{% endif %}
+            </span>
+        </div>
+        {% if nb_classes > 0 %}
+        <a href="{{ url_for('parametres_financiers') }}" class="wiz-btn wiz-btn-primary">
+            <i class="bi bi-gear"></i> Configurer
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Final : Prêt -->
+    {% if nb_classes > 0 and nb_eleves > 0 %}
+    <div class="wiz-card done" style="margin-top:1.5rem;">
+        <div class="wiz-icon final"><i class="bi bi-trophy"></i></div>
+        <div class="wiz-card-body">
+            <h5>Vous êtes prêt !</h5>
+            <p>Votre école est configurée. Vous pouvez maintenant explorer le tableau de bord et toutes les fonctionnalités.</p>
+        </div>
+        <a href="{{ url_for('dashboard') }}" class="wiz-btn wiz-btn-success">
+            <i class="bi bi-speedometer2"></i> Tableau de bord
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Passer -->
+    <div class="wiz-skip">
+        <a href="{{ url_for('wizard_skip') }}">
+            <i class="bi bi-arrow-right-circle me-1"></i>Passer l'assistant — je configurerai plus tard
+        </a>
+    </div>
+</div>
+{% endblock %}

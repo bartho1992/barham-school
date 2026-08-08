@@ -168,6 +168,30 @@ def register():
 @login_required
 def logout(): logout_user(); return redirect(url_for('login'))
 
+@app.route('/wizard/skip')
+@login_required
+def wizard_skip():
+    session['wizard_done'] = True
+    return redirect(url_for('dashboard'))
+
+@app.route('/wizard')
+@login_required
+def wizard():
+    from models import Classe, Eleve
+    ecole_id = get_current_ecole_id()
+    nb_classes = Classe.query.filter_by(ecole_id=ecole_id).count()
+    nb_eleves = Eleve.query.filter_by(ecole_id=ecole_id).count()
+    
+    # Determiner l'etape actuelle
+    if nb_classes == 0:
+        etape = 1
+    elif nb_eleves == 0:
+        etape = 2
+    else:
+        etape = 3
+    
+    return render_template('wizard.html', etape=etape, nb_classes=nb_classes, nb_eleves=nb_eleves)
+
 @app.route('/')
 @login_required
 def dashboard():
@@ -175,6 +199,14 @@ def dashboard():
     from app import get_current_ecole_id
     from datetime import datetime
     ecole_id = get_current_ecole_id()
+    
+    # Rediriger vers le wizard si premiere utilisation
+    if not session.get('wizard_done'):
+        nb_classes = Classe.query.filter_by(ecole_id=ecole_id).count()
+        nb_eleves = Eleve.query.filter_by(ecole_id=ecole_id).count()
+        if nb_classes == 0 or nb_eleves == 0:
+            return redirect(url_for('wizard'))
+    
     e = Ecole.query.get(ecole_id); annee = _annee_courante(e)
     eleves_filter = db.or_(Eleve.annee_scolaire == annee, Eleve.annee_scolaire == None, Eleve.annee_scolaire == '')
     eleves = Eleve.query.filter_by(ecole_id=ecole_id).options(joinedload(Eleve.classe)).filter(eleves_filter).all()
