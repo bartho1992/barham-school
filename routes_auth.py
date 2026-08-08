@@ -177,61 +177,39 @@ def wizard_skip():
 @app.route('/wizard')
 @login_required
 def wizard():
-    # #region debug-point A:entry
-    import traceback, os
-    _log_path = os.path.join(os.path.dirname(__file__), 'wizard_error.log')
-    try:
-        from models import Classe, Eleve
-        ecole_id = get_current_ecole_id()
-        ecole = Ecole.query.get(ecole_id)
-        nb_classes = Classe.query.filter_by(ecole_id=ecole_id).count()
-        nb_eleves = Eleve.query.filter_by(ecole_id=ecole_id).count()
-        # #endregion
-        
-        # Determiner l'etape actuelle
-        if nb_classes == 0:
-            etape = 1
-        elif nb_eleves == 0:
-            etape = 2
-        else:
-            etape = 3
-        
-        def safe_url(endpoint, **kwargs):
-            try:
-                return url_for(endpoint, **kwargs)
-            except Exception:
-                return '#'
+    from app import get_current_ecole_id
+    from models import Classe, Eleve
+    ecole_id = get_current_ecole_id()
+    ecole = Ecole.query.get(ecole_id)
+    nb_classes = Classe.query.filter_by(ecole_id=ecole_id).count()
+    nb_eleves = Eleve.query.filter_by(ecole_id=ecole_id).count()
+    
+    # Determiner l'etape actuelle
+    if nb_classes == 0:
+        etape = 1
+    elif nb_eleves == 0:
+        etape = 2
+    else:
+        etape = 3
+    
+    def safe_url(endpoint, **kwargs):
+        try:
+            return url_for(endpoint, **kwargs)
+        except Exception:
+            return '#'
 
-        # #region debug-point B:urls
-        cu = safe_url('classe_ajouter')
-        eu = safe_url('eleve_ajouter')
-        pu = safe_url('parametres_financiers')
-        du = safe_url('dashboard')
-        wu = safe_url('wizard_skip')
-        # #endregion
-
-        # #region debug-point C:render
-        result = render_template(
-            'wizard.html',
-            ecole=ecole,
-            etape=etape,
-            nb_classes=nb_classes,
-            nb_eleves=nb_eleves,
-            classe_url=cu,
-            eleve_url=eu,
-            parametres_url=pu,
-            dashboard_url=du,
-            wizard_skip_url=wu,
-        )
-        return result
-        # #endregion
-    except Exception as e:
-        with open(_log_path, 'a') as f:
-            f.write("=== WIZARD ERROR ===\n")
-            f.write("Exception: {}\n".format(str(e)))
-            traceback.print_exc(file=f)
-            f.write("=== END ===\n\n")
-        raise
+    return render_template(
+        'wizard.html',
+        ecole=ecole,
+        etape=etape,
+        nb_classes=nb_classes,
+        nb_eleves=nb_eleves,
+        classe_url=safe_url('classe_ajouter'),
+        eleve_url=safe_url('eleve_ajouter'),
+        parametres_url=safe_url('parametres_financiers'),
+        dashboard_url=safe_url('dashboard'),
+        wizard_skip_url=safe_url('wizard_skip'),
+    )
 
 @app.route('/')
 @login_required
