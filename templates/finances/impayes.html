@@ -131,7 +131,8 @@
         <tbody>
             {% for ligne in lignes %}
             {% set e = ligne.eleve %}
-            <tr class="impaye-row" data-eleve-id="{{ e.id }}" data-classe="{{ e.classe.nom }}" data-nom="{{ e.nom }} {{ e.prenom }}" data-has-impaye="{{ '1' if ligne.total_reste > 0 else '0' }}" data-mois-details='{{ ligne.mois_details|tojson }}'{% for cl in ligne.cat_lines %} data-cat-{{ cl.cat.id }}="{{ cl.reste }}"{% endfor %} data-mois="{{ ligne.mois_affiche }}">
+            {% set versement_defaut = ligne.versements_par_mois.get(ligne.mois_affiche, 0) if ligne.mois_affiche and ligne.mois_affiche not in ('-', 'Total') else 0 %}
+            <tr class="impaye-row" data-eleve-id="{{ e.id }}" data-classe="{{ e.classe.nom }}" data-nom="{{ e.nom }} {{ e.prenom }}" data-has-impaye="{{ '1' if ligne.total_reste > 0 else '0' }}" data-mois-details='{{ ligne.mois_details|tojson }}'{% for cl in ligne.cat_lines %} data-cat-{{ cl.cat.id }}="{{ cl.reste }}"{% endfor %} data-mois="{{ ligne.mois_affiche }}"{% for m in mois_list %} data-vers-{{ m|lower }}="{{ ligne.versements_par_mois.get(m, 0) }}"{% endfor %}>
                 <td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="eleve-check-impaye" value="{{ e.id }}" onchange="updateBtnGroupe()"></td>
                 <td style="vertical-align:middle;font-size:0.6rem;">{{ e.code }}</td>
                 <td style="vertical-align:middle;">{{ e.prenom }}</td>
@@ -152,8 +153,8 @@
                 </td>
                 <td style="text-align:center;vertical-align:middle;font-size:0.55rem;">{{ ligne.date_limite }}</td>
                 <td style="vertical-align:middle;font-size:0.55rem;">{{ e.tel or '-' }}</td>
-                <td style="text-align:right;vertical-align:middle;font-size:0.6rem;{% if ligne.versement_mois > 0 %}color:#155724;font-weight:bold;{% else %}color:#999;{% endif %}">
-                    {{ '{:,.0f}'.format(ligne.versement_mois).replace(',', ' ') if ligne.versement_mois > 0 else '0' }}
+                <td class="cell-mois-versement" style="text-align:right;vertical-align:middle;font-size:0.6rem;{% if versement_defaut > 0 %}color:#155724;font-weight:bold;{% else %}color:#999;{% endif %}">
+                    {{ '{:,.0f}'.format(versement_defaut).replace(',', ' ') if versement_defaut > 0 else '0' }}
                 </td>
                 {% for cl in ligne.cat_lines %}
                 <td style="text-align:right;vertical-align:middle;font-size:0.6rem;white-space:nowrap;
@@ -215,6 +216,8 @@ function sauvegarderImpayes() {
         tr.setAttribute('data-orig-cumul', cells[8].textContent);
         tr.setAttribute('data-orig-cumul-color', cells[8].style.color || '#c00');
         tr.setAttribute('data-orig-mois', cells[11].textContent);
+        tr.setAttribute('data-orig-mois-color', cells[11].style.color || '#999');
+        tr.setAttribute('data-orig-mois-bold', cells[11].style.fontWeight || '');
         tr.setAttribute('data-orig-saved', '1');
     });
     // Sauvegarder les badges
@@ -288,8 +291,13 @@ function filtrer() {
                      cells[7].style.fontSize = '';
                  }
                  cells[8].textContent = d.cumul > 0 ? Number(d.cumul).toLocaleString('fr-FR') : (d.due > 0 ? '\u2713' : '-');
-                 cells[8].style.color = d.cumul > 0 ? '#c00' : (d.due > 0 ? '#155724' : '#999');
-                cells[11].textContent = d.due > 0 || d.paye > 0 || d.reste > 0 ? mois : '-';
+                cells[8].style.color = d.cumul > 0 ? '#c00' : (d.due > 0 ? '#155724' : '#999');
+                // Afficher le versement pour le mois filtre
+                var versAttr = 'data-vers-' + mois.toLowerCase();
+                var vers = parseInt(tr.getAttribute(versAttr) || '0', 10);
+                cells[11].textContent = vers > 0 ? Number(vers).toLocaleString('fr-FR') : '0';
+                cells[11].style.color = vers > 0 ? '#155724' : '#999';
+                cells[11].style.fontWeight = vers > 0 ? 'bold' : '';
                 if (d.due === 0 && d.paye === 0 && d.reste === 0) show = false;
             }
         } else {
@@ -309,6 +317,8 @@ function filtrer() {
                 cells[8].textContent = tr.getAttribute('data-orig-cumul') || '';
                 cells[8].style.color = tr.getAttribute('data-orig-cumul-color') || '#c00';
                 cells[11].textContent = tr.getAttribute('data-orig-mois') || '';
+                cells[11].style.color = tr.getAttribute('data-orig-mois-color') || '#999';
+                cells[11].style.fontWeight = tr.getAttribute('data-orig-mois-bold') || '';
             }
         }
         

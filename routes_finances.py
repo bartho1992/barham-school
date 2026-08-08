@@ -324,7 +324,10 @@ def _build_ligne_financiere(eleve, annee, categories, scolarites_map, tarifs_ser
         'nb_impayes': sum(1 for cl in cat_lines if cl['reste'] > 0) + (1 if max(scolarite_due - scolarite_paye, 0) > 0 else 0),
         'services_due': services_due,
         'services_paye': services_paye,
-        'versement_mois': sum((p.montant or 0) for p in paiements if (p.type_paiement or '').strip() == mois_affiche) if mois_affiche and mois_affiche not in ('-', 'Total') else 0
+        'versements_par_mois': {
+            m: sum((p.montant or 0) for p in paiements if (p.type_paiement or '').strip() == m)
+            for m in MOIS_SCOLAIRES
+        }
     }
 
 @app.route('/finances/gestion')
