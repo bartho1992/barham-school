@@ -150,7 +150,8 @@
     </script>
 
     {% if eleve_select %}
-    <!-- Carte infos eleve -->
+    <!-- Carte infos eleve + resultats -->
+    <div id="annuler-resultat">
     <div class="card-info">
         <div class="avatar-circle">{{ eleve_select.prenom[0] }}{{ eleve_select.nom[0] }}</div>
         <div class="info-text">
@@ -208,5 +209,70 @@
         <div style="font-size:0.8rem;">Aucun versement trouvé pour cet élève</div>
     </div>
     {% endif %}
+    </div><!-- /annuler-resultat -->
     {% endif %}
 </div>
+
+{% if embed %}
+<script>
+(function() {
+    function loadResultat(url) {
+        fetch(url)
+            .then(function(r) { return r.text(); })
+            .then(function(html) {
+                var p = new DOMParser();
+                var d = p.parseFromString(html, 'text/html');
+                var newContent = d.getElementById('annuler-resultat');
+                var current = document.getElementById('annuler-resultat');
+                if (newContent && current) {
+                    current.innerHTML = newContent.innerHTML;
+                } else if (newContent) {
+                    var form = document.getElementById('form-recherche');
+                    if (form) form.insertAdjacentHTML('afterend', '<div id="annuler-resultat">' + newContent.innerHTML + '</div>');
+                }
+                bindAnnulerBtns();
+            });
+    }
+
+    function bindAnnulerBtns() {
+        document.querySelectorAll('#annuler-resultat form[method="POST"]').forEach(function(f) {
+            f.addEventListener('submit', function(e) {
+                e.preventDefault();
+                var msg = this.getAttribute('onsubmit');
+                var confirmMsg = 'Confirmer l\'annulation ?';
+                if (msg) {
+                    var m = msg.match(/Confirmer[^?]+\?/);
+                    if (m) confirmMsg = m[0];
+                }
+                if (!confirm(confirmMsg)) return;
+                var that = this;
+                fetch(this.action, { method: 'POST' })
+                    .then(function() {
+                        // Recharger les resultats pour l'eleve courant
+                        var eleveId = document.getElementById('eleve-id-hidden').value;
+                        if (eleveId) {
+                            loadResultat('{{ url_for("paiements_annuler") }}?eleve_id=' + eleveId + '&embed=1');
+                        }
+                    });
+            });
+        });
+    }
+
+    var f = document.getElementById('form-recherche');
+    if (f) {
+        f.addEventListener('submit', function(e) {
+            e.preventDefault();
+            var p = new URLSearchParams(new FormData(this)).toString();
+            loadResultat(this.action.split('?')[0] + '?' + p + '&embed=1');
+        });
+    }
+    
+    window.selectEleve = function(id, nomComplet) {
+        document.getElementById('eleve-id-hidden').value = id;
+        document.getElementById('recherche-eleve').value = nomComplet;
+        document.getElementById('resultats-recherche').style.display = 'none';
+        loadResultat('{{ url_for("paiements_annuler") }}?eleve_id=' + id + '&embed=1');
+    };
+})();
+</script>
+{% endif %}
