@@ -330,10 +330,13 @@ def _build_ligne_financiere(eleve, annee, categories, scolarites_map, tarifs_ser
         }
     }
 
-@app.route('/finances/gestion')
+@app.route('/finances/gestion', methods=['GET', 'POST'])
 @login_required
 def finances_hub():
     """Page unique avec onglets : Finances, Impayes, Paiements, Nouveau paiement, Inscription"""
+    if request.method == 'POST':
+        # Tolere les POST residuels (anciens formulaires) : redirige en GET
+        return redirect(url_for('finances_hub'))
     ecole_id = get_current_ecole_id()
     e = Ecole.query.get(ecole_id)
     return render_template('finances/hub.html', ecole=e)
