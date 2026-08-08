@@ -107,6 +107,7 @@
                 {% for cat in categories %}
                 <td style="text-align:right;border:1px solid #b0c4de;padding:0;"><span style="display:inline-block;background:#0a58ca;color:#fff;font-size:0.5rem;font-weight:bold;padding:1px 2px;line-height:1.2;border-radius:2px;">{{ '{:,.0f}'.format(ns.cats_sums.get(cat.nom, 0)).replace(',', ' ') }}</span></td>
                 {% endfor %}
+                <td style="border:1px solid #b0c4de;padding:0;"></td>
             </tr>
             <tr>
                 <th style="width:22px;text-align:center;vertical-align:middle;background:#f8f9fa !important;"><input type="checkbox" id="check-all" onchange="toggleAll(this)" title="Tout selectionner"></th>
@@ -124,12 +125,13 @@
                 {% for cat in categories %}
                 <th style="width:55px;vertical-align:middle;text-align:right;font-size:0.55rem;background:#0a58ca !important;color:#fff;" title="{{ cat.nom }}">{{ cat.nom|upper|truncate(8,true,'') }}</th>
                 {% endfor %}
+                <th style="width:34px;vertical-align:middle;text-align:center;background:#198754 !important;color:#fff;font-size:0.6rem;">PAYER</th>
             </tr>
         </thead>
         <tbody>
             {% for ligne in lignes %}
             {% set e = ligne.eleve %}
-            <tr class="impaye-row" data-eleve-id="{{ e.id }}" data-classe="{{ e.classe.nom }}" data-nom="{{ e.nom }} {{ e.prenom }}" data-has-impaye="{{ '1' if ligne.total_reste > 0 else '0' }}" data-mois-details='{{ ligne.mois_details|tojson }}'{% for cl in ligne.cat_lines %} data-cat-{{ cl.cat.id }}="{{ cl.reste }}"{% endfor %}>
+            <tr class="impaye-row" data-eleve-id="{{ e.id }}" data-classe="{{ e.classe.nom }}" data-nom="{{ e.nom }} {{ e.prenom }}" data-has-impaye="{{ '1' if ligne.total_reste > 0 else '0' }}" data-mois-details='{{ ligne.mois_details|tojson }}'{% for cl in ligne.cat_lines %} data-cat-{{ cl.cat.id }}="{{ cl.reste }}"{% endfor %} data-mois="{{ ligne.mois_affiche }}">
                 <td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="eleve-check-impaye" value="{{ e.id }}" onchange="updateBtnGroupe()"></td>
                 <td style="vertical-align:middle;font-size:0.6rem;">{{ e.code }}</td>
                 <td style="vertical-align:middle;">{{ e.prenom }}</td>
@@ -164,6 +166,11 @@
                     {% endif %}
                 </td>
                 {% endfor %}
+                <td style="text-align:center;vertical-align:middle;">
+                    <button class="btn btn-success btn-sm py-0 px-1" style="font-size:0.6rem;line-height:1;" title="Payer {{ e.prenom }} {{ e.nom }} pour {{ ligne.mois_affiche }}" onclick="payerUnEleve({{ e.id }}, '{{ ligne.mois_affiche }}')">
+                        <i class="bi bi-cash"></i>
+                    </button>
+                </td>
             </tr>
             {% endfor %}
         </tbody>
@@ -378,6 +385,44 @@ function ouvrirPaiementGroupe() {
     moisInput.value = prompt('Mois a payer (ex: Janvier, Fevrier, Inscription...) :', 'Inscription');
     if (!moisInput.value) return;
     form.appendChild(moisInput);
+    document.body.appendChild(form);
+    form.submit();
+}
+
+function payerUnEleve(eleveId, moisDefaut) {
+    // Decoche toutes les cases, coche celle de cet eleve
+    var checks = document.querySelectorAll('.eleve-check-impaye');
+    checks.forEach(function(c) { c.checked = false; });
+    var cb = document.querySelector('.eleve-check-impaye[value="' + eleveId + '"]');
+    if (cb) cb.checked = true;
+    
+    var form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/finances/paiement-groupe';
+    
+    var inputId = document.createElement('input');
+    inputId.type = 'hidden';
+    inputId.name = 'eleve_ids[]';
+    inputId.value = eleveId;
+    form.appendChild(inputId);
+    
+    var moisInput = document.createElement('input');
+    moisInput.type = 'hidden';
+    moisInput.name = 'mois';
+    moisInput.value = prompt('Mois a payer :', moisDefaut || 'Inscription');
+    if (!moisInput.value) return;
+    form.appendChild(moisInput);
+    
+    // Optionnel : montant personnalise
+    var montantStr = prompt('Montant (laisser vide = montant attendu) :', '');
+    if (montantStr !== null && montantStr.trim() !== '') {
+        var montantInput = document.createElement('input');
+        montantInput.type = 'hidden';
+        montantInput.name = 'montant_par_eleve';
+        montantInput.value = montantStr;
+        form.appendChild(montantInput);
+    }
+    
     document.body.appendChild(form);
     form.submit();
 }

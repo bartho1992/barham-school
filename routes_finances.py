@@ -630,6 +630,8 @@ def paiement_groupe():
     nb_skip = 0
     total_percu = 0
     
+    eleves_skipped = []  # pour le message d'erreur detaille
+    
     for eleve_id_str in eleve_ids:
         try:
             eleve_id = int(eleve_id_str)
@@ -637,13 +639,13 @@ def paiement_groupe():
             nb_skip += 1
             continue
         
-        eleve = Eleve.query.get(eleve_id)
+        eleve = Eleve.query.filter_by(id=eleve_id, ecole_id=ecole_id).first()
         if not eleve or not eleve.classe:
             nb_skip += 1
             continue
         
-        # Calculer le montant attendu (scolarité + services)
-        scolarite = Scolarite.query.filter_by(classe_id=eleve.classe_id, annee_scolaire=annee).first()
+        # Calculer le montant attendu (scolarite + services)
+        scolarite = Scolarite.query.filter_by(classe_id=eleve.classe_id, annee_scolaire=annee, ecole_id=ecole_id).first()
         montant_scolarite = 0
         if scolarite:
             if is_inscription:
@@ -652,12 +654,9 @@ def paiement_groupe():
                 montant_scolarite = getattr(scolarite, mois.lower(), 0) or 0
         
         total_services = 0
-        if is_inscription:
-            # Pas de services pour l'inscription dans le paiement groupé
-            pass
-        else:
+        if not is_inscription:
             abonnements = AbonnementService.query.filter_by(
-                eleve_id=eleve_id, actif=True
+                eleve_id=eleve_id, actif=True, ecole_id=ecole_id
             ).join(CategorieTarif).filter(CategorieTarif.type_categorie == 'mensuel').all()
             for abo in abonnements:
                 try:
@@ -674,7 +673,7 @@ def paiement_groupe():
                     continue
                 cat = abo.categorie
                 tarif = TarifService.query.filter_by(
-                    classe_id=eleve.classe_id, categorie_id=cat.id, annee_scolaire=annee
+                    classe_id=eleve.classe_id, categorie_id=cat.id, annee_scolaire=annee, ecole_id=ecole_id
                 ).first()
                 if abo.montant_personnalise is not None:
                     total_services += abo.montant_personnalise
@@ -683,23 +682,25 @@ def paiement_groupe():
         
         montant_attendu = montant_scolarite + total_services
         
-        # Montant à payer : soit le montant fixe saisi, soit le tarif exact
+        # Montant a payer : soit le montant fixe saisi, soit le tarif exact
         if montant_par_eleve_str:
             montant = float(montant_par_eleve_str)
         else:
             montant = montant_attendu
         
         if montant <= 0:
+            eleves_skipped.append(f"{eleve.prenom} {eleve.nom} (montant=0)")
             nb_skip += 1
             continue
         
         # Calculer le reste
         deja_paye = db.session.query(db.func.sum(Paiement.montant)).filter_by(
-            eleve_id=eleve_id, type_paiement=mois, annee_scolaire=annee
+            eleve_id=eleve_id, type_paiement=mois, annee_scolaire=annee, ecole_id=ecole_id
         ).scalar() or 0
         
-        # Vérifier si déjà payé
+        # Verifier si deja paye
         if deja_paye >= montant_attendu and not montant_par_eleve_str:
+            eleves_skipped.append(f"{eleve.prenom} {eleve.nom} (deja paye)")
             nb_skip += 1
             continue
         
@@ -709,15 +710,22 @@ def paiement_groupe():
             eleve_id=eleve_id, montant=montant, type_paiement=mois,
             montant_attendu=montant_attendu, montant_restant=montant_restant,
             caissier=current_user.username, annee_scolaire=annee,
-            mode_paiement=mode_paiement
+            mode_paiement=mode_paiement, ecole_id=ecole_id
         )
         db.session.add(p)
+        db.session.flush()  # Pour obtenir p.id pour l'ecriture comptable
         _creer_ecriture_paiement(p)
         total_percu += montant
         nb_ok += 1
     
     db.session.commit()
-    flash(f'Paiement groupe effectue : {nb_ok} eleve(s) paye(s) pour {mois} ({nb_skip} ignores). Total percu : {total_percu:,.0f} FCFA', 'success')
+    
+    msg = f'Paiement groupe effectue : {nb_ok} eleve(s) paye(s) pour {mois}. Total percu : {total_percu:,.0f} FCFA.'
+    if nb_skip > 0:
+        msg += f' ({nb_skip} ignores)'
+    if eleves_skipped and len(eleves_skipped) <= 5:
+        msg += ' | Ignorés : ' + ', '.join(eleves_skipped)
+    flash(msg, 'success')
     return redirect(url_for('impayes'))
 
 @app.route('/finances/paiement', methods=['GET', 'POST'])
