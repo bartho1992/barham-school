@@ -348,21 +348,24 @@
         {% endif %}
         
         // Mode simplifie
-        (function(){
+        document.addEventListener('DOMContentLoaded', function() {
             var isSimple = localStorage.getItem('mode-simple') === 'true';
             if (isSimple) { document.body.classList.add('mode-simple'); }
-            updateModeBtn();
-        })();
+            var icon = document.getElementById('iconModeSimple');
+            var label = document.getElementById('labelModeSimple');
+            if (icon && label) {
+                icon.className = isSimple ? 'bi bi-chevron-double-down' : 'bi bi-chevron-double-up';
+                label.textContent = isSimple ? 'Tout afficher' : 'Mode simple';
+            }
+        });
         function toggleModeSimple() {
             document.body.classList.toggle('mode-simple');
             var isSimple = document.body.classList.contains('mode-simple');
             localStorage.setItem('mode-simple', isSimple);
-            updateModeBtn();
-        }
-        function updateModeBtn() {
-            var isSimple = document.body.classList.contains('mode-simple');
-            document.getElementById('iconModeSimple').className = isSimple ? 'bi bi-chevron-double-down' : 'bi bi-chevron-double-up';
-            document.getElementById('labelModeSimple').textContent = isSimple ? 'Tout afficher' : 'Mode simple';
+            var icon = document.getElementById('iconModeSimple');
+            var label = document.getElementById('labelModeSimple');
+            if (icon) icon.className = isSimple ? 'bi bi-chevron-double-down' : 'bi bi-chevron-double-up';
+            if (label) label.textContent = isSimple ? 'Tout afficher' : 'Mode simple';
         }
     </script>
     {% block scripts %}{% endblock %}
