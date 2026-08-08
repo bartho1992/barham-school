@@ -1,64 +1,153 @@
-<div class="d-flex justify-content-between align-items-center mb-2">
-    <h6 class="mb-0"><i class="bi bi-x-circle text-danger"></i> Annuler un paiement</h6>
-</div>
+<style>
+.section-annuler { max-width: 700px; margin: 0 auto; }
+.card-select { 
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+    border-radius: 12px; padding: 18px 20px; margin-bottom: 14px; 
+    box-shadow: 0 4px 15px rgba(102,126,234,0.3); 
+}
+.card-select label { 
+    color: rgba(255,255,255,0.85); font-size: 0.7rem; font-weight: 700; 
+    margin-bottom: 6px; display: block; letter-spacing: 0.5px; text-transform: uppercase;
+}
+.card-select select { 
+    width: 100%; padding: 10px 14px; border-radius: 8px; border: 2px solid rgba(255,255,255,0.2); 
+    background: rgba(255,255,255,0.95); font-size: 0.82rem; font-weight: 600; 
+    color: #333; outline: none; transition: all 0.2s; cursor: pointer;
+}
+.card-select select:focus { border-color: #fff; box-shadow: 0 0 0 3px rgba(255,255,255,0.25); }
+.card-info {
+    background: #fff; border-radius: 12px; padding: 14px 18px; margin-bottom: 14px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06); border-left: 4px solid #667eea;
+    display: flex; align-items: center; gap: 14px;
+}
+.card-info .avatar-circle {
+    width: 44px; height: 44px; border-radius: 50%; 
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff; display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 1rem; flex-shrink: 0;
+}
+.card-info .info-text { flex: 1; }
+.card-info .info-name { font-size: 0.85rem; font-weight: 700; color: #2d3748; }
+.card-info .info-detail { font-size: 0.68rem; color: #718096; }
+.card-info .badge-count {
+    background: #667eea; color: #fff; border-radius: 20px; padding: 4px 12px;
+    font-size: 0.7rem; font-weight: 700; white-space: nowrap;
+}
+.table-modern { 
+    width: 100%; border-collapse: separate; border-spacing: 0; 
+    background: #fff; border-radius: 12px; overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06); font-size: 0.72rem;
+}
+.table-modern thead th {
+    background: #f7f8fc; color: #4a5568; font-weight: 700; font-size: 0.65rem;
+    text-transform: uppercase; letter-spacing: 0.5px; padding: 10px 12px;
+    border-bottom: 2px solid #e2e8f0; position: sticky; top: 0; z-index: 2;
+}
+.table-modern tbody td {
+    padding: 9px 12px; border-bottom: 1px solid #f1f3f8; 
+    color: #2d3748; vertical-align: middle;
+}
+.table-modern tbody tr:hover { background: #f7f8fc; }
+.table-modern tbody tr:last-child td { border-bottom: none; }
+.badge-type {
+    display: inline-block; padding: 3px 10px; border-radius: 6px; 
+    font-size: 0.65rem; font-weight: 700;
+}
+.badge-type.inscription { background: #ebf4ff; color: #3182ce; }
+.badge-type.mois { background: #f0fff4; color: #276749; }
+.badge-type.autre { background: #fefcbf; color: #975a16; }
+.badge-mode {
+    display: inline-block; padding: 3px 8px; border-radius: 4px; 
+    font-size: 0.62rem; font-weight: 600; 
+    background: #edf2f7; color: #4a5568;
+}
+.montant-cell { font-weight: 800; font-size: 0.78rem; color: #2d3748; }
+.btn-annuler {
+    background: #fff; color: #e53e3e; border: 1.5px solid #fed7d7; 
+    border-radius: 6px; padding: 4px 12px; font-size: 0.65rem; font-weight: 700;
+    cursor: pointer; transition: all 0.2s; white-space: nowrap;
+}
+.btn-annuler:hover { background: #e53e3e; color: #fff; border-color: #e53e3e; }
+.empty-state { 
+    text-align: center; padding: 40px 20px; color: #a0aec0; 
+}
+.empty-state i { font-size: 3rem; display: block; margin-bottom: 10px; opacity: 0.4; }
+</style>
 
-<!-- Selection de l'eleve -->
-<form method="GET" action="{{ url_for('paiements_annuler', embed=embed) }}" class="mb-2">
-    <div class="input-group input-group-sm" style="max-width:450px;">
-        <span class="input-group-text"><i class="bi bi-person"></i></span>
-        <select name="eleve_id" class="form-select form-select-sm" onchange="this.form.submit()">
-            <option value="">-- Selectionner un eleve --</option>
-            {% for el in eleves %}
-            <option value="{{ el.id }}" {{ 'selected' if eleve_select and eleve_select.id == el.id }}>
-                {{ el.nom }} {{ el.prenom }} - {{ el.classe.nom if el.classe else '?' }}
-            </option>
-            {% endfor %}
-        </select>
+<div class="section-annuler">
+    <!-- Selection de l'eleve -->
+    <form method="GET" action="{{ url_for('paiements_annuler', embed=embed) }}">
+        <div class="card-select">
+            <label><i class="bi bi-search me-1"></i> Sélectionner un élève</label>
+            <select name="eleve_id" onchange="this.form.submit()">
+                <option value="">-- Choisir un élève --</option>
+                {% for el in eleves %}
+                <option value="{{ el.id }}" {{ 'selected' if eleve_select and eleve_select.id == el.id }}>
+                    {{ el.nom }} {{ el.prenom }} — {{ el.classe.nom if el.classe else '?' }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+    </form>
+
+    {% if eleve_select %}
+    <!-- Carte infos eleve -->
+    <div class="card-info">
+        <div class="avatar-circle">{{ eleve_select.prenom[0] }}{{ eleve_select.nom[0] }}</div>
+        <div class="info-text">
+            <div class="info-name">{{ eleve_select.prenom }} {{ eleve_select.nom }}</div>
+            <div class="info-detail">{{ eleve_select.classe.nom if eleve_select.classe else '?' }} · {{ eleve_select.code or '' }}</div>
+        </div>
+        <div class="badge-count">{{ paiements|length }} versement{{ 's' if paiements|length != 1 }}</div>
     </div>
-</form>
 
-{% if eleve_select %}
-<div class="alert alert-info py-1 px-2 mb-2 small">
-    <strong>{{ eleve_select.prenom }} {{ eleve_select.nom }}</strong> — {{ eleve_select.classe.nom if eleve_select.classe else '?' }} | 
-    <strong>{{ paiements|length }}</strong> versement(s)
+    {% if paiements %}
+    <div style="max-height:52vh;overflow:auto;border-radius:12px;">
+        <table class="table-modern">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>Mode</th>
+                    <th class="text-end">Montant</th>
+                    <th>Caissier</th>
+                    <th class="text-center" style="width:80px;"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in paiements %}
+                <tr>
+                    <td style="white-space:nowrap;">{{ p.date_paiement.strftime('%d/%m/%Y') if p.date_paiement else '-' }}</td>
+                    <td>
+                        {% set t = (p.type_paiement or '')|string %}
+                        {% if t|lower == 'inscription' %}
+                        <span class="badge-type inscription">{{ t }}</span>
+                        {% elif t in ['Octobre','Novembre','Decembre','Janvier','Fevrier','Mars','Avril','Mai','Juin'] %}
+                        <span class="badge-type mois">{{ t }}</span>
+                        {% else %}
+                        <span class="badge-type autre">{{ t or '-' }}</span>
+                        {% endif %}
+                    </td>
+                    <td><span class="badge-mode">{{ p.mode_paiement or 'Espèces' }}</span></td>
+                    <td class="text-end montant-cell">{{ '{:,.0f}'.format(p.montant or 0).replace(',', ' ') }} F</td>
+                    <td style="font-size:0.65rem;color:#718096;">{{ p.caissier or '-' }}</td>
+                    <td class="text-center">
+                        <form method="POST" action="{{ url_for('paiement_annuler', id=p.id) }}" 
+                              onsubmit="return confirm('Confirmer l\'annulation de {{ '{:,.0f}'.format(p.montant or 0).replace(',', ' ') }} FCFA ?')" 
+                              style="display:inline;">
+                            <button class="btn-annuler"><i class="bi bi-trash me-1"></i>Annuler</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="bi bi-inbox"></i>
+        <div style="font-size:0.8rem;">Aucun versement trouvé pour cet élève</div>
+    </div>
+    {% endif %}
+    {% endif %}
 </div>
-
-{% if paiements %}
-<div style="max-height:55vh;overflow:auto;">
-    <table class="table table-sm table-bordered mb-0" style="font-size:0.7rem;">
-        <thead class="bg-light" style="position:sticky;top:0;z-index:2;">
-            <tr>
-                <th>Date</th>
-                <th>Type</th>
-                <th>Mode</th>
-                <th class="text-end">Montant</th>
-                <th>Caissier</th>
-                <th class="text-center">Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for p in paiements %}
-            <tr>
-                <td>{{ p.date_paiement.strftime('%d/%m/%Y') if p.date_paiement else '-' }}</td>
-                <td>{{ p.type_paiement or '-' }}</td>
-                <td>{{ p.mode_paiement or 'Espèces' }}</td>
-                <td class="text-end fw-bold">{{ '{:,.0f}'.format(p.montant or 0).replace(',', ' ') }}</td>
-                <td>{{ p.caissier or '-' }}</td>
-                <td class="text-center">
-                    <form method="POST" action="{{ url_for('paiement_annuler', id=p.id) }}" 
-                          onsubmit="return confirm('Annuler ce versement de {{ '{:,.0f}'.format(p.montant or 0).replace(',', ' ') }} FCFA ?')" 
-                          style="display:inline;">
-                        <button class="btn btn-danger btn-sm py-0 px-2" style="font-size:0.6rem;">
-                            <i class="bi bi-x-circle"></i> Annuler
-                        </button>
-                    </form>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-{% else %}
-<div class="text-muted small py-3 text-center">Aucun versement trouve pour cet eleve.</div>
-{% endif %}
-{% endif %}
