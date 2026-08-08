@@ -1828,7 +1828,7 @@ footer {
 }
 
 /* === MODE SIMPLIFIÉ === */
-.mode-simple .nav-advanced { display: none !important; }
+body.mode-simple .sidebar-menu .nav-item.nav-advanced { display: none !important; }
 
 /* === VALIDATION INPUT === */
 .is-invalid { border-color: #dc3545 !important; box-shadow: 0 0 0 0.2rem rgba(220,53,69,0.15) !important; }
