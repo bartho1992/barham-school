@@ -152,8 +152,8 @@
                 </td>
                 <td style="text-align:center;vertical-align:middle;font-size:0.55rem;">{{ ligne.date_limite }}</td>
                 <td style="vertical-align:middle;font-size:0.55rem;">{{ e.tel or '-' }}</td>
-                <td style="text-align:center;vertical-align:middle;font-size:0.6rem;">
-                    {{ ligne.mois_affiche }}
+                <td style="text-align:right;vertical-align:middle;font-size:0.6rem;{% if ligne.versement_mois > 0 %}color:#155724;font-weight:bold;{% else %}color:#999;{% endif %}">
+                    {{ '{:,.0f}'.format(ligne.versement_mois).replace(',', ' ') if ligne.versement_mois > 0 else '0' }}
                 </td>
                 {% for cl in ligne.cat_lines %}
                 <td style="text-align:right;vertical-align:middle;font-size:0.6rem;white-space:nowrap;
