@@ -39,6 +39,11 @@
             </div>
             
             <nav class="sidebar-menu">
+                <div class="px-2 mb-1">
+                    <button class="btn btn-sm btn-outline-light w-100 py-0" id="btnModeSimple" onclick="toggleModeSimple()" style="font-size:0.6rem;text-transform:uppercase;letter-spacing:0.5px;border:1px dashed rgba(255,255,255,0.3);">
+                        <i class="bi bi-chevron-double-up" id="iconModeSimple"></i> <span id="labelModeSimple">Mode simple</span>
+                    </button>
+                </div>
                 <ul class="nav flex-column gap-0">
                     {% set nav_items = [
                         ('dashboard', 'bi-speedometer2', 'Dashboard', '#3b82f6'),
@@ -47,7 +52,6 @@
                         ('administration', 'bi-gear-wide', 'Administration', '#8b5cf6'),
                         ('documents', 'bi-printer', 'Documents', '#f59e0b'),
                         ('finances_hub', 'bi-cash-stack', 'Finances', '#14b8a6'),
-                        ('comptabilite_accueil', 'bi-calculator-fill', 'Comptabilite', '#6366f1'),
                     ] %}
                     
                     {% if not has_licence %}
@@ -68,6 +72,14 @@
                         </a>
                     </li>
                     {% endfor %}
+
+                    <!-- Comptabilite (avance) -->
+                    <li class="nav-item nav-advanced">
+                        <a class="nav-link d-flex align-items-center gap-2 py-1 px-2 {{ 'active' if request.endpoint == 'comptabilite_accueil' }}" href="{{ url_for('comptabilite_accueil') }}" style="border-left: 3px solid #6366f1;">
+                            <i class="bi bi-calculator-fill" style="font-size: 0.9rem; color: #6366f1;"></i>
+                            <span style="font-size: 0.78rem; text-transform: uppercase; font-weight: 600;">Comptabilité</span>
+                        </a>
+                    </li>
                     
                     <li class="nav-item">
                         <a class="nav-link d-flex align-items-center gap-2 py-1 px-2 {{ 'active' if request.endpoint == 'parametres_financiers' }}" href="{{ url_for('parametres_financiers') }}" style="border-left: 3px solid #94a3b8;">
@@ -77,28 +89,28 @@
                     </li>
 
                     <!-- Nouveaux modules Vie Scolaire -->
-                    <li class="nav-item mt-2">
+                    <li class="nav-item nav-advanced mt-2">
                         <span class="d-block px-2 text-white-50" style="font-size:0.65rem; text-transform:uppercase; letter-spacing:1px;">Vie Scolaire</span>
                     </li>
-                    <li class="nav-item">
+                    <li class="nav-item nav-advanced">
                         <a class="nav-link d-flex align-items-center gap-2 py-1 px-2 {{ 'active' if request.endpoint and request.endpoint.startswith('edt_bp') }}" href="{{ url_for('edt_bp.edt') }}" style="border-left: 3px solid #6366f1;">
                             <i class="bi bi-calendar3" style="font-size: 0.9rem; color: #6366f1;"></i>
                             <span style="font-size: 0.78rem; text-transform: uppercase; font-weight: 600;">EDT</span>
                         </a>
                     </li>
-                    <li class="nav-item">
+                    <li class="nav-item nav-advanced">
                         <a class="nav-link d-flex align-items-center gap-2 py-1 px-2 {{ 'active' if request.endpoint and request.endpoint.startswith('examens_bp') }}" href="{{ url_for('examens_bp.examens') }}" style="border-left: 3px solid #ef4444;">
                             <i class="bi bi-journal-check" style="font-size: 0.9rem; color: #ef4444;"></i>
                             <span style="font-size: 0.78rem; text-transform: uppercase; font-weight: 600;">Examens</span>
                         </a>
                     </li>
-                    <li class="nav-item">
+                    <li class="nav-item nav-advanced">
                         <a class="nav-link d-flex align-items-center gap-2 py-1 px-2 {{ 'active' if request.endpoint and request.endpoint.startswith('cahier_texte_bp') }}" href="{{ url_for('cahier_texte_bp.cahier_texte') }}" style="border-left: 3px solid #84cc16;">
                             <i class="bi bi-journal-text" style="font-size: 0.9rem; color: #84cc16;"></i>
                             <span style="font-size: 0.78rem; text-transform: uppercase; font-weight: 600;">Cahier texte</span>
                         </a>
                     </li>
-                    <li class="nav-item">
+                    <li class="nav-item nav-advanced">
                         <a class="nav-link d-flex align-items-center gap-2 py-1 px-2 {{ 'active' if request.endpoint and request.endpoint.startswith('conseil_bp') }}" href="{{ url_for('conseil_bp.conseil') }}" style="border-left: 3px solid #a855f7;">
                             <i class="bi bi-people-fill" style="font-size: 0.9rem; color: #a855f7;"></i>
                             <span style="font-size: 0.78rem; text-transform: uppercase; font-weight: 600;">Conseil</span>
@@ -124,23 +136,23 @@
                     </li>
 
                     <!-- Nouveaux modules Outils -->
-                    <li class="nav-item mt-2">
+                    <li class="nav-item nav-advanced mt-2">
                         <span class="d-block px-2 text-white-50" style="font-size:0.65rem; text-transform:uppercase; letter-spacing:1px;">Outils</span>
                     </li>
-                    <li class="nav-item">
+                    <li class="nav-item nav-advanced">
                         <a class="nav-link d-flex align-items-center gap-2 py-1 px-2 {{ 'active' if request.endpoint and request.endpoint.startswith('exports_bp') }}" href="{{ url_for('exports_bp.index') }}" style="border-left: 3px solid #eab308;">
                             <i class="bi bi-file-earmark-pdf" style="font-size: 0.9rem; color: #eab308;"></i>
                             <span style="font-size: 0.78rem; text-transform: uppercase; font-weight: 600;">Exports</span>
                         </a>
                     </li>
-                    <li class="nav-item">
+                    <li class="nav-item nav-advanced">
                         <a class="nav-link d-flex align-items-center gap-2 py-1 px-2 {{ 'active' if request.endpoint and request.endpoint.startswith('archives_bp') }}" href="{{ url_for('archives_bp.archives') }}" style="border-left: 3px solid #78716c;">
                             <i class="bi bi-archive" style="font-size: 0.9rem; color: #78716c;"></i>
                             <span style="font-size: 0.78rem; text-transform: uppercase; font-weight: 600;">Archives</span>
                         </a>
                     </li>
                     
-                    <li class="nav-item">
+                    <li class="nav-item nav-advanced">
                         <a class="nav-link d-flex align-items-center gap-2 py-1 px-2 {{ 'active' if request.endpoint == 'etablissement' }}" href="{{ url_for('etablissement') }}" style="border-left: 3px solid #06b6d4;">
                             <i class="bi bi-building" style="font-size: 0.9rem; color: #06b6d4;"></i>
                             <span style="font-size: 0.78rem; text-transform: uppercase; font-weight: 600;">Etablissement</span>
@@ -298,16 +310,6 @@
             }
         });
         
-        // Auto-disparition des notifications flottantes apres 5s
-        (function() {
-            document.querySelectorAll('.toast-flash').forEach(function(toast) {
-                setTimeout(function() {
-                    toast.classList.add('removing');
-                    setTimeout(function() { toast.remove(); }, 300);
-                }, 5000);
-            });
-        })();
-        
         // Sidebar toggle pour mobile/tablette
         (function() {
             var toggle = document.getElementById('sidebarToggle');
@@ -344,6 +346,24 @@
         {% if current_user.is_authenticated %}
         inactivityTime();
         {% endif %}
+        
+        // Mode simplifie
+        (function(){
+            var isSimple = localStorage.getItem('mode-simple') === 'true';
+            if (isSimple) { document.body.classList.add('mode-simple'); }
+            updateModeBtn();
+        })();
+        function toggleModeSimple() {
+            document.body.classList.toggle('mode-simple');
+            var isSimple = document.body.classList.contains('mode-simple');
+            localStorage.setItem('mode-simple', isSimple);
+            updateModeBtn();
+        }
+        function updateModeBtn() {
+            var isSimple = document.body.classList.contains('mode-simple');
+            document.getElementById('iconModeSimple').className = isSimple ? 'bi bi-chevron-double-down' : 'bi bi-chevron-double-up';
+            document.getElementById('labelModeSimple').textContent = isSimple ? 'Tout afficher' : 'Mode simple';
+        }
     </script>
     {% block scripts %}{% endblock %}
 </body>

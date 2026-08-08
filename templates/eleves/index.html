@@ -98,7 +98,7 @@
 
 <form id="formBulk" method="POST" action="{{ url_for('eleves_supprimer_bulk') }}" class="animate-in" style="animation-delay:0.1s;">
 <div id="table-wrapper" class="table-responsive-stack vue-simple" style="max-height:65vh; overflow-y:auto; border-radius:var(--radius-md); box-shadow:var(--shadow-sm);">
-    <table class="table table-sm table-hover align-middle bg-white mb-0" id="table-eleves">
+    <table class="table table-sm table-hover align-middle bg-white mb-0 table-card-view" id="table-eleves">
         <thead>
             <tr>
                 <th style="width:32px;"><input class="form-check-input" type="checkbox" id="selectAll" onchange="toggleAll(this)"></th>

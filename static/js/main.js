@@ -1,11 +1,47 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Auto-dismiss alerts after 5 seconds
-    const alerts = document.querySelectorAll('.alert');
-    alerts.forEach(alert => {
-        setTimeout(() => {
-            const bsAlert = new bootstrap.Alert(alert);
-            bsAlert.close();
-        }, 5000);
+    // --- Vue carte sur mobile : auto data-labels ---
+    function initCardView() {
+        if (window.innerWidth <= 768) {
+            document.querySelectorAll('.table-card-view').forEach(function(table) {
+                table.querySelectorAll('tbody tr').forEach(function(row) {
+                    row.querySelectorAll('td').forEach(function(td, idx) {
+                        if (!td.hasAttribute('data-label') && !td.classList.contains('td-check') && !td.classList.contains('td-actions')) {
+                            var th = table.querySelectorAll('thead th')[idx];
+                            if (th) td.setAttribute('data-label', th.textContent.trim());
+                        }
+                    });
+                });
+            });
+        }
+    }
+    initCardView();
+    window.addEventListener('resize', initCardView);
+
+    // --- Validation téléphone et email ---
+    document.querySelectorAll('input[data-validate="phone"]').forEach(function(input) {
+        input.addEventListener('input', function() {
+            var val = this.value.replace(/[^0-9+\- ]/g, '');
+            this.value = val;
+            this.classList.toggle('is-invalid', val.length > 0 && val.replace(/[^0-9]/g, '').length < 8);
+        });
+        input.addEventListener('blur', function() {
+            var digits = this.value.replace(/[^0-9]/g, '');
+            if (this.value.length > 0 && digits.length < 8) {
+                this.classList.add('is-invalid');
+            } else {
+                this.classList.remove('is-invalid');
+            }
+        });
+    });
+    document.querySelectorAll('input[data-validate="email"]').forEach(function(input) {
+        input.addEventListener('blur', function() {
+            var re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (this.value.length > 0 && !re.test(this.value)) {
+                this.classList.add('is-invalid');
+            } else {
+                this.classList.remove('is-invalid');
+            }
+        });
     });
 
     // tooltips

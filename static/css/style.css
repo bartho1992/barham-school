@@ -1826,3 +1826,45 @@ footer {
 .animate-in {
     animation: fadeInUp 0.5s ease;
 }
+
+/* === MODE SIMPLIFIÉ === */
+.mode-simple .nav-advanced { display: none !important; }
+
+/* === VALIDATION INPUT === */
+.is-invalid { border-color: #dc3545 !important; box-shadow: 0 0 0 0.2rem rgba(220,53,69,0.15) !important; }
+
+/* === VUE CARTE SUR MOBILE === */
+@media (max-width: 768px) {
+    .table-card-view thead { display: none; }
+    .table-card-view tbody tr {
+        display: block;
+        margin-bottom: 10px;
+        border: 1px solid var(--neutral-200);
+        border-radius: var(--radius-md);
+        background: #fff;
+        box-shadow: var(--shadow-xs);
+        padding: 0;
+    }
+    .table-card-view tbody td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 10px !important;
+        border-bottom: 1px solid var(--neutral-100);
+        text-align: right !important;
+        white-space: normal !important;
+        font-size: 0.8rem;
+    }
+    .table-card-view tbody td:last-child { border-bottom: none; }
+    .table-card-view tbody td::before {
+        content: attr(data-label);
+        font-weight: 700;
+        color: var(--neutral-600);
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        white-space: nowrap;
+        margin-right: 8px;
+        flex-shrink: 0;
+    }
+    .table-card-view tbody td.col-detail { display: flex !important; }
+}
