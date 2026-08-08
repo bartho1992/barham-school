@@ -17,6 +17,40 @@ document.addEventListener('DOMContentLoaded', function() {
     initCardView();
     window.addEventListener('resize', initCardView);
 
+    // --- Tri par colonne (cliquer sur l'en-tête) ---
+    document.querySelectorAll('th.sortable').forEach(function(th) {
+        th.style.cursor = 'pointer';
+        th.title = 'Cliquer pour trier';
+        th.addEventListener('click', function() {
+            var table = th.closest('table');
+            var tbody = table.querySelector('tbody');
+            if (!tbody) return;
+            var colIdx = Array.prototype.indexOf.call(th.parentNode.children, th);
+            var rows = [].slice.call(tbody.querySelectorAll('tr'));
+            var asc = th.classList.contains('sort-asc');
+            table.querySelectorAll('th').forEach(function(h) { h.classList.remove('sort-asc', 'sort-desc'); });
+            th.classList.add(asc ? 'sort-desc' : 'sort-asc');
+            rows.sort(function(a, b) {
+                var aVal = (a.children[colIdx] ? a.children[colIdx].textContent : '').trim();
+                var bVal = (b.children[colIdx] ? b.children[colIdx].textContent : '').trim();
+                var aNum = parseFloat(aVal.replace(/[^0-9.-]/g, ''));
+                var bNum = parseFloat(bVal.replace(/[^0-9.-]/g, ''));
+                if (!isNaN(aNum) && !isNaN(bNum)) return asc ? bNum - aNum : aNum - bNum;
+                return asc ? bVal.localeCompare(aVal) : aVal.localeCompare(bVal);
+            });
+            rows.forEach(function(r) { tbody.appendChild(r); });
+        });
+    });
+
+    // --- Filtres sauvegardés (classe, mois, année) ---
+    var pageKey = window.location.pathname.replace(/[^a-zA-Z0-9]/g, '_');
+    document.querySelectorAll('select.filter-save, input.filter-save').forEach(function(el) {
+        var key = 'filter_' + pageKey + '_' + (el.name || el.id || 'default');
+        var saved = localStorage.getItem(key);
+        if (saved && !el.value) el.value = saved;
+        el.addEventListener('change', function() { localStorage.setItem(key, this.value); });
+    });
+
     // --- Validation téléphone et email ---
     document.querySelectorAll('input[data-validate="phone"]').forEach(function(input) {
         input.addEventListener('input', function() {

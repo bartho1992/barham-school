@@ -79,8 +79,8 @@
                 </div>
             </div>
             <div class="col-md-3">
-                <select name="classe" class="form-select form-select-sm">
-                    <option value="">Toutes les classes</option>
+                <select name="classe" class="form-select form-select-sm filter-save" onchange="this.form.submit()">
+                        <option value="">Toutes les classes</option>
                     {% for c in classes %}
                     <option value="{{ c.id }}" {% if filter_classe==c.id|string %}selected{% endif %}>{{ c.nom }}</option>
                     {% endfor %}
@@ -102,13 +102,13 @@
         <thead>
             <tr>
                 <th style="width:32px;"><input class="form-check-input" type="checkbox" id="selectAll" onchange="toggleAll(this)"></th>
-                <th>Code</th>
-                <th>Prénom</th>
-                <th>Nom</th>
-                <th>Sexe</th>
-                <th>Classe</th>
-                <th>Téléphone</th>
-                <th class="col-detail">Date naiss.</th>
+                <th class="sortable">Code</th>
+                <th class="sortable">Prénom</th>
+                <th class="sortable">Nom</th>
+                <th class="sortable">Sexe</th>
+                <th class="sortable">Classe</th>
+                <th class="sortable">Téléphone</th>
+                <th class="sortable col-detail">Date naiss.</th>
                 <th class="col-detail">Lieu naiss.</th>
                 <th class="col-detail">Tuteur</th>
                 <th class="col-detail">Adresse</th>

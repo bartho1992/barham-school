@@ -207,6 +207,12 @@
                 </ul>
             </nav>
             
+            <!-- Historique récent -->
+            <div class="sidebar-recent" id="sidebarRecent">
+                <div class="rec-title"><i class="bi bi-clock-history"></i> Récents</div>
+                <div id="recList"></div>
+            </div>
+            
             <div class="sidebar-footer mt-auto">
                 {% if current_user.role == 'dev' and all_ecoles %}
                 <div class="dropdown w-100 mb-2">
@@ -357,6 +363,81 @@
                 icon.className = isSimple ? 'bi bi-chevron-double-down' : 'bi bi-chevron-double-up';
                 label.textContent = isSimple ? 'Tout afficher' : 'Mode simple';
             }
+            
+            // Historique recent
+            try {
+                var recs = JSON.parse(sessionStorage.getItem('sidebar_recent') || '[]');
+                var title = document.title.split(' - ')[0].trim();
+                var url = window.location.href;
+                recs = recs.filter(function(r) { return r.u !== url; });
+                recs.unshift({ t: title, u: url, p: '{{ request.endpoint }}' });
+                if (recs.length > 5) recs = recs.slice(0, 5);
+                sessionStorage.setItem('sidebar_recent', JSON.stringify(recs));
+                var list = document.getElementById('recList');
+                if (list) {
+                    var icons = { dashboard: 'bi-speedometer2', eleves: 'bi-person', finances_hub: 'bi-cash', 
+                        comptabilite_accueil: 'bi-calculator', assiduite: 'bi-calendar-check',
+                        documents: 'bi-printer', administration: 'bi-gear' };
+                    var colors = { dashboard: '#3b82f6', eleves: '#10b981', finances_hub: '#14b8a6',
+                        comptabilite_accueil: '#6366f1', assiduite: '#f97316',
+                        documents: '#f59e0b', administration: '#8b5cf6' };
+                    recs.forEach(function(r) {
+                        var div = document.createElement('div');
+                        div.className = 'rec-item';
+                        var ep = r.p || '';
+                        var ico = 'bi-circle';
+                        var col = '#94a3b8';
+                        for (var k in icons) { if (ep.indexOf(k) >= 0) { ico = icons[k]; col = colors[k] || col; break; } }
+                        div.innerHTML = '<span class="rec-dot" style="background:' + col + ';"></span>' + 
+                            '<i class="bi ' + ico + '" style="color:' + col + ';font-size:0.55rem;"></i>' +
+                            '<span style="overflow:hidden;text-overflow:ellipsis;">' + r.t + '</span>';
+                        div.style.cursor = 'pointer';
+                        div.title = r.t;
+                        div.onclick = function() { window.location.href = r.u; };
+                        list.appendChild(div);
+                    });
+                }
+            } catch(e) {}
+        });
+        
+        // Aide contextuelle : ajoute un ? a cote des titres de section
+        document.addEventListener('DOMContentLoaded', function() {
+            var aides = {
+                'Tableau de bord': 'Vue d\'ensemble de votre école : effectifs, paiements, alertes.',
+                'Élèves': 'Gérez vos élèves : inscription, modification, recherche, import Excel.',
+                'Assiduité': 'Suivez les présences, absences et retards de vos élèves.',
+                'Administration': 'Gérez les classes, matières, personnel enseignant et périodes.',
+                'Documents': 'Imprimez et exportez les listes, reçus, bulletins et attestations.',
+                'Finances': 'Suivez les paiements des élèves et les frais de scolarité.',
+                'Comptabilité': 'Comptabilité en partie double selon le plan SYSCOHADA.',
+                'Emploi du Temps': 'Gérez les créneaux horaires. Automatique pour le secondaire.',
+                'Examens': 'Saisissez les notes et générez les bulletins.',
+                'Cahier texte': 'Journal de classe numérique pour les enseignants.',
+                'Conseil': 'Suivez les conseils de classe et les décisions.',
+                'Messages': 'Messagerie interne entre personnel et parents d\'élèves.',
+                'Paramètres': 'Configurez les frais de scolarité, catégories et tarifs.',
+                'Exports': 'Exportez les données en PDF ou Excel.',
+                'Archives': 'Consultez les années scolaires précédentes.'
+            };
+            document.querySelectorAll('.section-header').forEach(function(h) {
+                var txt = h.textContent.trim();
+                for (var k in aides) {
+                    if (txt.indexOf(k) >= 0) {
+                        var wrap = document.createElement('span');
+                        wrap.className = 'aide-parent';
+                        h.parentNode.insertBefore(wrap, h);
+                        wrap.appendChild(h);
+                        var btn = document.createElement('button');
+                        btn.className = 'aide-toggle'; btn.textContent = '?'; btn.type = 'button';
+                        btn.setAttribute('aria-label', 'Aide');
+                        var tip = document.createElement('div');
+                        tip.className = 'aide-tooltip'; tip.textContent = aides[k];
+                        wrap.appendChild(btn);
+                        wrap.appendChild(tip);
+                        break;
+                    }
+                }
+            });
         });
         function toggleModeSimple() {
             document.body.classList.toggle('mode-simple');
