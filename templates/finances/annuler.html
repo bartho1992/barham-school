@@ -1,3 +1,6 @@
+{% extends "base.html" %}
+{% block title %}Annuler un paiement - {{ ecole.nom }}{% endblock %}
+{% block content %}
 <style>
 .section-annuler { max-width: 700px; margin: 0 auto; }
 .card-select { 
@@ -134,7 +137,6 @@
         container.innerHTML = html;
         container.style.display = 'block';
         
-        // Hover effect via event delegation
         container.querySelectorAll('.result-item').forEach(function(item) {
             item.addEventListener('mouseenter', function() { this.style.background = '#f0f4ff'; });
             item.addEventListener('mouseleave', function() { this.style.background = ''; });
@@ -245,10 +247,8 @@
                     if (m) confirmMsg = m[0];
                 }
                 if (!confirm(confirmMsg)) return;
-                var that = this;
                 fetch(this.action, { method: 'POST' })
                     .then(function() {
-                        // Recharger les resultats pour l'eleve courant
                         var eleveId = document.getElementById('eleve-id-hidden').value;
                         if (eleveId) {
                             loadResultat('{{ url_for("paiements_annuler") }}?eleve_id=' + eleveId + '&embed=1');
@@ -276,3 +276,4 @@
 })();
 </script>
 {% endif %}
+{% endblock %}
