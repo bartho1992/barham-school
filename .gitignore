@@ -6,6 +6,7 @@ __pycache__/
 *.log
 .env
 .venv/
+.venv_old_*/
 venv/
 .vscode/
 *.tmp
@@ -24,3 +25,6 @@ creer_modeles_excel.py
 generateur_licence.py
 generate_key.py
 generer_modeles.py
+*.txt
+test_import.py
+logs/
