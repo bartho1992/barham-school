@@ -29,6 +29,15 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
 app.config['SESSION_REFRESH_EACH_REQUEST'] = True
 db.init_app(app)
 
+@app.errorhandler(405)
+def methode_non_autorisee(e):
+    """Filet de securite : un POST residuel (ancien formulaire) vers une route GET
+    renvoyait 405 et bloquait l'utilisateur. On redirige proprement."""
+    referer = request.referrer or ''
+    if referer.startswith(request.host_url) and referer != request.url:
+        return redirect(referer, 302)
+    return redirect(url_for('dashboard'), 302)
+
 def get_current_ecole_id():
     if 'ecole_id' in session:
         return session['ecole_id']
