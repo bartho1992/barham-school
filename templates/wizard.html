@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Assistant de démarrage - {{ ecole.nom }}{% endblock %}
+{% block title %}Assistant de démarrage - {{ ecole.nom if ecole else 'Barham School' }}{% endblock %}
 {% block extra_css %}
 <style>
     :root {
@@ -243,7 +243,7 @@
             </span>
         </div>
         {% if nb_classes == 0 %}
-        <a href="{{ url_for('classe_ajouter') }}" class="wiz-btn wiz-btn-primary">
+        <a href="{{ classe_url }}" class="wiz-btn wiz-btn-primary">
             <i class="bi bi-plus-circle"></i> Créer une classe
         </a>
         {% else %}
@@ -262,7 +262,7 @@
             </span>
         </div>
         {% if nb_eleves == 0 and nb_classes > 0 %}
-        <a href="{{ url_for('eleve_ajouter') }}" class="wiz-btn wiz-btn-primary">
+        <a href="{{ eleve_url }}" class="wiz-btn wiz-btn-primary">
             <i class="bi bi-person-plus"></i> Inscrire un élève
         </a>
         {% elif nb_eleves > 0 %}
@@ -283,7 +283,7 @@
             </span>
         </div>
         {% if nb_classes > 0 %}
-        <a href="{{ url_for('parametres_financiers') }}" class="wiz-btn wiz-btn-primary">
+        <a href="{{ parametres_url }}" class="wiz-btn wiz-btn-primary">
             <i class="bi bi-gear"></i> Configurer
         </a>
         {% endif %}
@@ -297,7 +297,7 @@
             <h5>Vous êtes prêt !</h5>
             <p>Votre école est configurée. Vous pouvez maintenant explorer le tableau de bord et toutes les fonctionnalités.</p>
         </div>
-        <a href="{{ url_for('dashboard') }}" class="wiz-btn wiz-btn-success">
+        <a href="{{ dashboard_url }}" class="wiz-btn wiz-btn-success">
             <i class="bi bi-speedometer2"></i> Tableau de bord
         </a>
     </div>
@@ -305,7 +305,7 @@
 
     <!-- Passer -->
     <div class="wiz-skip">
-        <a href="{{ url_for('wizard_skip') }}">
+        <a href="{{ wizard_skip_url }}">
             <i class="bi bi-arrow-right-circle me-1"></i>Passer l'assistant — je configurerai plus tard
         </a>
     </div>

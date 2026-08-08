@@ -179,6 +179,7 @@ def wizard_skip():
 def wizard():
     from models import Classe, Eleve
     ecole_id = get_current_ecole_id()
+    ecole = Ecole.query.get(ecole_id)
     nb_classes = Classe.query.filter_by(ecole_id=ecole_id).count()
     nb_eleves = Eleve.query.filter_by(ecole_id=ecole_id).count()
     
@@ -190,7 +191,24 @@ def wizard():
     else:
         etape = 3
     
-    return render_template('wizard.html', etape=etape, nb_classes=nb_classes, nb_eleves=nb_eleves)
+    def safe_url(endpoint, **kwargs):
+        try:
+            return url_for(endpoint, **kwargs)
+        except Exception:
+            return '#'
+
+    return render_template(
+        'wizard.html',
+        ecole=ecole,
+        etape=etape,
+        nb_classes=nb_classes,
+        nb_eleves=nb_eleves,
+        classe_url=safe_url('classe_ajouter'),
+        eleve_url=safe_url('eleve_ajouter'),
+        parametres_url=safe_url('parametres_financiers'),
+        dashboard_url=safe_url('dashboard'),
+        wizard_skip_url=safe_url('wizard_skip'),
+    )
 
 @app.route('/')
 @login_required
