@@ -18,7 +18,7 @@
 <!-- Resume : barre de badges alignes -->
 {% set ns = namespace(nb_non_payes=0, total_du=0, total_avance=0, total_reste=0, total_cumul=0) %}
 {% for lp in lignes %}
-    {% if lp.total_paye <= 0 %}{% set ns.nb_non_payes = ns.nb_non_payes + 1 %}{% endif %}
+    {% if lp.total_reste > 0 %}{% set ns.nb_non_payes = ns.nb_non_payes + 1 %}{% endif %}
     {% set ns.total_du = ns.total_du + lp.du_affiche %}
     {% set ns.total_avance = ns.total_avance + lp.avance_affiche %}
     {% set ns.total_reste = ns.total_reste + lp.reste_affiche %}
@@ -350,7 +350,7 @@ function filtrer() {
         var re = toNum(cells[7].textContent);
         var cu = toNum(cells[8].textContent);
         bDU += du; bAV += av; bRE += re; bCU += cu;
-        if (av <= 0) bNonPaye++;
+        if (re > 0) bNonPaye++;
     });
     var fmt = function(n) { return Number(n).toLocaleString('fr-FR'); };
     var setBadge = function(id, val) {
