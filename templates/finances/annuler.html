@@ -75,6 +75,12 @@
     text-align: center; padding: 40px 20px; color: #a0aec0; 
 }
 .empty-state i { font-size: 3rem; display: block; margin-bottom: 10px; opacity: 0.4; }
+.section-header td {
+    background: #f0f4ff !important; font-weight: 700; font-size: 0.65rem;
+    color: #4a5568; text-transform: uppercase; letter-spacing: 0.8px;
+    padding: 8px 12px !important; border-bottom: 2px solid #667eea !important;
+}
+.section-header.cat td { background: #fffbeb !important; border-bottom-color: #f59e0b !important; }
 </style>
 
 <div class="section-annuler">
@@ -164,6 +170,9 @@
     </div>
 
     {% if paiements %}
+    {% set mois_scol = ['Inscription','Octobre','Novembre','Decembre','Janvier','Fevrier','Mars','Avril','Mai','Juin'] %}
+    {% set scolarite = paiements|selectattr('type_paiement', 'in', mois_scol)|list %}
+    {% set categories = paiements|rejectattr('type_paiement', 'in', mois_scol)|list %}
     <div style="max-height:52vh;overflow:auto;border-radius:12px;">
         <table class="table-modern">
             <thead>
@@ -177,7 +186,7 @@
                 </tr>
             </thead>
             <tbody>
-                {% for p in paiements %}
+                {% macro ligne_paiement(p) %}
                 <tr>
                     <td style="white-space:nowrap;">{{ p.date_paiement.strftime('%d/%m/%Y') if p.date_paiement else '-' }}</td>
                     <td>
@@ -201,7 +210,17 @@
                         </form>
                     </td>
                 </tr>
-                {% endfor %}
+                {% endmacro %}
+
+                {% if scolarite %}
+                <tr class="section-header"><td colspan="6"><i class="bi bi-mortarboard-fill me-1"></i> Scolarité ({{ scolarite|length }})</td></tr>
+                {% for p in scolarite %}{{ ligne_paiement(p) }}{% endfor %}
+                {% endif %}
+
+                {% if categories %}
+                <tr class="section-header cat"><td colspan="6"><i class="bi bi-grid-fill me-1"></i> Services / Catégories ({{ categories|length }})</td></tr>
+                {% for p in categories %}{{ ligne_paiement(p) }}{% endfor %}
+                {% endif %}
             </tbody>
         </table>
     </div>
