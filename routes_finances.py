@@ -814,18 +814,43 @@ def paiement_recu(id):
 @app.route('/finances/paiement/annuler/<int:id>', methods=['POST'])
 @login_required
 def paiement_annuler(id):
-    """Annule un paiement (reserve aux super_users)"""
+    """Annule un paiement"""
     ecole_id = get_current_ecole_id()
-    check = _check_parametres_access(ecole_id)
-    if check: return check
-    p = Paiement.query.get_or_404(id)
+    p = Paiement.query.filter_by(id=id, ecole_id=ecole_id).first_or_404()
     # Supprimer l'ecriture comptable liee
     from models import EcritureComptable
     EcritureComptable.query.filter_by(paiement_id=p.id).delete()
     db.session.delete(p)
     db.session.commit()
     flash('Paiement annule avec succes', 'success')
-    return redirect(request.referrer or url_for('finances_liste'))
+    return redirect(request.referrer or url_for('finances_hub'))
+
+@app.route('/finances/paiements/annuler')
+@login_required
+def paiements_annuler():
+    """Page d'annulation de paiement : selectionner un eleve, voir ses versements, annuler"""
+    ecole_id = get_current_ecole_id()
+    e = Ecole.query.get(ecole_id); annee = _annee_courante(e)
+    embed = request.args.get('embed')
+    
+    eleve_id = request.args.get('eleve_id', type=int)
+    paiements_eleve = []
+    eleve_select = None
+    
+    if eleve_id:
+        eleve_select = Eleve.query.filter_by(id=eleve_id, ecole_id=ecole_id).first()
+        if eleve_select:
+            paiements_eleve = Paiement.query.filter_by(
+                eleve_id=eleve_id, ecole_id=ecole_id
+            ).order_by(Paiement.date_paiement.desc()).all()
+    
+    eleves = Eleve.query.filter_by(ecole_id=ecole_id).options(
+        joinedload(Eleve.classe)
+    ).order_by(Eleve.nom, Eleve.prenom).all()
+    
+    return render_template('finances/annuler.html',
+                         ecole=e, eleves=eleves, eleve_select=eleve_select,
+                         paiements=paiements_eleve, embed=embed)
 
 @app.route('/api/eleve/<int:eleve_id>/statut-paiements')
 @login_required

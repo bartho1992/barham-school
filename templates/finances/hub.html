@@ -18,6 +18,7 @@
 #btn-paiements { background: #6f42c1; }
 #btn-nouveau { background: #198754; }
 #btn-inscription { background: #fd7e14; }
+#btn-annuler { background: #e74c3c; }
 .hub-content { min-height: 60vh; background: #fff; border-radius: 0 0 8px 8px; }
 .hub-loader { display: flex; align-items: center; justify-content: center; padding: 3rem; color: #999; font-size: 0.85rem; }
 </style>
@@ -44,6 +45,9 @@
     </button>
     <button class="hub-btn" onclick="showHub('inscription', '{{ url_for('eleve_ajouter', embed='1') }}')" id="btn-inscription">
         <i class="bi bi-person-plus"></i> Inscription
+    </button>
+    <button class="hub-btn" onclick="showHub('annuler', '{{ url_for('paiements_annuler', embed='1') }}')" id="btn-annuler">
+        <i class="bi bi-x-circle"></i> Annuler
     </button>
 </div>
 
