@@ -141,12 +141,13 @@
 </div>
 
 <script>
+(function() {
 let currentTarifs = null;
 // Séquence scolaire : Inscription puis Octobre → Juin
 const MOIS_SCOLAIRES = ['Inscription','Octobre','Novembre','Decembre','Janvier','Fevrier','Mars','Avril','Mai','Juin'];
 const MOIS_DISPLAY = {Janvier: 'JAN', Fevrier: 'FEV', Mars: 'MAR', Avril: 'AVR', Mai: 'MAI', Juin: 'JUI', Juillet: 'JUL', Aout: 'AOU', Septembre: 'SEP', Octobre: 'OCT', Novembre: 'NOV', Decembre: 'DEC', Inscription: 'INS'};
 
-document.addEventListener('DOMContentLoaded', function() {
+function initPaiementForm() {
     const searchInput = document.getElementById('eleve-search');
     const resultsDiv = document.getElementById('search-results');
     const idInput = document.getElementById('eleve_id_hidden');
@@ -446,6 +447,15 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('restant-scolarite').value = '0 FCFA';
         document.getElementById('reste-a-payer').value = '0 FCFA';
     }
-});
+}
+
+// Executer des que le DOM est pret (fonctionne en standalone ET dans le hub
+// qui re-injecte le contenu apres DOMContentLoaded via reinitScripts)
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initPaiementForm);
+} else {
+    initPaiementForm();
+}
+})();
 </script>
 {% endblock %}
