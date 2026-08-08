@@ -11,6 +11,8 @@ def _annee_courante(e):
 def personnel():
     ecole_id = get_current_ecole_id()
     embed = request.args.get('embed')
+    if not embed:
+        return redirect(url_for('administration'))
     return render_template('personnel/index.html', personnels=Personnel.query.filter_by(ecole_id=ecole_id).all(), ecole=Ecole.query.get(ecole_id), embed=embed)
 
 @app.route('/personnel/ajouter', methods=['GET','POST'])

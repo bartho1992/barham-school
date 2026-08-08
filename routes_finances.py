@@ -337,10 +337,12 @@ def finances_hub():
 @app.route('/finances')
 @login_required
 def finances():
+    embed = request.args.get('embed')
+    if not embed:
+        return redirect(url_for('finances_hub'))
     import sys
     ecole_id = get_current_ecole_id()
     e = Ecole.query.get(ecole_id); annee = _annee_courante(e)
-    embed = request.args.get('embed')
     print(f"[DIAG-FINANCES] ecole_id={ecole_id}, annee={annee}", file=sys.stderr)
     recent_paiements = Paiement.query.filter_by(annee_scolaire=annee, ecole_id=ecole_id).options(
         joinedload(Paiement.eleve).joinedload(Eleve.classe)
@@ -620,7 +622,7 @@ def paiement_groupe():
     
     if not eleve_ids or not mois:
         flash('Selectionnez au moins un eleve et un mois.', 'danger')
-        return redirect(url_for('impayes'))
+        return redirect(url_for('finances_hub'))
     
     is_inscription = (mois.lower() == 'inscription')
     ordre_mois = ['Janvier','Fevrier','Mars','Avril','Mai','Juin',
@@ -726,7 +728,7 @@ def paiement_groupe():
     if eleves_skipped and len(eleves_skipped) <= 5:
         msg += ' | Ignorés : ' + ', '.join(eleves_skipped)
     flash(msg, 'success')
-    return redirect(url_for('impayes'))
+    return redirect(url_for('finances_hub'))
 
 @app.route('/finances/paiement', methods=['GET', 'POST'])
 @login_required
@@ -862,9 +864,11 @@ def api_eleve_statut_paiements(eleve_id):
 @app.route('/finances/list')
 @login_required
 def finances_liste():
+    embed = request.args.get('embed')
+    if not embed:
+        return redirect(url_for('finances_hub'))
     ecole_id = get_current_ecole_id()
     e = Ecole.query.get(ecole_id); annee = _annee_courante(e)
-    embed = request.args.get('embed')
     q = Paiement.query.filter_by(annee_scolaire=annee, ecole_id=ecole_id)
     type_p = request.args.get('type_paiement')
     if type_p: q = q.filter_by(type_paiement=type_p)
@@ -891,6 +895,9 @@ def finances_paiements_supprimer_bulk():
 @login_required
 def impayes():
     """Tableau des impayes : eleves x categories de services"""
+    embed = request.args.get('embed')
+    if not embed:
+        return redirect(url_for('finances_hub'))
     import sys
     print("===== impayES V2 (categories) =====", file=sys.stderr)
     ecole_id = get_current_ecole_id()
