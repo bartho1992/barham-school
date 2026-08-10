@@ -3,114 +3,231 @@
 
 {% block extra_css %}
 <style>
-.pro-header { background: linear-gradient(135deg, #1e3a5f 0%, #2d6a9f 100%); color: #fff; border-radius: 12px; padding: 20px 24px; margin-bottom: 16px; }
-.pro-header h5 { font-weight: 800; letter-spacing: 0.5px; }
-.pro-stats { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
-.pro-stat { background: rgba(255,255,255,0.12); border-radius: 8px; padding: 10px 16px; min-width: 100px; text-align: center; }
-.pro-stat .num { font-size: 1.3rem; font-weight: 800; }
-.pro-stat .lbl { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.8; }
-.pro-card { background: #fff; border-radius: 10px; padding: 14px 18px; margin-bottom: 10px; border-left: 4px solid #2d6a9f; box-shadow: 0 1px 6px rgba(0,0,0,0.06); transition: all 0.2s; }
-.pro-card:hover { box-shadow: 0 3px 12px rgba(0,0,0,0.1); }
-.pro-card h6 { font-size: 0.78rem; font-weight: 700; color: #1e3a5f; margin: 0; }
-.pro-card .meta { font-size: 0.62rem; color: #718096; }
-.pro-card .badge-status { font-size: 0.58rem; padding: 3px 8px; border-radius: 4px; font-weight: 600; }
-.pro-section-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #4a5568; margin: 16px 0 8px; }
-.btn-pro { font-size: 0.68rem; font-weight: 700; padding: 5px 14px; border-radius: 6px; transition: all 0.2s; }
-.empty-pro { text-align: center; padding: 30px; color: #a0aec0; font-size: 0.75rem; }
+/* ===== HERO ===== */
+.fpro-hero {
+    background: linear-gradient(135deg, #0c4a6e 0%, #0891b2 50%, #06b6d4 100%);
+    color: #fff; border-radius: 16px; padding: 24px 28px; margin-bottom: 20px;
+    position: relative; overflow: hidden;
+}
+.fpro-hero::after {
+    content: ''; position: absolute; top: -40px; right: -40px;
+    width: 160px; height: 160px; border-radius: 50%;
+    background: rgba(255,255,255,0.06); pointer-events: none;
+}
+.fpro-hero h4 { font-weight: 800; font-size: 1rem; letter-spacing: -0.3px; position: relative; z-index: 1; }
+.fpro-hero .subtitle { font-size: 0.7rem; opacity: 0.8; position: relative; z-index: 1; }
+.fpro-hero-stats { display: flex; gap: 16px; margin-top: 16px; position: relative; z-index: 1; }
+.fpro-stat {
+    background: rgba(255,255,255,0.1); backdrop-filter: blur(8px);
+    border-radius: 12px; padding: 12px 20px; text-align: center;
+    border: 1px solid rgba(255,255,255,0.15);
+}
+.fpro-stat .val { font-size: 1.6rem; font-weight: 800; line-height: 1; }
+.fpro-stat .tag { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px; opacity: 0.75; margin-top: 2px; }
+
+/* ===== SECTION HEADERS ===== */
+.section-label {
+    font-size: 0.66rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1.2px; color: #64748b; margin-bottom: 12px;
+    display: flex; align-items: center; gap: 6px;
+}
+
+/* ===== FILIERE CARDS ===== */
+.filiere-card {
+    background: #fff; border-radius: 14px; padding: 0;
+    margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03);
+    border: 1px solid #f1f5f9; overflow: hidden;
+    transition: all 0.25s ease;
+}
+.filiere-card:hover {
+    box-shadow: 0 8px 25px rgba(8,145,178,0.12);
+    border-color: #cffafe; transform: translateY(-1px);
+}
+.filiere-card-inner {
+    display: flex; align-items: center; gap: 14px; padding: 14px 18px;
+}
+.filiere-icon {
+    width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; color: #fff;
+    background: linear-gradient(135deg, #0891b2, #06b6d4);
+}
+.filiere-icon.inactive { background: linear-gradient(135deg, #94a3b8, #cbd5e1); }
+.filiere-info { flex: 1; min-width: 0; }
+.filiere-info h6 { font-size: 0.78rem; font-weight: 700; color: #0f172a; margin: 0; }
+.filiere-info .desc { font-size: 0.62rem; color: #64748b; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.filiere-info .stats { font-size: 0.6rem; color: #94a3b8; margin-top: 3px; display: flex; gap: 10px; }
+.filiere-info .stats span { display: flex; align-items: center; gap: 3px; }
+.filiere-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+
+/* ===== BUTTONS ===== */
+.btn-fpro {
+    font-size: 0.66rem; font-weight: 700; padding: 6px 14px;
+    border-radius: 8px; border: none; cursor: pointer;
+    transition: all 0.2s; text-decoration: none; display: inline-flex;
+    align-items: center; gap: 4px; line-height: 1.4;
+}
+.btn-fpro-primary { background: linear-gradient(135deg, #0891b2, #06b6d4); color: #fff; }
+.btn-fpro-primary:hover { box-shadow: 0 4px 12px rgba(8,145,178,0.35); transform: translateY(-1px); color: #fff; }
+.btn-fpro-ghost { background: #f1f5f9; color: #475569; }
+.btn-fpro-ghost:hover { background: #e2e8f0; color: #0f172a; }
+.btn-fpro-danger { background: #fef2f2; color: #dc2626; }
+.btn-fpro-danger:hover { background: #fecaca; }
+
+/* ===== SESSION CARDS ===== */
+.session-card {
+    background: #fff; border-radius: 14px; padding: 14px 16px;
+    margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    border: 1px solid #f1f5f9; border-left: 4px solid #10b981;
+    transition: all 0.25s ease;
+}
+.session-card:hover {
+    box-shadow: 0 6px 20px rgba(16,185,129,0.1);
+    border-left-color: #059669;
+}
+.session-card.closed { border-left-color: #94a3b8; opacity: 0.7; }
+.session-card .ses-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.session-card .ses-name { font-weight: 700; font-size: 0.76rem; color: #0f172a; }
+.session-card .ses-meta { font-size: 0.62rem; color: #64748b; margin-top: 2px; }
+.session-card .ses-count { font-size: 0.6rem; color: #94a3b8; margin-top: 2px; }
+
+/* ===== BADGES ===== */
+.badge-fpro {
+    font-size: 0.56rem; font-weight: 700; padding: 3px 10px;
+    border-radius: 20px; letter-spacing: 0.5px; text-transform: uppercase;
+}
+.badge-fpro.active { background: #d1fae5; color: #065f46; }
+.badge-fpro.inactive { background: #f1f5f9; color: #64748b; }
+.badge-fpro.open { background: #dbeafe; color: #1e40af; }
+.badge-fpro.running { background: #d1fae5; color: #065f46; }
+.badge-fpro.done { background: #f1f5f9; color: #64748b; }
+
+/* ===== ADD FORM ===== */
+.add-form { display: none; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+.add-form.visible { display: block; }
+.add-form input, .add-form textarea {
+    border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px;
+    font-size: 0.72rem; width: 100%; transition: border 0.2s;
+}
+.add-form input:focus, .add-form textarea:focus {
+    border-color: #0891b2; box-shadow: 0 0 0 3px rgba(8,145,178,0.1); outline: none;
+}
+
+/* ===== EMPTY STATE ===== */
+.empty-fpro {
+    text-align: center; padding: 40px 20px;
+    background: #f8fafc; border-radius: 14px; border: 1px dashed #e2e8f0;
+}
+.empty-fpro i { font-size: 2.5rem; color: #cbd5e1; display: block; margin-bottom: 8px; }
+.empty-fpro .msg { font-size: 0.72rem; color: #94a3b8; font-weight: 600; }
+.empty-fpro .hint { font-size: 0.62rem; color: #cbd5e1; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="pro-header">
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <h5 class="mb-0"><i class="bi bi-mortarboard-fill me-2"></i>Formation Professionnelle</h5>
-    </div>
-    <div class="pro-stats">
-        <div class="pro-stat">
-            <div class="num">{{ filieres|length }}</div>
-            <div class="lbl">Filières</div>
+<div class="fpro-hero">
+    <h4 class="mb-1"><i class="bi bi-mortarboard-fill me-2"></i>Formation Professionnelle</h4>
+    <div class="subtitle">Gérez vos filières, modules, sessions et certifications</div>
+    <div class="fpro-hero-stats">
+        <div class="fpro-stat">
+            <div class="val">{{ filieres|length }}</div>
+            <div class="tag">Filières</div>
         </div>
-        <div class="pro-stat">
-            <div class="num">{{ sessions_actives|length }}</div>
-            <div class="lbl">Sessions actives</div>
+        <div class="fpro-stat">
+            <div class="val">{{ sessions_actives|length }}</div>
+            <div class="tag">Sessions actives</div>
         </div>
     </div>
 </div>
 
-<div class="row g-3">
-    <!-- Filières -->
+<div class="row g-4">
+    <!-- Colonne Filières -->
     <div class="col-lg-7">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-            <span class="pro-section-title mb-0"><i class="bi bi-diagram-3 me-1"></i> Filières</span>
-            <button class="btn-pro btn-sm" style="background:#2d6a9f;color:#fff;" onclick="document.getElementById('form-add-filiere').style.display='block'">
+        <div class="d-flex justify-content-between align-items-center mb-0">
+            <div class="section-label mb-0"><i class="bi bi-diagram-3"></i> Filières</div>
+            <button class="btn-fpro btn-fpro-primary" onclick="document.getElementById('addFiliere').classList.toggle('visible')">
                 <i class="bi bi-plus-lg"></i> Nouvelle
             </button>
         </div>
 
-        <!-- Formulaire ajout filière -->
-        <div id="form-add-filiere" style="display:none;background:#f0f4ff;border-radius:8px;padding:14px;margin-bottom:10px;">
+        <!-- Formulaire ajout -->
+        <div class="add-form mt-2" id="addFiliere">
             <form method="POST" action="{{ url_for('fpro_bp.filiere_ajouter') }}">
                 <div class="row g-2">
-                    <div class="col-md-5">
-                        <input type="text" name="nom" class="form-control form-control-sm" placeholder="Nom de la filière" required style="font-size:0.72rem;">
+                    <div class="col-md-6">
+                        <input type="text" name="nom" placeholder="Nom de la filière *" required>
                     </div>
                     <div class="col-md-3">
-                        <input type="number" name="duree_mois" class="form-control form-control-sm" placeholder="Durée (mois)" value="6" style="font-size:0.72rem;">
+                        <input type="number" name="duree_mois" placeholder="Durée (mois)" value="6">
                     </div>
-                    <div class="col-md-4 d-flex gap-1 align-items-end">
-                        <button type="submit" class="btn-pro btn-sm" style="background:#2d6a9f;color:#fff;">Ajouter</button>
-                        <button type="button" class="btn-pro btn-sm" style="background:#e2e8f0;color:#4a5568;" onclick="this.closest('#form-add-filiere').style.display='none'">Annuler</button>
+                    <div class="col-md-3 d-flex gap-2">
+                        <button type="submit" class="btn-fpro btn-fpro-primary flex-fill">Créer</button>
+                        <button type="button" class="btn-fpro btn-fpro-ghost" onclick="document.getElementById('addFiliere').classList.remove('visible')">×</button>
                     </div>
                 </div>
                 <div class="mt-2">
-                    <textarea name="description" class="form-control form-control-sm" rows="1" placeholder="Description (optionnel)" style="font-size:0.72rem;"></textarea>
+                    <textarea name="description" rows="1" placeholder="Description (optionnel)"></textarea>
                 </div>
             </form>
         </div>
 
         {% if filieres %}
         {% for f in filieres %}
-        <div class="pro-card">
-            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
-                <div>
+        <div class="filiere-card mt-2">
+            <div class="filiere-card-inner">
+                <div class="filiere-icon {{ 'inactive' if not f.actif }}"><i class="bi bi-bookmark-star-fill"></i></div>
+                <div class="filiere-info">
                     <h6>{{ f.nom }}</h6>
-                    <div class="meta">{{ f.duree_mois }} mois · {{ f.modules.count() }} modules · {{ f.sessions.count() }} sessions</div>
-                    {% if f.description %}<div class="meta mt-1">{{ f.description[:100] }}</div>{% endif %}
+                    {% if f.description %}<div class="desc">{{ f.description[:80] }}</div>{% endif %}
+                    <div class="stats">
+                        <span><i class="bi bi-clock"></i> {{ f.duree_mois }} mois</span>
+                        <span><i class="bi bi-grid"></i> {{ f.modules.count() }} modules</span>
+                        <span><i class="bi bi-calendar3"></i> {{ f.sessions.count() }} sessions</span>
+                    </div>
                 </div>
-                <div class="d-flex gap-1 align-items-center">
-                    {% if f.actif %}<span class="badge-status" style="background:#c6f6d5;color:#276749;">Active</span>{% else %}<span class="badge-status" style="background:#fed7d7;color:#9b2c2c;">Inactive</span>{% endif %}
-                    <a href="{{ url_for('fpro_bp.modules', filiere_id=f.id) }}" class="btn-pro btn-sm" style="background:#e2e8f0;color:#2d3748;" title="Modules"><i class="bi bi-grid"></i></a>
-                    <a href="{{ url_for('fpro_bp.sessions', filiere_id=f.id) }}" class="btn-pro btn-sm" style="background:#e2e8f0;color:#2d3748;" title="Sessions"><i class="bi bi-calendar3"></i></a>
+                <div class="filiere-actions">
+                    <span class="badge-fpro {{ 'active' if f.actif else 'inactive' }}">{{ 'Active' if f.actif else 'Off' }}</span>
+                    <a href="{{ url_for('fpro_bp.modules', filiere_id=f.id) }}" class="btn-fpro btn-fpro-ghost" title="Modules"><i class="bi bi-grid"></i></a>
+                    <a href="{{ url_for('fpro_bp.sessions', filiere_id=f.id) }}" class="btn-fpro btn-fpro-primary" title="Sessions"><i class="bi bi-calendar3"></i> Sessions</a>
                 </div>
             </div>
         </div>
         {% endfor %}
         {% else %}
-        <div class="empty-pro"><i class="bi bi-inbox d-block mb-1" style="font-size:2rem;"></i>Aucune filière créée</div>
+        <div class="empty-fpro mt-2">
+            <i class="bi bi-inbox"></i>
+            <div class="msg">Aucune filière</div>
+            <div class="hint">Créez votre première filière pour commencer</div>
+        </div>
         {% endif %}
     </div>
 
-    <!-- Sessions actives -->
+    <!-- Colonne Sessions -->
     <div class="col-lg-5">
-        <span class="pro-section-title"><i class="bi bi-play-circle me-1"></i> Sessions actives</span>
+        <div class="section-label"><i class="bi bi-play-circle-fill"></i> Sessions actives</div>
         {% if sessions_actives %}
         {% for s in sessions_actives %}
-        <div class="pro-card" style="border-left-color: #48bb78;">
-            <div class="d-flex justify-content-between align-items-start">
-                <div>
-                    <h6>{{ s.nom }}</h6>
-                    <div class="meta">{{ s.filiere.nom }} · {{ s.date_debut }} → {{ s.date_fin }}</div>
-                    <div class="meta">{{ s.inscriptions.count() }} inscrit(s)</div>
+        <div class="session-card">
+            <div class="ses-top">
+                <div style="flex:1;min-width:0;">
+                    <div class="ses-name">{{ s.nom }}</div>
+                    <div class="ses-meta">{{ s.filiere.nom }}</div>
+                    <div class="ses-meta">{{ s.date_debut }} <i class="bi bi-arrow-right mx-1"></i> {{ s.date_fin }}</div>
+                    <div class="ses-count">{{ s.inscriptions.count() }} apprenant(s)</div>
                 </div>
-                <div class="d-flex flex-column gap-1 align-items-end">
-                    <span class="badge-status" style="background:#c6f6d5;color:#276749;">{{ s.statut|replace('_', ' ')|capitalize }}</span>
-                    <a href="{{ url_for('fpro_bp.inscriptions', session_id=s.id) }}" class="btn-pro btn-sm" style="background:#2d6a9f;color:#fff;">Gérer</a>
+                <div class="d-flex flex-column gap-2 align-items-end">
+                    <span class="badge-fpro {{ 'running' if s.statut == 'en_cours' else 'open' }}">{{ s.statut|replace('_', ' ')|capitalize }}</span>
+                    <a href="{{ url_for('fpro_bp.inscriptions', session_id=s.id) }}" class="btn-fpro btn-fpro-primary">Gérer <i class="bi bi-arrow-right"></i></a>
                 </div>
             </div>
         </div>
         {% endfor %}
         {% else %}
-        <div class="empty-pro"><i class="bi bi-calendar-x d-block mb-1" style="font-size:2rem;"></i>Aucune session active</div>
+        <div class="empty-fpro">
+            <i class="bi bi-calendar-x"></i>
+            <div class="msg">Aucune session</div>
+            <div class="hint">Ouvrez une filière pour créer une session</div>
+        </div>
         {% endif %}
     </div>
 </div>

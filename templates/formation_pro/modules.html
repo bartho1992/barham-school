@@ -3,52 +3,48 @@
 
 {% block extra_css %}
 <style>
-.mod-header { background: linear-gradient(135deg, #1e3a5f 0%, #2d6a9f 100%); color: #fff; border-radius: 10px; padding: 16px 20px; margin-bottom: 14px; }
-.mod-header h5 { font-weight: 700; font-size: 0.85rem; }
-.mod-card { background: #fff; border-radius: 8px; padding: 10px 14px; margin-bottom: 6px; border-left: 3px solid #2d6a9f; box-shadow: 0 1px 4px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 10px; font-size: 0.72rem; }
-.mod-card .mod-num { width: 28px; height: 28px; background: #2d6a9f; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.65rem; flex-shrink: 0; }
-.mod-card .mod-info { flex: 1; }
-.mod-card .mod-name { font-weight: 700; color: #2d3748; }
-.mod-card .mod-meta { font-size: 0.62rem; color: #718096; }
+.fpro-hero { background: linear-gradient(135deg, #0c4a6e 0%, #0891b2 50%, #06b6d4 100%); color: #fff; border-radius: 16px; padding: 20px 24px; margin-bottom: 18px; }
+.fpro-hero h5 { font-weight: 800; font-size: 0.9rem; }
+.add-form { background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 14px; margin-bottom: 12px; }
+.add-form input { border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px; font-size: 0.7rem; width: 100%; }
+.add-form input:focus { border-color: #0891b2; box-shadow: 0 0 0 3px rgba(8,145,178,0.1); outline: none; }
+.mod-card { background: #fff; border-radius: 12px; padding: 12px 16px; margin-bottom: 6px; border: 1px solid #f1f5f9; box-shadow: 0 1px 3px rgba(0,0,0,0.03); display: flex; align-items: center; gap: 12px; transition: all 0.2s; }
+.mod-card:hover { box-shadow: 0 4px 15px rgba(8,145,178,0.08); border-color: #cffafe; }
+.mod-num { width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, #0891b2, #06b6d4); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.7rem; flex-shrink: 0; }
+.mod-info { flex: 1; }
+.mod-info .name { font-weight: 700; font-size: 0.74rem; color: #0f172a; }
+.mod-info .meta { font-size: 0.6rem; color: #64748b; }
+.btn-fpro { font-size: 0.64rem; font-weight: 700; padding: 6px 12px; border-radius: 8px; border: none; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
+.btn-fpro-primary { background: #0891b2; color: #fff; }
+.btn-fpro-primary:hover { background: #0e7490; color: #fff; }
+.btn-fpro-danger { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+.btn-fpro-danger:hover { background: #fecaca; }
+.empty-fpro { text-align: center; padding: 40px; color: #94a3b8; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="mod-header">
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <h5 class="mb-0"><i class="bi bi-grid-fill me-2"></i>{{ filiere.nom }} — Modules</h5>
-        <a href="{{ url_for('fpro_bp.hub') }}" class="btn btn-sm btn-outline-light"><i class="bi bi-arrow-left"></i> Retour</a>
+<div class="fpro-hero">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h5 class="mb-0"><i class="bi bi-grid-fill me-2"></i>{{ filiere.nom }} — Modules</h5>
+            <small style="opacity:0.8;">{{ filiere.modules.count() }} module(s) · {{ filiere.duree_mois }} mois</small>
+        </div>
+        <a href="{{ url_for('fpro_bp.hub') }}" class="btn btn-sm btn-outline-light"><i class="bi bi-arrow-left"></i> Hub</a>
     </div>
 </div>
 
-<!-- Ajouter module -->
-<div style="background:#f0f4ff;border-radius:8px;padding:12px;margin-bottom:12px;">
+<div class="add-form">
     <form method="POST" action="{{ url_for('fpro_bp.module_ajouter') }}">
         <input type="hidden" name="filiere_id" value="{{ filiere.id }}">
         <div class="row g-2 align-items-end">
-            <div class="col-md-4">
-                <label class="form-label mb-0" style="font-size:0.62rem;font-weight:700;color:#4a5568;">Nom du module</label>
-                <input type="text" name="nom" class="form-control form-control-sm" placeholder="Ex: Maintenance PC" required style="font-size:0.72rem;">
-            </div>
-            <div class="col-md-2">
-                <label class="form-label mb-0" style="font-size:0.62rem;font-weight:700;color:#4a5568;">Heures</label>
-                <input type="number" name="duree_heures" class="form-control form-control-sm" value="30" style="font-size:0.72rem;">
-            </div>
-            <div class="col-md-2">
-                <label class="form-label mb-0" style="font-size:0.62rem;font-weight:700;color:#4a5568;">Coef.</label>
-                <input type="number" name="coefficient" class="form-control form-control-sm" value="1" step="0.5" style="font-size:0.72rem;">
-            </div>
-            <div class="col-md-2">
-                <label class="form-label mb-0" style="font-size:0.62rem;font-weight:700;color:#4a5568;">Ordre</label>
-                <input type="number" name="ordre" class="form-control form-control-sm" value="{{ modules|length + 1 }}" style="font-size:0.72rem;">
-            </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-sm w-100" style="background:#2d6a9f;color:#fff;font-size:0.68rem;font-weight:700;">Ajouter</button>
-            </div>
+            <div class="col-md-4"><input type="text" name="nom" placeholder="Nom du module *" required></div>
+            <div class="col-md-2"><input type="number" name="duree_heures" placeholder="Heures" value="30"></div>
+            <div class="col-md-2"><input type="number" name="coefficient" placeholder="Coef." value="1" step="0.5"></div>
+            <div class="col-md-2"><input type="number" name="ordre" placeholder="Ordre" value="{{ modules|length + 1 }}"></div>
+            <div class="col-md-2"><button type="submit" class="btn-fpro btn-fpro-primary w-100">Ajouter</button></div>
         </div>
-        <div class="mt-1">
-            <input type="text" name="description" class="form-control form-control-sm" placeholder="Description (optionnel)" style="font-size:0.68rem;">
-        </div>
+        <div class="mt-1"><input type="text" name="description" placeholder="Description (optionnel)"></div>
     </form>
 </div>
 
@@ -57,19 +53,15 @@
 <div class="mod-card">
     <div class="mod-num">{{ m.ordre }}</div>
     <div class="mod-info">
-        <div class="mod-name">{{ m.nom }}</div>
-        <div class="mod-meta">{{ m.duree_heures }}h · Coef {{ m.coefficient }}{% if m.description %} · {{ m.description[:60] }}{% endif %}</div>
+        <div class="name">{{ m.nom }}</div>
+        <div class="meta">{{ m.duree_heures }}h · Coef {{ m.coefficient }}{% if m.description %} · {{ m.description[:60] }}{% endif %}</div>
     </div>
-    <div class="d-flex gap-1">
-        <form method="POST" action="{{ url_for('fpro_bp.module_supprimer', id=m.id) }}" onsubmit="return confirm('Supprimer {{ m.nom }} ?')">
-            <button class="btn btn-sm btn-outline-danger" style="font-size:0.6rem;"><i class="bi bi-trash"></i></button>
-        </form>
-    </div>
+    <form method="POST" action="{{ url_for('fpro_bp.module_supprimer', id=m.id) }}" onsubmit="return confirm('Supprimer {{ m.nom }} ?')">
+        <button class="btn-fpro btn-fpro-danger"><i class="bi bi-trash"></i></button>
+    </form>
 </div>
 {% endfor %}
 {% else %}
-<div style="text-align:center;padding:30px;color:#a0aec0;font-size:0.75rem;">
-    <i class="bi bi-inbox d-block mb-1" style="font-size:2rem;"></i>Aucun module dans cette filière
-</div>
+<div class="empty-fpro"><i class="bi bi-inbox d-block mb-2" style="font-size:2rem;"></i>Aucun module</div>
 {% endif %}
 {% endblock %}

@@ -3,36 +3,40 @@
 
 {% block extra_css %}
 <style>
-.eval-header { background: linear-gradient(135deg, #1e3a5f 0%, #2d6a9f 100%); color: #fff; border-radius: 10px; padding: 16px 20px; margin-bottom: 14px; }
-.eval-header h5 { font-weight: 700; font-size: 0.85rem; }
-.eval-table { width: 100%; border-collapse: separate; border-spacing: 0; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 6px rgba(0,0,0,0.06); font-size: 0.7rem; }
-.eval-table thead th { background: #f0f4ff; color: #2d6a9f; font-weight: 700; font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.5px; padding: 8px 10px; border-bottom: 2px solid #2d6a9f; }
-.eval-table tbody td { padding: 7px 10px; border-bottom: 1px solid #f1f3f8; vertical-align: middle; }
-.eval-table tbody tr:hover { background: #f7fafc; }
-.eval-table input[type="number"] { width: 65px; padding: 4px 6px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 0.7rem; text-align: center; font-weight: 600; }
-.eval-mod-name { font-weight: 600; color: #2d3748; }
-.eval-mod-meta { font-size: 0.58rem; color: #718096; }
-.moyenne-cell { font-weight: 800; color: #2d3748; background: #f0fff4; }
+.fpro-hero { background: linear-gradient(135deg, #0c4a6e 0%, #0891b2 50%, #06b6d4 100%); color: #fff; border-radius: 16px; padding: 20px 24px; margin-bottom: 18px; }
+.fpro-hero h5 { font-weight: 800; font-size: 0.9rem; }
+.eval-table { width: 100%; border-collapse: separate; border-spacing: 0; background: #fff; border-radius: 14px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.04); font-size: 0.7rem; border: 1px solid #f1f5f9; }
+.eval-table thead th { background: #f0fdfa; color: #0f766e; font-weight: 700; font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.8px; padding: 10px 12px; border-bottom: 2px solid #ccfbf1; }
+.eval-table tbody td { padding: 9px 12px; border-bottom: 1px solid #f8fafc; vertical-align: middle; }
+.eval-table tbody tr:hover { background: #f0fdfa; }
+.eval-table tbody tr:last-child td { border-bottom: none; }
+.eval-table input[type="number"] { width: 60px; padding: 5px 6px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.7rem; text-align: center; font-weight: 600; }
+.eval-table input[type="number"]:focus { border-color: #0891b2; box-shadow: 0 0 0 2px rgba(8,145,178,0.1); outline: none; }
+.eval-mod-name { font-weight: 600; color: #0f172a; }
+.eval-mod-meta { font-size: 0.58rem; color: #94a3b8; }
+.moy-cell { font-weight: 800; color: #065f46; background: #d1fae5; border-radius: 6px; padding: 3px 10px; display: inline-block; font-size: 0.68rem; }
+.btn-fpro { font-size: 0.66rem; font-weight: 700; padding: 7px 20px; border-radius: 8px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
+.btn-fpro-primary { background: linear-gradient(135deg, #0891b2, #06b6d4); color: #fff; }
+.btn-fpro-primary:hover { background: #0e7490; color: #fff; }
+.empty-fpro { text-align: center; padding: 40px; color: #94a3b8; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="eval-header">
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+<div class="fpro-hero">
+    <div class="d-flex justify-content-between align-items-center">
         <div>
             <h5 class="mb-0"><i class="bi bi-pencil-square me-2"></i>{{ inscription.eleve.prenom }} {{ inscription.eleve.nom }}</h5>
-            <div style="font-size:0.62rem;opacity:0.8;">{{ filiere.nom }} · {{ session.nom }} · Statut: {{ inscription.statut|capitalize }}</div>
+            <small style="opacity:0.8;">{{ filiere.nom }} · {{ session.nom }} · {{ inscription.statut|capitalize }}</small>
         </div>
-        <div class="d-flex gap-2">
-            <a href="{{ url_for('fpro_bp.inscriptions', session_id=session.id) }}" class="btn btn-sm btn-outline-light"><i class="bi bi-arrow-left"></i> Retour</a>
-        </div>
+        <a href="{{ url_for('fpro_bp.inscriptions', session_id=session.id) }}" class="btn btn-sm btn-outline-light"><i class="bi bi-arrow-left"></i> Inscrits</a>
     </div>
 </div>
 
 {% if modules %}
 <form method="POST" action="{{ url_for('fpro_bp.evaluation_sauvegarder') }}">
     <input type="hidden" name="inscription_id" value="{{ inscription.id }}">
-    <div style="max-height:60vh;overflow:auto;border-radius:10px;">
+    <div style="overflow:auto;border-radius:14px;">
         <table class="eval-table">
             <thead>
                 <tr>
@@ -45,43 +49,29 @@
             </thead>
             <tbody>
                 {% for m in modules %}
-                {% set note_ctrl = evals_map.get((m.id, 'Controle')) %}
-                {% set note_exam = evals_map.get((m.id, 'Examen')) %}
-                {% set note_ratt = evals_map.get((m.id, 'Rattrapage')) %}
-                {% set v_ctrl = note_ctrl.note if note_ctrl else 0 %}
-                {% set v_exam = note_exam.note if note_exam else 0 %}
-                {% set v_ratt = note_ratt.note if note_ratt else 0 %}
+                {% set v_ctrl = (evals_map.get((m.id, 'Controle')) or {}).get('note', 0) or 0 %}
+                {% set v_exam = (evals_map.get((m.id, 'Examen')) or {}).get('note', 0) or 0 %}
+                {% set v_ratt = (evals_map.get((m.id, 'Rattrapage')) or {}).get('note', 0) or 0 %}
                 {% set moyenne = (v_exam if v_exam > 0 else v_ratt if v_ratt > 0 else v_ctrl) %}
                 <tr>
                     <td>
                         <div class="eval-mod-name">{{ m.nom }}</div>
                         <div class="eval-mod-meta">{{ m.duree_heures }}h · Coef {{ m.coefficient }}</div>
                     </td>
-                    <td class="text-center">
-                        <input type="number" name="note_{{ m.id }}_Controle" value="{{ v_ctrl if v_ctrl else '' }}" min="0" max="20" step="0.5" placeholder="-">
-                    </td>
-                    <td class="text-center">
-                        <input type="number" name="note_{{ m.id }}_Examen" value="{{ v_exam if v_exam else '' }}" min="0" max="20" step="0.5" placeholder="-">
-                    </td>
-                    <td class="text-center">
-                        <input type="number" name="note_{{ m.id }}_Rattrapage" value="{{ v_ratt if v_ratt else '' }}" min="0" max="20" step="0.5" placeholder="-">
-                    </td>
-                    <td class="text-center moyenne-cell">{{ '{:.1f}'.format(moyenne) if moyenne > 0 else '-' }}</td>
+                    <td class="text-center"><input type="number" name="note_{{ m.id }}_Controle" value="{{ v_ctrl if v_ctrl else '' }}" min="0" max="20" step="0.5" placeholder="-"></td>
+                    <td class="text-center"><input type="number" name="note_{{ m.id }}_Examen" value="{{ v_exam if v_exam else '' }}" min="0" max="20" step="0.5" placeholder="-"></td>
+                    <td class="text-center"><input type="number" name="note_{{ m.id }}_Rattrapage" value="{{ v_ratt if v_ratt else '' }}" min="0" max="20" step="0.5" placeholder="-"></td>
+                    <td class="text-center"><span class="moy-cell">{{ '{:.1f}'.format(moyenne) if moyenne > 0 else '-' }}</span></td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
     <div class="text-end mt-3">
-        <button type="submit" class="btn" style="background:#2d6a9f;color:#fff;font-size:0.72rem;font-weight:700;padding:8px 24px;">
-            <i class="bi bi-save me-1"></i> Enregistrer les notes
-        </button>
+        <button type="submit" class="btn-fpro btn-fpro-primary"><i class="bi bi-save me-1"></i> Enregistrer</button>
     </div>
 </form>
 {% else %}
-<div style="text-align:center;padding:40px;color:#a0aec0;font-size:0.75rem;">
-    <i class="bi bi-inbox d-block mb-1" style="font-size:2.5rem;"></i>
-    Aucun module dans cette filière. Ajoutez d'abord des modules.
-</div>
+<div class="empty-fpro"><i class="bi bi-inbox d-block mb-2" style="font-size:2.5rem;"></i>Aucun module. Ajoutez des modules à cette filière.</div>
 {% endif %}
 {% endblock %}

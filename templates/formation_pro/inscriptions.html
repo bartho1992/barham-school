@@ -3,83 +3,91 @@
 
 {% block extra_css %}
 <style>
-.ins-header { background: linear-gradient(135deg, #1e3a5f 0%, #2d6a9f 100%); color: #fff; border-radius: 10px; padding: 16px 20px; margin-bottom: 14px; }
-.ins-header h5 { font-weight: 700; font-size: 0.85rem; }
-.ins-card { background: #fff; border-radius: 8px; padding: 10px 14px; margin-bottom: 6px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 10px; font-size: 0.72rem; }
-.ins-card .ins-avatar { width: 32px; height: 32px; border-radius: 50%; background: #2d6a9f; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.7rem; flex-shrink: 0; }
-.ins-card .ins-info { flex: 1; }
-.ins-card .ins-name { font-weight: 700; color: #2d3748; }
-.ins-card .ins-meta { font-size: 0.62rem; color: #718096; }
-.badge-statut { font-size: 0.58rem; padding: 3px 8px; border-radius: 4px; font-weight: 600; }
+.fpro-hero { background: linear-gradient(135deg, #0c4a6e 0%, #0891b2 50%, #06b6d4 100%); color: #fff; border-radius: 16px; padding: 20px 24px; margin-bottom: 18px; }
+.fpro-hero h5 { font-weight: 800; font-size: 0.9rem; }
+.ins-card { background: #fff; border-radius: 12px; padding: 12px 16px; margin-bottom: 6px; border: 1px solid #f1f5f9; box-shadow: 0 1px 3px rgba(0,0,0,0.03); display: flex; align-items: center; gap: 12px; transition: all 0.2s; }
+.ins-card:hover { box-shadow: 0 4px 15px rgba(8,145,178,0.06); }
+.ins-avatar { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #0891b2, #06b6d4); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.7rem; flex-shrink: 0; }
+.ins-info { flex: 1; }
+.ins-info .name { font-weight: 700; font-size: 0.74rem; color: #0f172a; }
+.ins-info .meta { font-size: 0.6rem; color: #64748b; }
+.ins-side { background: #f8fafc; border-radius: 12px; padding: 14px; border: 1px solid #e2e8f0; }
+.ins-side select { border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px; font-size: 0.7rem; width: 100%; }
+.ins-side select:focus { border-color: #0891b2; box-shadow: 0 0 0 3px rgba(8,145,178,0.1); outline: none; }
+.badge-statut { font-size: 0.56rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; }
+.badge-statut.actif { background: #d1fae5; color: #065f46; }
+.badge-statut.termine { background: #f1f5f9; color: #64748b; }
+.badge-statut.certifie { background: #dbeafe; color: #1e40af; }
+.badge-statut.abandon { background: #fee2e2; color: #991b1b; }
+.btn-fpro { font-size: 0.64rem; font-weight: 700; padding: 6px 12px; border-radius: 8px; border: none; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
+.btn-fpro-primary { background: #0891b2; color: #fff; }
+.btn-fpro-primary:hover { background: #0e7490; color: #fff; }
+.btn-fpro-danger { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+.btn-fpro-danger:hover { background: #fecaca; }
+.empty-fpro { text-align: center; padding: 40px; color: #94a3b8; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="ins-header">
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+<div class="fpro-hero">
+    <div class="d-flex justify-content-between align-items-center">
         <div>
             <h5 class="mb-0"><i class="bi bi-people-fill me-2"></i>{{ session.nom }}</h5>
-            <div style="font-size:0.62rem;opacity:0.8;">{{ session.filiere.nom }} · {{ session.date_debut }} → {{ session.date_fin }}</div>
+            <small style="opacity:0.8;">{{ session.filiere.nom }} · {{ session.date_debut }} → {{ session.date_fin }}</small>
         </div>
-        <div class="d-flex gap-2">
-            <a href="{{ url_for('fpro_bp.sessions', filiere_id=session.filiere_id) }}" class="btn btn-sm btn-outline-light"><i class="bi bi-arrow-left"></i> Sessions</a>
-        </div>
+        <a href="{{ url_for('fpro_bp.sessions', filiere_id=session.filiere_id) }}" class="btn btn-sm btn-outline-light"><i class="bi bi-arrow-left"></i> Sessions</a>
     </div>
 </div>
 
 <div class="row g-3">
-    <!-- Inscrits -->
     <div class="col-lg-8">
-        <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#4a5568;margin-bottom:8px;">
-            <i class="bi bi-person-check me-1"></i> Inscrits ({{ inscrits|length }})
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <span style="font-size:0.66rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#64748b;">
+                <i class="bi bi-person-check me-1"></i> Inscrits ({{ inscrits|length }})
+            </span>
         </div>
         {% if inscrits %}
         {% for i in inscrits %}
         <div class="ins-card">
             <div class="ins-avatar">{{ i.eleve.prenom[0] }}{{ i.eleve.nom[0] }}</div>
             <div class="ins-info">
-                <div class="ins-name">{{ i.eleve.prenom }} {{ i.eleve.nom }}</div>
-                <div class="ins-meta">{{ i.eleve.code or '?' }} · Inscrit le {{ i.date_inscription.strftime('%d/%m/%Y') if i.date_inscription else '?' }}</div>
+                <div class="name">{{ i.eleve.prenom }} {{ i.eleve.nom }}</div>
+                <div class="meta">{{ i.eleve.code or '?' }} · {{ i.date_inscription.strftime('%d/%m/%Y') if i.date_inscription else '?' }}</div>
             </div>
-            <div class="d-flex gap-1 align-items-center">
-                <span class="badge-statut" style="background:{% if i.statut == 'actif' %}#c6f6d5;color:#276749{% elif i.statut == 'termine' %}#e2e8f0;color:#4a5568{% elif i.statut == 'certifie' %}#bee3f8;color:#2b6cb0{% else %}#fed7d7;color:#9b2c2c{% endif %};">
-                    {{ i.statut|capitalize }}
-                </span>
-                <a href="{{ url_for('fpro_bp.evaluations', inscription_id=i.id) }}" class="btn btn-sm" style="background:#2d6a9f;color:#fff;font-size:0.62rem;font-weight:700;">Notes</a>
-                <form method="POST" action="{{ url_for('fpro_bp.inscription_supprimer', id=i.id) }}" onsubmit="return confirm('Retirer {{ i.eleve.prenom }} de cette session ?')">
-                    <button class="btn btn-sm btn-outline-danger" style="font-size:0.6rem;"><i class="bi bi-trash"></i></button>
+            <div class="d-flex gap-2 align-items-center">
+                <span class="badge-statut {{ i.statut }}">{{ i.statut|capitalize }}</span>
+                <a href="{{ url_for('fpro_bp.evaluations', inscription_id=i.id) }}" class="btn-fpro btn-fpro-primary">Notes</a>
+                <form method="POST" action="{{ url_for('fpro_bp.inscription_supprimer', id=i.id) }}" onsubmit="return confirm('Retirer {{ i.eleve.prenom }} ?')">
+                    <button class="btn-fpro btn-fpro-danger"><i class="bi bi-trash"></i></button>
                 </form>
             </div>
         </div>
         {% endfor %}
         {% else %}
-        <div style="text-align:center;padding:30px;color:#a0aec0;font-size:0.75rem;">
-            <i class="bi bi-person-x d-block mb-1" style="font-size:2rem;"></i>Aucun inscrit
-        </div>
+        <div class="empty-fpro"><i class="bi bi-person-x d-block mb-2" style="font-size:2rem;"></i>Aucun inscrit</div>
         {% endif %}
     </div>
 
-    <!-- Inscrire un élève -->
     <div class="col-lg-4">
-        <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#4a5568;margin-bottom:8px;">
-            <i class="bi bi-person-plus me-1"></i> Inscrire un élève
+        <div class="ins-side">
+            <div style="font-size:0.66rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#64748b;margin-bottom:10px;">
+                <i class="bi bi-person-plus me-1"></i> Inscrire un apprenant
+            </div>
+            {% if eleves_libres %}
+            <form method="POST" action="{{ url_for('fpro_bp.inscription_ajouter') }}">
+                <input type="hidden" name="session_id" value="{{ session.id }}">
+                <select name="eleve_id" class="mb-2" required>
+                    <option value="">— Sélectionner —</option>
+                    {% for el in eleves_libres %}
+                    <option value="{{ el.id }}">{{ el.nom }} {{ el.prenom }}{% if el.classe %} ({{ el.classe.nom }}){% endif %}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn-fpro btn-fpro-primary w-100">Inscrire</button>
+            </form>
+            {% else %}
+            <div style="text-align:center;color:#94a3b8;font-size:0.65rem;">Tous les élèves sont déjà inscrits.</div>
+            {% endif %}
         </div>
-        {% if eleves_libres %}
-        <form method="POST" action="{{ url_for('fpro_bp.inscription_ajouter') }}" style="background:#f0f4ff;border-radius:8px;padding:12px;">
-            <input type="hidden" name="session_id" value="{{ session.id }}">
-            <select name="eleve_id" class="form-select form-select-sm mb-2" required style="font-size:0.72rem;">
-                <option value="">-- Sélectionner --</option>
-                {% for el in eleves_libres %}
-                <option value="{{ el.id }}">{{ el.nom }} {{ el.prenom }}{% if el.classe %} ({{ el.classe.nom }}){% endif %}</option>
-                {% endfor %}
-            </select>
-            <button type="submit" class="btn btn-sm w-100" style="background:#2d6a9f;color:#fff;font-size:0.68rem;font-weight:700;">Inscrire</button>
-        </form>
-        {% else %}
-        <div style="text-align:center;padding:20px;color:#a0aec0;font-size:0.7rem;background:#f7f8fc;border-radius:8px;">
-            Tous les élèves sont déjà inscrits à cette session.
-        </div>
-        {% endif %}
     </div>
 </div>
 {% endblock %}
