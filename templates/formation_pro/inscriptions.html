@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Inscriptions - {{ session.nom }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.ins-header { background: linear-gradient(135deg, #1e3a5f 0%, #2d6a9f 100%); color: #fff; border-radius: 10px; padding: 16px 20px; margin-bottom: 14px; }
+.ins-header h5 { font-weight: 700; font-size: 0.85rem; }
+.ins-card { background: #fff; border-radius: 8px; padding: 10px 14px; margin-bottom: 6px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 10px; font-size: 0.72rem; }
+.ins-card .ins-avatar { width: 32px; height: 32px; border-radius: 50%; background: #2d6a9f; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.7rem; flex-shrink: 0; }
+.ins-card .ins-info { flex: 1; }
+.ins-card .ins-name { font-weight: 700; color: #2d3748; }
+.ins-card .ins-meta { font-size: 0.62rem; color: #718096; }
+.badge-statut { font-size: 0.58rem; padding: 3px 8px; border-radius: 4px; font-weight: 600; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ins-header">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <h5 class="mb-0"><i class="bi bi-people-fill me-2"></i>{{ session.nom }}</h5>
+            <div style="font-size:0.62rem;opacity:0.8;">{{ session.filiere.nom }} · {{ session.date_debut }} → {{ session.date_fin }}</div>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('fpro_bp.sessions', filiere_id=session.filiere_id) }}" class="btn btn-sm btn-outline-light"><i class="bi bi-arrow-left"></i> Sessions</a>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <!-- Inscrits -->
+    <div class="col-lg-8">
+        <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#4a5568;margin-bottom:8px;">
+            <i class="bi bi-person-check me-1"></i> Inscrits ({{ inscrits|length }})
+        </div>
+        {% if inscrits %}
+        {% for i in inscrits %}
+        <div class="ins-card">
+            <div class="ins-avatar">{{ i.eleve.prenom[0] }}{{ i.eleve.nom[0] }}</div>
+            <div class="ins-info">
+                <div class="ins-name">{{ i.eleve.prenom }} {{ i.eleve.nom }}</div>
+                <div class="ins-meta">{{ i.eleve.code or '?' }} · Inscrit le {{ i.date_inscription.strftime('%d/%m/%Y') if i.date_inscription else '?' }}</div>
+            </div>
+            <div class="d-flex gap-1 align-items-center">
+                <span class="badge-statut" style="background:{% if i.statut == 'actif' %}#c6f6d5;color:#276749{% elif i.statut == 'termine' %}#e2e8f0;color:#4a5568{% elif i.statut == 'certifie' %}#bee3f8;color:#2b6cb0{% else %}#fed7d7;color:#9b2c2c{% endif %};">
+                    {{ i.statut|capitalize }}
+                </span>
+                <a href="{{ url_for('fpro_bp.evaluations', inscription_id=i.id) }}" class="btn btn-sm" style="background:#2d6a9f;color:#fff;font-size:0.62rem;font-weight:700;">Notes</a>
+                <form method="POST" action="{{ url_for('fpro_bp.inscription_supprimer', id=i.id) }}" onsubmit="return confirm('Retirer {{ i.eleve.prenom }} de cette session ?')">
+                    <button class="btn btn-sm btn-outline-danger" style="font-size:0.6rem;"><i class="bi bi-trash"></i></button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div style="text-align:center;padding:30px;color:#a0aec0;font-size:0.75rem;">
+            <i class="bi bi-person-x d-block mb-1" style="font-size:2rem;"></i>Aucun inscrit
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Inscrire un élève -->
+    <div class="col-lg-4">
+        <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#4a5568;margin-bottom:8px;">
+            <i class="bi bi-person-plus me-1"></i> Inscrire un élève
+        </div>
+        {% if eleves_libres %}
+        <form method="POST" action="{{ url_for('fpro_bp.inscription_ajouter') }}" style="background:#f0f4ff;border-radius:8px;padding:12px;">
+            <input type="hidden" name="session_id" value="{{ session.id }}">
+            <select name="eleve_id" class="form-select form-select-sm mb-2" required style="font-size:0.72rem;">
+                <option value="">-- Sélectionner --</option>
+                {% for el in eleves_libres %}
+                <option value="{{ el.id }}">{{ el.nom }} {{ el.prenom }}{% if el.classe %} ({{ el.classe.nom }}){% endif %}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-sm w-100" style="background:#2d6a9f;color:#fff;font-size:0.68rem;font-weight:700;">Inscrire</button>
+        </form>
+        {% else %}
+        <div style="text-align:center;padding:20px;color:#a0aec0;font-size:0.7rem;background:#f7f8fc;border-radius:8px;">
+            Tous les élèves sont déjà inscrits à cette session.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

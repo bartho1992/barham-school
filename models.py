@@ -586,6 +586,88 @@ class EcritureComptable(db.Model):
     def __repr__(self):
         return f'<Ecriture {self.id}: {self.libelle} {self.montant}>'
 
+# ============================================================
+# NOUVEAUX MODELES — Formation Professionnelle
+# ============================================================
+
+class FilierePro(db.Model):
+    """Filière de formation professionnelle"""
+    id = db.Column(db.Integer, primary_key=True)
+    nom = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text)
+    duree_mois = db.Column(db.Integer, default=6)
+    actif = db.Column(db.Boolean, default=True)
+    ecole_id = db.Column(db.Integer, db.ForeignKey('ecole.id'), nullable=False, default=1)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    
+    ecole = db.relationship('Ecole', backref='filieres_pro')
+    modules = db.relationship('ModulePro', backref='filiere', lazy='dynamic', order_by='ModulePro.ordre')
+    sessions = db.relationship('SessionFormation', backref='filiere', lazy='dynamic', order_by='SessionFormation.date_debut.desc()')
+
+class ModulePro(db.Model):
+    """Module dans une filiere pro"""
+    id = db.Column(db.Integer, primary_key=True)
+    filiere_id = db.Column(db.Integer, db.ForeignKey('filiere_pro.id'), nullable=False)
+    nom = db.Column(db.String(200), nullable=False)
+    duree_heures = db.Column(db.Integer, default=30)
+    coefficient = db.Column(db.Float, default=1)
+    ordre = db.Column(db.Integer, default=0)
+    description = db.Column(db.Text)
+    ecole_id = db.Column(db.Integer, db.ForeignKey('ecole.id'), nullable=False, default=1)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    
+    ecole = db.relationship('Ecole', backref='modules_pro')
+
+class SessionFormation(db.Model):
+    """Session de formation (promotion)"""
+    id = db.Column(db.Integer, primary_key=True)
+    filiere_id = db.Column(db.Integer, db.ForeignKey('filiere_pro.id'), nullable=False)
+    nom = db.Column(db.String(200), nullable=False)
+    date_debut = db.Column(db.String(20), nullable=False)
+    date_fin = db.Column(db.String(20), nullable=False)
+    statut = db.Column(db.String(20), default='ouverte')  # ouverte, en_cours, terminee, annulee
+    ecole_id = db.Column(db.Integer, db.ForeignKey('ecole.id'), nullable=False, default=1)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    
+    ecole = db.relationship('Ecole', backref='sessions_formation')
+    inscriptions = db.relationship('InscriptionSession', backref='session', lazy='dynamic')
+
+class InscriptionSession(db.Model):
+    """Inscription d'un eleve a une session de formation pro"""
+    id = db.Column(db.Integer, primary_key=True)
+    eleve_id = db.Column(db.Integer, db.ForeignKey('eleve.id'), nullable=False)
+    session_id = db.Column(db.Integer, db.ForeignKey('session_formation.id'), nullable=False)
+    date_inscription = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    statut = db.Column(db.String(20), default='actif')  # actif, abandon, termine, certifie
+    ecole_id = db.Column(db.Integer, db.ForeignKey('ecole.id'), nullable=False, default=1)
+    
+    eleve = db.relationship('Eleve', backref='inscriptions_pro')
+    evaluations = db.relationship('EvaluationModulePro', backref='inscription', lazy='dynamic')
+    
+    __table_args__ = (
+        db.UniqueConstraint('eleve_id', 'session_id', name='uq_inscription_eleve_session'),
+    )
+
+class EvaluationModulePro(db.Model):
+    """Evaluation d'un eleve sur un module en formation pro"""
+    id = db.Column(db.Integer, primary_key=True)
+    inscription_id = db.Column(db.Integer, db.ForeignKey('inscription_session.id'), nullable=False)
+    module_id = db.Column(db.Integer, db.ForeignKey('module_pro.id'), nullable=False)
+    note = db.Column(db.Float, default=0)
+    type_eval = db.Column(db.String(30), default='Controle')  # Controle, Examen, Rattrapage
+    date_eval = db.Column(db.String(20))
+    observations = db.Column(db.Text)
+    ecole_id = db.Column(db.Integer, db.ForeignKey('ecole.id'), nullable=False, default=1)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    
+    module = db.relationship('ModulePro', backref='evaluations')
+    ecole = db.relationship('Ecole', backref='evaluations_pro')
+    
+    __table_args__ = (
+        db.UniqueConstraint('inscription_id', 'module_id', 'type_eval', name='uq_eval_inscription_module_type'),
+    )
+
+
 PLAN_SYSCOHADA = [
     ("10", "CAPITAL", "passif", 1, None),
     ("101", "Capital social", "passif", 2, "10"),

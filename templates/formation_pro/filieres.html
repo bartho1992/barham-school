@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Filières Pro - {{ ecole.nom }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.fil-header { background: linear-gradient(135deg, #1e3a5f 0%, #2d6a9f 100%); color: #fff; border-radius: 10px; padding: 16px 20px; margin-bottom: 14px; }
+.fil-header h5 { font-weight: 700; font-size: 0.85rem; }
+.fil-card { background: #fff; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; border-left: 4px solid #2d6a9f; box-shadow: 0 1px 5px rgba(0,0,0,0.05); }
+.fil-card h6 { font-size: 0.78rem; font-weight: 700; color: #1e3a5f; }
+.fil-card .meta { font-size: 0.62rem; color: #718096; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="fil-header">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h5 class="mb-0"><i class="bi bi-mortarboard-fill me-2"></i>Filières Professionnelles</h5>
+        <a href="{{ url_for('fpro_bp.hub') }}" class="btn btn-sm btn-outline-light"><i class="bi bi-arrow-left"></i> Retour</a>
+    </div>
+</div>
+
+<!-- Ajouter filière -->
+<div style="background:#f0f4ff;border-radius:8px;padding:12px;margin-bottom:12px;">
+    <form method="POST" action="{{ url_for('fpro_bp.filiere_ajouter') }}">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label mb-0" style="font-size:0.62rem;font-weight:700;color:#4a5568;">Nom</label>
+                <input type="text" name="nom" class="form-control form-control-sm" required style="font-size:0.72rem;">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label mb-0" style="font-size:0.62rem;font-weight:700;color:#4a5568;">Durée (mois)</label>
+                <input type="number" name="duree_mois" class="form-control form-control-sm" value="6" style="font-size:0.72rem;">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label mb-0" style="font-size:0.62rem;font-weight:700;color:#4a5568;">Description</label>
+                <input type="text" name="description" class="form-control form-control-sm" style="font-size:0.72rem;">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-sm w-100" style="background:#2d6a9f;color:#fff;font-size:0.68rem;font-weight:700;">Ajouter</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+{% if filieres %}
+{% for f in filieres %}
+<div class="fil-card">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <h6 class="mb-1">{{ f.nom }}</h6>
+            <div class="meta">{{ f.duree_mois }} mois · {{ f.modules.count() }} modules · {{ f.sessions.count() }} sessions</div>
+        </div>
+        <div class="d-flex gap-1">
+            <a href="{{ url_for('fpro_bp.modules', filiere_id=f.id) }}" class="btn btn-sm" style="background:#e2e8f0;font-size:0.62rem;">Modules</a>
+            <a href="{{ url_for('fpro_bp.sessions', filiere_id=f.id) }}" class="btn btn-sm" style="background:#e2e8f0;font-size:0.62rem;">Sessions</a>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% else %}
+<div style="text-align:center;padding:30px;color:#a0aec0;font-size:0.75rem;">
+    <i class="bi bi-inbox d-block mb-1" style="font-size:2rem;"></i>Aucune filière
+</div>
+{% endif %}
+{% endblock %}

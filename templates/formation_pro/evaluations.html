@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Notes - {{ inscription.eleve.prenom }} {{ inscription.eleve.nom }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.eval-header { background: linear-gradient(135deg, #1e3a5f 0%, #2d6a9f 100%); color: #fff; border-radius: 10px; padding: 16px 20px; margin-bottom: 14px; }
+.eval-header h5 { font-weight: 700; font-size: 0.85rem; }
+.eval-table { width: 100%; border-collapse: separate; border-spacing: 0; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 6px rgba(0,0,0,0.06); font-size: 0.7rem; }
+.eval-table thead th { background: #f0f4ff; color: #2d6a9f; font-weight: 700; font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.5px; padding: 8px 10px; border-bottom: 2px solid #2d6a9f; }
+.eval-table tbody td { padding: 7px 10px; border-bottom: 1px solid #f1f3f8; vertical-align: middle; }
+.eval-table tbody tr:hover { background: #f7fafc; }
+.eval-table input[type="number"] { width: 65px; padding: 4px 6px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 0.7rem; text-align: center; font-weight: 600; }
+.eval-mod-name { font-weight: 600; color: #2d3748; }
+.eval-mod-meta { font-size: 0.58rem; color: #718096; }
+.moyenne-cell { font-weight: 800; color: #2d3748; background: #f0fff4; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="eval-header">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <h5 class="mb-0"><i class="bi bi-pencil-square me-2"></i>{{ inscription.eleve.prenom }} {{ inscription.eleve.nom }}</h5>
+            <div style="font-size:0.62rem;opacity:0.8;">{{ filiere.nom }} · {{ session.nom }} · Statut: {{ inscription.statut|capitalize }}</div>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('fpro_bp.inscriptions', session_id=session.id) }}" class="btn btn-sm btn-outline-light"><i class="bi bi-arrow-left"></i> Retour</a>
+        </div>
+    </div>
+</div>
+
+{% if modules %}
+<form method="POST" action="{{ url_for('fpro_bp.evaluation_sauvegarder') }}">
+    <input type="hidden" name="inscription_id" value="{{ inscription.id }}">
+    <div style="max-height:60vh;overflow:auto;border-radius:10px;">
+        <table class="eval-table">
+            <thead>
+                <tr>
+                    <th>Module</th>
+                    <th class="text-center">Contrôle</th>
+                    <th class="text-center">Examen</th>
+                    <th class="text-center">Rattrapage</th>
+                    <th class="text-center">Moyenne</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in modules %}
+                {% set note_ctrl = evals_map.get((m.id, 'Controle')) %}
+                {% set note_exam = evals_map.get((m.id, 'Examen')) %}
+                {% set note_ratt = evals_map.get((m.id, 'Rattrapage')) %}
+                {% set v_ctrl = note_ctrl.note if note_ctrl else 0 %}
+                {% set v_exam = note_exam.note if note_exam else 0 %}
+                {% set v_ratt = note_ratt.note if note_ratt else 0 %}
+                {% set moyenne = (v_exam if v_exam > 0 else v_ratt if v_ratt > 0 else v_ctrl) %}
+                <tr>
+                    <td>
+                        <div class="eval-mod-name">{{ m.nom }}</div>
+                        <div class="eval-mod-meta">{{ m.duree_heures }}h · Coef {{ m.coefficient }}</div>
+                    </td>
+                    <td class="text-center">
+                        <input type="number" name="note_{{ m.id }}_Controle" value="{{ v_ctrl if v_ctrl else '' }}" min="0" max="20" step="0.5" placeholder="-">
+                    </td>
+                    <td class="text-center">
+                        <input type="number" name="note_{{ m.id }}_Examen" value="{{ v_exam if v_exam else '' }}" min="0" max="20" step="0.5" placeholder="-">
+                    </td>
+                    <td class="text-center">
+                        <input type="number" name="note_{{ m.id }}_Rattrapage" value="{{ v_ratt if v_ratt else '' }}" min="0" max="20" step="0.5" placeholder="-">
+                    </td>
+                    <td class="text-center moyenne-cell">{{ '{:.1f}'.format(moyenne) if moyenne > 0 else '-' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="text-end mt-3">
+        <button type="submit" class="btn" style="background:#2d6a9f;color:#fff;font-size:0.72rem;font-weight:700;padding:8px 24px;">
+            <i class="bi bi-save me-1"></i> Enregistrer les notes
+        </button>
+    </div>
+</form>
+{% else %}
+<div style="text-align:center;padding:40px;color:#a0aec0;font-size:0.75rem;">
+    <i class="bi bi-inbox d-block mb-1" style="font-size:2.5rem;"></i>
+    Aucun module dans cette filière. Ajoutez d'abord des modules.
+</div>
+{% endif %}
+{% endblock %}

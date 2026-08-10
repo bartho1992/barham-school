@@ -205,6 +205,7 @@ from routes_exports import exports_bp; _new_blueprints.append(exports_bp)
 from routes_archives import archives_bp; _new_blueprints.append(archives_bp)
 from routes_api import api_bp; _new_blueprints.append(api_bp)
 from routes_conseil import conseil_bp; _new_blueprints.append(conseil_bp)
+from routes_formation_pro import fpro_bp; _new_blueprints.append(fpro_bp)
 
 for bp in _new_blueprints:
     if bp.name not in app.blueprints:

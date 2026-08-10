@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Sessions - {{ filiere.nom }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.ses-header { background: linear-gradient(135deg, #1e3a5f 0%, #2d6a9f 100%); color: #fff; border-radius: 10px; padding: 16px 20px; margin-bottom: 14px; }
+.ses-header h5 { font-weight: 700; font-size: 0.85rem; }
+.ses-card { background: #fff; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; box-shadow: 0 1px 5px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 12px; font-size: 0.72rem; }
+.ses-card .ses-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
+.ses-card .ses-info { flex: 1; }
+.ses-card .ses-name { font-weight: 700; color: #2d3748; }
+.ses-card .ses-meta { font-size: 0.62rem; color: #718096; }
+.badge-statut { font-size: 0.58rem; padding: 3px 8px; border-radius: 4px; font-weight: 600; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ses-header">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h5 class="mb-0"><i class="bi bi-calendar3 me-2"></i>{{ filiere.nom }} — Sessions</h5>
+        <a href="{{ url_for('fpro_bp.hub') }}" class="btn btn-sm btn-outline-light"><i class="bi bi-arrow-left"></i> Retour</a>
+    </div>
+</div>
+
+<!-- Ajouter session -->
+<div style="background:#f0f4ff;border-radius:8px;padding:12px;margin-bottom:12px;">
+    <form method="POST" action="{{ url_for('fpro_bp.session_ajouter') }}">
+        <input type="hidden" name="filiere_id" value="{{ filiere.id }}">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label mb-0" style="font-size:0.62rem;font-weight:700;color:#4a5568;">Nom de la session</label>
+                <input type="text" name="nom" class="form-control form-control-sm" placeholder="Ex: Promotion 2026" required style="font-size:0.72rem;">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label mb-0" style="font-size:0.62rem;font-weight:700;color:#4a5568;">Début</label>
+                <input type="date" name="date_debut" class="form-control form-control-sm" required style="font-size:0.72rem;">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label mb-0" style="font-size:0.62rem;font-weight:700;color:#4a5568;">Fin</label>
+                <input type="date" name="date_fin" class="form-control form-control-sm" required style="font-size:0.72rem;">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-sm w-100" style="background:#2d6a9f;color:#fff;font-size:0.68rem;font-weight:700;">Créer</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+{% if sessions %}
+{% for s in sessions %}
+<div class="ses-card">
+    <div class="ses-icon" style="background:{% if s.statut == 'ouverte' %}#ebf8ff;color:#2b6cb0{% elif s.statut == 'en_cours' %}#f0fff4;color:#276749{% elif s.statut == 'terminee' %}#edf2f7;color:#4a5568{% else %}#fed7d7;color:#9b2c2c{% endif %};">
+        <i class="bi {% if s.statut == 'ouverte' %}bi-play-circle{% elif s.statut == 'en_cours' %}bi-arrow-repeat{% elif s.statut == 'terminee' %}bi-check-circle{% else %}bi-x-circle{% endif %}"></i>
+    </div>
+    <div class="ses-info">
+        <div class="ses-name">{{ s.nom }}</div>
+        <div class="ses-meta">{{ s.date_debut }} → {{ s.date_fin }} · {{ s.inscriptions.count() }} inscrit(s)</div>
+    </div>
+    <div class="d-flex gap-1 align-items-center">
+        <span class="badge-statut" style="background:{% if s.statut == 'ouverte' %}#bee3f8;color:#2b6cb0{% elif s.statut == 'en_cours' %}#c6f6d5;color:#276749{% elif s.statut == 'terminee' %}#e2e8f0;color:#4a5568{% else %}#fed7d7;color:#9b2c2c{% endif %};">
+            {{ s.statut|replace('_', ' ')|capitalize }}
+        </span>
+        <a href="{{ url_for('fpro_bp.inscriptions', session_id=s.id) }}" class="btn btn-sm" style="background:#2d6a9f;color:#fff;font-size:0.62rem;font-weight:700;">Inscrits</a>
+        <form method="POST" action="{{ url_for('fpro_bp.session_supprimer', id=s.id) }}" onsubmit="return confirm('Supprimer la session {{ s.nom }} ?')" style="display:inline;">
+            <button class="btn btn-sm btn-outline-danger" style="font-size:0.6rem;"><i class="bi bi-trash"></i></button>
+        </form>
+    </div>
+</div>
+{% endfor %}
+{% else %}
+<div style="text-align:center;padding:30px;color:#a0aec0;font-size:0.75rem;">
+    <i class="bi bi-calendar-x d-block mb-1" style="font-size:2rem;"></i>Aucune session créée
+</div>
+{% endif %}
+{% endblock %}
