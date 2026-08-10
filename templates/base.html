@@ -45,15 +45,16 @@
                     </button>
                 </div>
                 <ul class="nav flex-column gap-0">
-                    {% set nav_items = [
-                        ('dashboard', 'bi-speedometer2', 'Dashboard', '#3b82f6'),
-                        ('eleves', 'bi-people-fill', 'Eleves', '#10b981'),
-                        ('assiduite', 'bi-calendar2-check-fill', 'Assiduite', '#f97316'),
-                        ('administration', 'bi-gear-wide', 'Administration', '#8b5cf6'),
-                        ('documents', 'bi-printer', 'Documents', '#f59e0b'),
-                        ('finances_hub', 'bi-cash-stack', 'Finances', '#14b8a6'),
-                        ('fpro_bp.hub', 'bi-mortarboard-fill', 'Formation Pro', '#0891b2'),
-                    ] %}
+                    {% set is_scolaire = (ecole.type_ecole or 'scolaire') in ('scolaire', 'mixte') %}
+                    {% set is_pro = (ecole.type_ecole or 'scolaire') in ('professionnelle', 'mixte') %}
+                    {% set nav_items = [] %}
+                    {% set _ = nav_items.append(('dashboard', 'bi-speedometer2', 'Dashboard', '#3b82f6')) %}
+                    {% set _ = nav_items.append(('eleves', 'bi-people-fill', 'Eleves', '#10b981')) %}
+                    {% if is_scolaire %}{% set _ = nav_items.append(('assiduite', 'bi-calendar2-check-fill', 'Assiduite', '#f97316')) %}{% endif %}
+                    {% if is_scolaire %}{% set _ = nav_items.append(('administration', 'bi-gear-wide', 'Administration', '#8b5cf6')) %}{% endif %}
+                    {% if is_scolaire %}{% set _ = nav_items.append(('documents', 'bi-printer', 'Documents', '#f59e0b')) %}{% endif %}
+                    {% set _ = nav_items.append(('finances_hub', 'bi-cash-stack', 'Finances', '#14b8a6')) %}
+                    {% if is_pro %}{% set _ = nav_items.append(('fpro_bp.hub', 'bi-mortarboard-fill', 'Formation Pro', '#0891b2')) %}{% endif %}
                     
                     {% if not has_licence %}
                     <!-- Client sans licence : seulement Abonnement -->
@@ -89,6 +90,7 @@
                         </a>
                     </li>
 
+                    {% if is_scolaire %}
                     <!-- Nouveaux modules Vie Scolaire -->
                     <li class="nav-item nav-advanced mt-2">
                         <span class="d-block px-2 text-white-50" style="font-size:0.65rem; text-transform:uppercase; letter-spacing:1px;">Vie Scolaire</span>
@@ -117,6 +119,7 @@
                             <span style="font-size: 0.78rem; text-transform: uppercase; font-weight: 600;">Conseil</span>
                         </a>
                     </li>
+                    {% endif %}
 
                     <!-- Nouveaux modules Communication & Outils -->
                     <li class="nav-item mt-2">

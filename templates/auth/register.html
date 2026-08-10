@@ -18,6 +18,16 @@
                         </div>
                     </div>
                     <div class="mb-3">
+                        <label class="form-label fw-bold">Type d'etablissement</label>
+                        <select name="type_ecole" class="form-select" required style="font-size:0.82rem;">
+                            <option value="">-- Choisir --</option>
+                            <option value="scolaire">Scolaire (primaire, secondaire)</option>
+                            <option value="professionnelle">Formation Professionnelle</option>
+                            <option value="mixte">Mixte (scolaire + professionnel)</option>
+                        </select>
+                        <small class="text-muted">Ce choix determine les modules disponibles dans l'application.</small>
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label fw-bold">Identifiant</label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="bi bi-person"></i></span>

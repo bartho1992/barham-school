@@ -85,6 +85,7 @@ def register():
 
     if request.method == 'POST':
         nom_ecole = request.form.get('nom_ecole', '').strip()
+        type_ecole = request.form.get('type_ecole', 'scolaire').strip()
         username = request.form.get('username', '').strip()
         password = request.form.get('password', '')
         
@@ -103,7 +104,8 @@ def register():
         # Creer l'ecole (annee scolaire laissee vide, l'admin la definira)
         ecole = Ecole(
             nom=nom_ecole.upper(),
-            identifiant=f"EC-{nom_ecole[:4].upper()}-{Ecole.query.count() + 1}"
+            identifiant=f"EC-{nom_ecole[:4].upper()}-{Ecole.query.count() + 1}",
+            type_ecole=type_ecole
         )
         db.session.add(ecole)
         db.session.flush()

@@ -42,7 +42,12 @@
 
                 <div class="mb-3">
                     <label class="form-label fw-bold">Type d'etablissement</label>
-                    <input type="text" name="type_ecole" class="form-control" value="{{ ecole.type_ecole or '' }}" placeholder="Ex: Elementaire, Moyen, Secondaire">
+                    <select name="type_ecole" class="form-select">
+                        <option value="scolaire" {{ 'selected' if (ecole.type_ecole or 'scolaire') == 'scolaire' }}>Scolaire (primaire, secondaire)</option>
+                        <option value="professionnelle" {{ 'selected' if ecole.type_ecole == 'professionnelle' }}>Formation Professionnelle</option>
+                        <option value="mixte" {{ 'selected' if ecole.type_ecole == 'mixte' }}>Mixte (scolaire + professionnel)</option>
+                    </select>
+                    <small class="text-muted">Ce choix determine les modules affiches dans le menu.</small>
                 </div>
 
                 <div class="mb-3">
