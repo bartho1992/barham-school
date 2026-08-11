@@ -45,8 +45,8 @@
                     </button>
                 </div>
                 <ul class="nav flex-column gap-0">
-                    {% set is_scolaire = (ecole.type_ecole or 'scolaire') in ('scolaire', 'mixte') %}
-                    {% set is_pro = (ecole.type_ecole or 'scolaire') in ('professionnelle', 'mixte') %}
+                    {% set is_scolaire = (ecole.type_ecole or 'scolaire') in ('scolaire', 'mixte') or current_user.role == 'dev' %}
+                    {% set is_pro = (ecole.type_ecole or 'scolaire') in ('professionnelle', 'mixte') or current_user.role == 'dev' %}
                     {% set nav_items = [] %}
                     {% set _ = nav_items.append(('dashboard', 'bi-speedometer2', 'Dashboard', '#3b82f6')) %}
                     {% set _ = nav_items.append(('eleves', 'bi-people-fill', 'Eleves', '#10b981')) %}
