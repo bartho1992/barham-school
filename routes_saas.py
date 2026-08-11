@@ -379,7 +379,7 @@ def webhook_recevoir(passerelle):
 @app.route('/admin/paiements')
 @login_required
 def admin_paiements():
-    if current_user.role != 'super_users':
+    if current_user.role not in ('dev', 'super_users'):
         flash('Accès réservé au développeur.', 'danger')
         return redirect(url_for('dashboard'))
     
@@ -403,7 +403,7 @@ def admin_paiements():
 @app.route('/admin/paiements/valider/<int:facture_id>', methods=['POST'])
 @login_required
 def admin_valider_paiement(facture_id):
-    if current_user.role != 'super_users':
+    if current_user.role not in ('dev', 'super_users'):
         flash('Accès réservé au développeur.', 'danger')
         return redirect(url_for('dashboard'))
     
@@ -442,7 +442,7 @@ def admin_valider_paiement(facture_id):
 @app.route('/admin/paiements/refuser/<int:facture_id>', methods=['POST'])
 @login_required
 def admin_refuser_paiement(facture_id):
-    if current_user.role != 'super_users':
+    if current_user.role not in ('dev', 'super_users'):
         flash('Accès réservé au développeur.', 'danger')
         return redirect(url_for('dashboard'))
     
@@ -459,7 +459,7 @@ def admin_refuser_paiement(facture_id):
 @app.route('/admin/paiements/supprimer/<int:facture_id>', methods=['POST'])
 @login_required
 def admin_supprimer_paiement(facture_id):
-    if current_user.role != 'super_users':
+    if current_user.role not in ('dev', 'super_users'):
         flash('Accès réservé au développeur.', 'danger')
         return redirect(url_for('dashboard'))
     
@@ -496,7 +496,7 @@ def admin_paiements_supprimer_bulk():
 @app.route('/admin/transactions/supprimer/<int:tr_id>', methods=['POST'])
 @login_required
 def admin_supprimer_transaction(tr_id):
-    if current_user.role != 'super_users':
+    if current_user.role not in ('dev', 'super_users'):
         flash('Accès réservé au développeur.', 'danger')
         return redirect(url_for('dashboard'))
     
