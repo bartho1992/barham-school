@@ -285,7 +285,9 @@ def admin_ecole_supprimer(id):
     
     from models import (User, Eleve, Classe, Matiere, Note, Bulletin, 
                        Personnel, Salaire, Paiement, Document, Licence,
-                       FactureLicence, TransactionLicence, AnneeScolaire, Scolarite)
+                       FactureLicence, TransactionLicence, AnneeScolaire, Scolarite,
+                       CompteComptable, EcritureComptable, CategorieTarif, TarifService, AbonnementService,
+                       FilierePro, ModulePro, SessionFormation, InscriptionSession, EvaluationModulePro)
     
     ecole = Ecole.query.get_or_404(id)
     est_derniere = Ecole.query.count() <= 1
@@ -296,7 +298,9 @@ def admin_ecole_supprimer(id):
         # SAUF les super_users (développeurs) qui sont préservés
         for model in [Eleve, Classe, Matiere, Note, Bulletin,
                       Personnel, Salaire, Paiement, Document,
-                      FactureLicence, TransactionLicence, AnneeScolaire, Scolarite]:
+                      FactureLicence, TransactionLicence, AnneeScolaire, Scolarite,
+                      CompteComptable, EcritureComptable, CategorieTarif, TarifService, AbonnementService,
+                      FilierePro, ModulePro, SessionFormation, InscriptionSession, EvaluationModulePro]:
             if hasattr(model, 'ecole_id'):
                 model.query.filter_by(ecole_id=id).delete()
         
