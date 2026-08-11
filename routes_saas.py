@@ -179,17 +179,12 @@ def abonnement_payer():
     )
     db.session.add(tr)
 
-    # --- Activation automatique : plus de validation dev ---
-    facture.statut = 'payee'
-    facture.date_paiement = datetime.now(timezone.utc)
-    tr.statut = 'reussie'
+    # --- En attente de validation par le dev (sans WhatsApp) ---
+    facture.statut = 'en_attente'
     db.session.commit()
     
-    # Activer la licence directement
-    activer_licence(ecole_id, plan_key, duree, montant, passerelle, facture_id=facture.id)
-    
-    flash(f'Licence {plan["nom"]} activee avec succes ! Bienvenue.', 'success')
-    return redirect(url_for('dashboard'))
+    flash(f'Votre demande de licence {plan["nom"]} ({duree} mois) a ete enregistree. Vous recevrez l\'acces apres validation.', 'info')
+    return redirect(url_for('abonnement'))
 
 
 # ============================================================
@@ -203,24 +198,13 @@ def abonnement_callback(facture_id):
     facture = FactureLicence.query.filter_by(id=facture_id, ecole_id=ecole_id).first_or_404()
 
     if facture.statut != 'payee':
-        # Activer automatiquement (plus de validation dev)
-        plan_key = facture.plan or 'starter'
-        duree = facture.duree_mois or 1
-        montant = facture.montant or 0
-        mode = facture.mode_paiement or 'manual'
-        
-        activer_licence(ecole_id, plan_key, duree, montant, mode, facture_id=facture.id)
-        
-        facture.statut = 'payee'
+        facture.statut = 'en_attente'
         facture.date_paiement = datetime.now(timezone.utc)
-        tr = TransactionLicence.query.filter_by(facture_id=facture.id).first()
-        if tr:
-            tr.statut = 'reussie'
         db.session.commit()
         
-        flash('Licence activée avec succès ! Bienvenue.', 'success')
+        flash('Votre paiement a ete declare. Votre licence sera activee apres validation.', 'info')
 
-    return redirect(url_for('dashboard'))
+    return redirect(url_for('abonnement'))
 
 
 # ============================================================
