@@ -179,41 +179,17 @@ def abonnement_payer():
     )
     db.session.add(tr)
 
-    # --- Toutes les passerelles : en attente de validation par le dev ---
-    facture.statut = 'en_attente'
+    # --- Activation automatique : plus de validation dev ---
+    facture.statut = 'payee'
+    facture.date_paiement = datetime.now(timezone.utc)
+    tr.statut = 'reussie'
     db.session.commit()
     
-    # Envoyer notification email au dev
-    try:
-        from mailer import mailer
-        html_body = f"""<h3>Nouveau paiement en attente</h3>
-<p><strong>Facture :</strong> {numero}</p>
-<p><strong>Ecole :</strong> {ecole.nom}</p>
-<p><strong>Plan :</strong> {plan['nom']} — {duree} mois</p>
-<p><strong>Montant :</strong> {montant:,.0f} FCFA</p>
-<p><strong>Paiement :</strong> {passerelle}</p>
-<p><a href='http://127.0.0.1:5001/admin'>Valider dans l'admin</a></p>"""
-        mailer.send_email('barthotores92@gmail.com', f'[SaaS] Paiement {numero} — {ecole.nom}', html_body, is_html=True)
-    except Exception as e:
-        print(f"[SaaS] Email non envoye: {e}")
+    # Activer la licence directement
+    activer_licence(ecole_id, plan_key, duree, montant, passerelle, facture_id=facture.id)
     
-    flash(f'Votre demande de licence {plan["nom"]} est en attente de validation. Vous recevrez l\'accès après confirmation du paiement.', 'info')
-    
-    # Générer lien WhatsApp pour notifier le développeur
-    msg = f"*Nouveau Paiement*%0A%0AFacture%20:%20{numero}%0AEcole%20:%20{ecole.nom}%0APlan%20:%20{plan['nom']}%20-%20{duree}%20mois%0AMontant%20:%20{montant:,.0f}%20FCFA%0AMode%20:%20{passerelle}"
-    whatsapp_link = f"https://wa.me/{DEV_WHATSAPP.replace('+', '')}?text={msg}"
-    
-    if passerelle == 'wave':
-        return render_template('saas/paiement_wave.html', facture=facture, montant=montant, ecole=ecole, whatsapp_link=whatsapp_link)
-    elif passerelle == 'orange_money':
-        return render_template('saas/paiement_orange.html', facture=facture, montant=montant, ecole=ecole, whatsapp_link=whatsapp_link)
-    elif passerelle == 'stripe':
-        return render_template('saas/paiement_stripe.html', facture=facture, montant=montant, ecole=ecole, whatsapp_link=whatsapp_link)
-    else:
-        flash('Votre demande est enregistrée. Le developpeur va valider votre accès.', 'info')
-        return render_template('saas/paiement_ok.html', 
-            facture=facture, montant=montant, ecole=ecole, plan=plan, duree=duree,
-            passerelle=passerelle, whatsapp_link=whatsapp_link)
+    flash(f'Licence {plan["nom"]} activee avec succes ! Bienvenue.', 'success')
+    return redirect(url_for('dashboard'))
 
 
 # ============================================================
@@ -227,34 +203,24 @@ def abonnement_callback(facture_id):
     facture = FactureLicence.query.filter_by(id=facture_id, ecole_id=ecole_id).first_or_404()
 
     if facture.statut != 'payee':
-        facture.statut = 'en_attente'
+        # Activer automatiquement (plus de validation dev)
+        plan_key = facture.plan or 'starter'
+        duree = facture.duree_mois or 1
+        montant = facture.montant or 0
+        mode = facture.mode_paiement or 'manual'
+        
+        activer_licence(ecole_id, plan_key, duree, montant, mode, facture_id=facture.id)
+        
+        facture.statut = 'payee'
         facture.date_paiement = datetime.now(timezone.utc)
         tr = TransactionLicence.query.filter_by(facture_id=facture.id).first()
         if tr:
-            tr.statut = 'initiee'
+            tr.statut = 'reussie'
         db.session.commit()
         
-        # Notification email au dev
-        try:
-            from mailer import mailer
-            html_body = f"""<h3>Paiement declare par le client</h3>
-<p><strong>Facture :</strong> {facture.numero}</p>
-<p><strong>Ecole :</strong> {ecole.nom}</p>
-<p><strong>Plan :</strong> {PLANS.get(facture.plan, {}).get('nom', facture.plan)}</p>
-<p><strong>Montant :</strong> {facture.montant:,.0f} FCFA</p>
-<p><strong>Paiement :</strong> {facture.mode_paiement}</p>
-<p><strong style='color:red;'>ACTION REQUISE :</strong> Verifier le paiement et activer la licence.</p>
-<p><a href='http://127.0.0.1:5001/admin/paiements'>Panel de validation</a></p>"""
-            mailer.send_email('barthotores92@gmail.com', f'[ACTION] Paiement declare — {ecole.nom}', html_body, is_html=True)
-        except Exception as e:
-            print(f"[SaaS] Email non envoye: {e}")
-        
-        flash('Paiement declare. Le developpeur va verifier et activer votre licence.', 'info')
+        flash('Licence activée avec succès ! Bienvenue.', 'success')
 
-    # Rediriger vers WhatsApp automatiquement
-    msg = f"*Paiement*%20Barham%20School%0A%0AFacture%20:%20{facture.numero}%0AEcole%20:%20{ecole.nom}%0AMontant%20:%20{facture.montant:,.0f}%20FCFA%0APlan%20:%20{PLANS.get(facture.plan, {}).get('nom', facture.plan)}%0AMode%20:%20{facture.mode_paiement}"
-    whatsapp_url = f"https://wa.me/{DEV_WHATSAPP.replace('+', '')}?text={msg}"
-    return redirect(whatsapp_url)
+    return redirect(url_for('dashboard'))
 
 
 # ============================================================
@@ -321,7 +287,7 @@ def abonnement_essai():
     cle_f = f"{cle[:4]}-{cle[4:8]}-{cle[8:12]}-{cle[12:16]}"
 
     licence = Licence(
-        cle=cle_f, date_expiration=datetime.now(timezone.utc) + timedelta(days=30),
+        cle=cle_f, date_expiration=datetime.now(timezone.utc) + timedelta(days=15),
         active=True, date_activation=datetime.now(timezone.utc),
         ecole_id=ecole_id, plan='starter', eleves_max=50,
         personnel_max=5, essai=True,
@@ -330,7 +296,7 @@ def abonnement_essai():
     )
     db.session.add(licence)
     db.session.commit()
-    flash('Essai gratuit de 30 jours activé (50 élèves max) !', 'success')
+    flash('Essai gratuit de 15 jours activé (50 élèves max) !', 'success')
     return redirect(url_for('abonnement'))
 
 

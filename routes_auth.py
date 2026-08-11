@@ -133,7 +133,7 @@ def register():
             except:
                 pass  # L'annee scolaire n'est pas critique pour la licence d'essai
         
-        # Licence d'essai 30 jours automatique
+        # Licence d'essai 15 jours automatique
         import random, string
         def gen_cle(prefix):
             return f"{prefix}-{''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(12))}"
@@ -144,7 +144,7 @@ def register():
         
         licence = Licence(
             cle=cle,
-            date_expiration=now + timedelta(days=30),
+            date_expiration=now + timedelta(days=15),
             active=True,
             date_activation=now,
             ecole_id=ecole.id,
@@ -161,7 +161,7 @@ def register():
         db.session.commit()
         
         login_user(user)
-        flash(f'Bienvenue {nom_ecole.upper()} ! Vous beneficiez d\'un essai gratuit de 30 jours.', 'success')
+        flash(f'Bienvenue {nom_ecole.upper()} ! Vous beneficiez d\'un essai gratuit de 15 jours.', 'success')
         return redirect(url_for('dashboard'))
     
     return render_template('auth/register.html')
