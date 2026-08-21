@@ -81,7 +81,7 @@
         <tfoot class="table-light fw-bold">
             <tr>
                 <td>Total</td>
-                <td class="text-center">{{ lignes_classes|sum(attribute='nb_eleves') }}</td>
+                <td class="text-center">{{ total_effectif }}</td>
                 <td class="text-center text-danger">{{ nb_eleves_impayes }}</td>
                 <td class="text-end">{{ "{:,.0f}".format(total_du).replace(',', ' ') }}</td>
                 <td class="text-end text-success">{{ "{:,.0f}".format(total_paye).replace(',', ' ') }}</td>

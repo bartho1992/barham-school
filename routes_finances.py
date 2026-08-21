@@ -1058,10 +1058,11 @@ def impayes_par_classe():
         total_reste += ligne['total_reste']
 
     lignes_classes = [agg[c.id] for c in classes]
+    total_effectif = sum(a['nb_eleves'] for a in agg.values())
     return render_template('finances/impayes_par_classe.html',
                            ecole=e, annee=annee, lignes_classes=lignes_classes,
                            total_du=total_du, total_paye=total_paye, total_reste=total_reste,
-                           nb_eleves_impayes=nb_eleves_impayes)
+                           nb_eleves_impayes=nb_eleves_impayes, total_effectif=total_effectif)
 
 @app.route('/finances/parametres')
 @login_required
