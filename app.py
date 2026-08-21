@@ -5,7 +5,7 @@ from models import db, init_data, init_comptes_syscohada, Ecole, AnneeScolaire
 
 from datetime import timedelta, datetime
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'barham-informatique-2024')
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or os.urandom(32).hex()
 # Desactiver le cache en production
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 # En production, le repertoire /app/data est necessaire pour SQLite (Render)
@@ -28,6 +28,77 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
 app.config['SESSION_REFRESH_EACH_REQUEST'] = True
 db.init_app(app)
+
+# ---- Journal d'audit automatique ----
+# Trace les creations / modifications / suppressions sur tous les modeles,
+# sauf le journal d'audit lui-meme et les tentatives de connexion (bruit).
+from sqlalchemy import event
+from sqlalchemy.orm import Session
+
+_audit_guard = False
+_AUDIT_EXCLUS = ('AuditLog', 'LoginAttempt')
+_AUDIT_FIELDS = ('id', 'nom', 'prenom', 'code', 'username', 'montant', 'type_paiement',
+                 'eleve_id', 'classe_id', 'matiere_id', 'trimestre', 'type_evenement',
+                 'date_evenement', 'statut', 'session_id', 'filiere_id', 'module_id')
+
+def _audit_summarize(obj):
+    try:
+        info = {}
+        for attr in _AUDIT_FIELDS:
+            if hasattr(obj, attr):
+                val = getattr(obj, attr)
+                if val is not None:
+                    info[attr] = str(val)
+        return str(info)[:500]
+    except Exception:
+        return ''
+
+@event.listens_for(Session, 'after_flush')
+def _audit_after_flush(session, flush_context):
+    global _audit_guard
+    if _audit_guard:
+        return
+    try:
+        from flask import has_request_context
+        from flask_login import current_user
+        if not has_request_context():
+            return
+        if not getattr(current_user, 'is_authenticated', False):
+            return
+        username = getattr(current_user, 'username', None)
+        if not username:
+            return
+        user_id = getattr(current_user, 'id', None)
+        ecole_id = getattr(current_user, 'ecole_id', None)
+        if ecole_id is None:
+            ecole_id = session.get('ecole_id')
+
+        entries = []
+        for obj in session.new:
+            if type(obj).__name__ in _AUDIT_EXCLUS:
+                continue
+            entries.append(('create', type(obj).__name__, getattr(obj, 'id', None), _audit_summarize(obj)))
+        for obj in session.deleted:
+            if type(obj).__name__ in _AUDIT_EXCLUS:
+                continue
+            entries.append(('delete', type(obj).__name__, getattr(obj, 'id', None), _audit_summarize(obj)))
+        for obj in session.dirty:
+            if type(obj).__name__ in _AUDIT_EXCLUS:
+                continue
+            entries.append(('update', type(obj).__name__, getattr(obj, 'id', None), _audit_summarize(obj)))
+
+        if entries:
+            from models import AuditLog
+            for action, modele, oid, details in entries:
+                session.add(AuditLog(
+                    ecole_id=ecole_id, user_id=user_id, username=username,
+                    action=action, modele=modele, objet_id=str(oid), details=details
+                ))
+            _audit_guard = True
+            session.flush()
+            _audit_guard = False
+    except Exception:
+        pass
 
 @app.errorhandler(405)
 def methode_non_autorisee(e):

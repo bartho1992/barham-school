@@ -27,6 +27,8 @@ if project_home not in sys.path:
 
 # Set environment variable for production
 os.environ["PRODUCTION"] = "1"
-os.environ["SECRET_KEY"] = "barham-secret-key-prod-2024"
+# SECRET_KEY : définissez-la comme variable d'environnement sur PythonAnywhere
+# (onglet Web > "Environment variables"). Si absente, app.py génère une clé
+# aléatoire à chaque démarrage, ce qui invalide les sessions existantes.
 
 from app import app as application

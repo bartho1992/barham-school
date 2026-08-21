@@ -60,7 +60,7 @@
                         {% endif %}
                     </td>
                     <td class="text-end no-print px-4">
-                        <a href="#" class="btn btn-sm btn-outline-danger" title="Voir le bulletin complet"><i class="bi bi-file-earmark-pdf"></i> Générer PDF</a>
+                        <a href="{{ url_for('bulletin_eleve', eleve_id=b.eleve.id, trimestre=trimestre) }}" class="btn btn-sm btn-outline-danger" title="Voir le bulletin complet"><i class="bi bi-file-earmark-pdf"></i> Bulletin PDF</a>
                     </td>
                 </tr>
                 {% endfor %}

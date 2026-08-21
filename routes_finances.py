@@ -913,6 +913,15 @@ def finances_liste():
     eleves_list = Eleve.query.filter_by(ecole_id=ecole_id).options(joinedload(Eleve.classe)).order_by(Eleve.nom, Eleve.prenom).all()
     return render_template('finances/liste.html', paiements=ps, ecole=e, classes=classes, eleves_list=eleves_list, embed=embed)
 
+@app.route('/paiement/<int:id>/recu')
+@login_required
+def paiement_recu(id):
+    """Recu imprimable d'un paiement (format PDF via impression navigateur)"""
+    ecole_id = get_current_ecole_id()
+    e = Ecole.query.get(ecole_id)
+    p = Paiement.query.filter_by(id=id, ecole_id=ecole_id).options(joinedload(Paiement.eleve).joinedload(Eleve.classe)).first_or_404()
+    return render_template('finances/recu.html', paiement=p, ecole=e)
+
 @app.route('/finances/paiements/supprimer-bulk', methods=['POST'])
 @login_required
 def finances_paiements_supprimer_bulk():
@@ -991,6 +1000,68 @@ def impayes():
                          lignes=lignes, ecole=e, categories=categories, classes=classes,
                          total_impayes_global=total_global, nb_eleves=len(lignes), eleves_list=eleves_list,
                          mois_list=MOIS_SCOLAIRES)
+
+@app.route('/finances/impayes-par-classe')
+@login_required
+def impayes_par_classe():
+    """Rapport imprimable : impayes regroupes par classe"""
+    ecole_id = get_current_ecole_id()
+    e = Ecole.query.get(ecole_id); annee = _annee_courante(e)
+
+    categories = CategorieTarif.query.filter_by(ecole_id=ecole_id).order_by(CategorieTarif.nom).all()
+    eleves = Eleve.query.filter_by(ecole_id=ecole_id).options(joinedload(Eleve.classe)).filter(
+        db.or_(Eleve.annee_scolaire == annee, Eleve.annee_scolaire == None, Eleve.annee_scolaire == '')
+    ).order_by(Eleve.nom, Eleve.prenom).all()
+    eleve_ids = [eleve.id for eleve in eleves]
+
+    scolarites_map = {s.classe_id: s for s in Scolarite.query.filter_by(annee_scolaire=annee, ecole_id=ecole_id).all()}
+    tarifs_services_map = {(t.classe_id, t.categorie_id): t for t in TarifService.query.filter_by(annee_scolaire=annee, ecole_id=ecole_id).all()}
+
+    abonnements_map = {}
+    if eleve_ids:
+        abonnements = AbonnementService.query.filter(
+            AbonnementService.actif == True,
+            AbonnementService.eleve_id.in_(eleve_ids)
+        ).options(joinedload(AbonnementService.categorie)).all()
+        for a in abonnements:
+            abonnements_map.setdefault(a.eleve_id, []).append(a)
+
+    paiements_map = {}
+    for p in Paiement.query.filter_by(annee_scolaire=annee, ecole_id=ecole_id).all():
+        paiements_map.setdefault(p.eleve_id, []).append(p)
+
+    classes = Classe.query.filter_by(ecole_id=ecole_id).order_by(Classe.nom).all()
+    agg = {cl.id: {'classe': cl, 'nb_eleves': 0, 'nb_impayes': 0,
+                   'total_du': 0, 'total_paye': 0, 'total_reste': 0} for cl in classes}
+    total_du = total_paye = total_reste = 0
+    nb_eleves_impayes = 0
+
+    for eleve in eleves:
+        ligne = _build_ligne_financiere(
+            eleve, annee, categories, scolarites_map, tarifs_services_map,
+            abonnements_map, paiements_map.get(eleve.id, [])
+        )
+        if not ligne:
+            continue
+        a = agg.get(eleve.classe_id)
+        if a is None:
+            continue
+        a['nb_eleves'] += 1
+        a['total_du'] += ligne['total_du']
+        a['total_paye'] += ligne['total_paye']
+        a['total_reste'] += ligne['total_reste']
+        if ligne['total_reste'] > 0:
+            a['nb_impayes'] += 1
+            nb_eleves_impayes += 1
+        total_du += ligne['total_du']
+        total_paye += ligne['total_paye']
+        total_reste += ligne['total_reste']
+
+    lignes_classes = [agg[c.id] for c in classes]
+    return render_template('finances/impayes_par_classe.html',
+                           ecole=e, annee=annee, lignes_classes=lignes_classes,
+                           total_du=total_du, total_paye=total_paye, total_reste=total_reste,
+                           nb_eleves_impayes=nb_eleves_impayes)
 
 @app.route('/finances/parametres')
 @login_required

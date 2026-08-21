@@ -1,6 +1,6 @@
 from flask import render_template, request, redirect, url_for, flash, session
 from flask_login import login_required
-from models import db, Ecole, Eleve, Classe, Matiere, Note
+from models import db, Ecole, Eleve, Classe, Matiere, Note, Assiduite
 from app import app, get_current_ecole_id
 
 def _annee_courante(e):
@@ -81,3 +81,70 @@ def bulletin_classe(classe_id, trimestre):
     data.sort(key=lambda x: x['moyenne'], reverse=True)
     for i, b in enumerate(data): b['rang'] = i + 1
     return render_template('notes/bulletin_detail.html', classe=cl, bulletins=data, trimestre=trimestre, ecole=e, embed=request.args.get('embed'))
+
+@app.route('/bulletins/eleve/<int:eleve_id>/<int:trimestre>')
+@login_required
+def bulletin_eleve(eleve_id, trimestre):
+    ecole_id = get_current_ecole_id()
+    e = Ecole.query.get(ecole_id)
+    el = Eleve.query.filter_by(id=eleve_id, ecole_id=ecole_id).first_or_404()
+    cl = el.classe
+    if not cl or cl.ecole_id != ecole_id:
+        flash('Accès non autorisé', 'danger')
+        return redirect(url_for('bulletins'))
+    annee = _annee_courante(e)
+
+    notes = Note.query.filter_by(eleve_id=eleve_id, classe_id=cl.id, trimestre=trimestre, annee_scolaire=annee).all()
+    matieres = Matiere.query.filter_by(ecole_id=ecole_id).order_by(Matiere.nom).all()
+
+    notes_dict = {n.matiere_id: n for n in notes}
+    lignes = []
+    total_pondere = 0
+    total_coef = 0
+    for mat in matieres:
+        n = notes_dict.get(mat.id)
+        moyenne = n.moyenne if n else None
+        if moyenne is not None:
+            lignes.append({'matiere': mat, 'moyenne': moyenne, 'coef': mat.coefficient or 1})
+            total_pondere += moyenne * (mat.coefficient or 1)
+            total_coef += (mat.coefficient or 1)
+
+    moyenne_generale = round(total_pondere / total_coef, 2) if total_coef else 0
+
+    # Rang et moyenne de classe
+    eleves = Eleve.query.filter_by(classe_id=cl.id, annee_scolaire=annee, ecole_id=ecole_id).all()
+    classement = []
+    for e2 in eleves:
+        n2 = Note.query.filter_by(eleve_id=e2.id, classe_id=cl.id, trimestre=trimestre, annee_scolaire=annee).all()
+        tp, tc = 0, 0
+        for nn in n2:
+            if nn.moyenne:
+                coef = (nn.matiere.coefficient if nn.matiere else 1) or 1
+                tp += nn.moyenne * coef
+                tc += coef
+        classement.append((e2.id, round(tp / tc, 2) if tc else 0))
+    classement.sort(key=lambda x: x[1], reverse=True)
+    rang = next((i + 1 for i, (eid, _) in enumerate(classement) if eid == el.id), len(classement))
+    moyennes = [m for _, m in classement if m > 0]
+    moyenne_classe = round(sum(moyennes) / len(moyennes), 2) if moyennes else 0
+
+    if moyenne_generale >= 16:
+        appreciation = 'Excellent'
+    elif moyenne_generale >= 14:
+        appreciation = 'Très Bien'
+    elif moyenne_generale >= 12:
+        appreciation = 'Assez Bien'
+    elif moyenne_generale >= 10:
+        appreciation = 'Passable'
+    else:
+        appreciation = 'Insuffisant'
+    decision = 'Admis(e)' if moyenne_generale >= 10 else 'A redoubler / Rattrapage'
+
+    absences = db.session.query(db.func.count(Assiduite.id)).filter_by(
+        eleve_id=eleve_id, ecole_id=ecole_id, annee_scolaire=annee, type_evenement='Absent'
+    ).scalar() or 0
+
+    return render_template('notes/bulletin_eleve.html', eleve=el, classe=cl, ecole=e,
+                           lignes=lignes, moyenne_generale=moyenne_generale, rang=rang,
+                           moyenne_classe=moyenne_classe, appreciation=appreciation,
+                           decision=decision, absences=absences, trimestre=trimestre, annee=annee)

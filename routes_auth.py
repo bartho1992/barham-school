@@ -93,8 +93,8 @@ def register():
             flash('Tous les champs sont obligatoires.', 'danger')
             return render_template('auth/register.html')
         
-        if len(password) < 3:
-            flash('Le mot de passe doit contenir au moins 3 caracteres.', 'danger')
+        if len(password) < 8:
+            flash('Le mot de passe doit contenir au moins 8 caracteres.', 'danger')
             return render_template('auth/register.html')
         
         if User.query.filter_by(username=username).first():

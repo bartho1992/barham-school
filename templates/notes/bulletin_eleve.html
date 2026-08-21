@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block title %}Bulletin {{ eleve.prenom }} {{ eleve.nom }} - {{ ecole.nom }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.bulletin { max-width: 800px; margin: 0 auto; font-size: 0.85rem; }
+.bulletin-header { border-bottom: 3px solid #1e3a8a; }
+.bulletin table th, .bulletin table td { border: 1px solid #333 !important; }
+.sig-line { border-top: 1px dashed #666; margin-top: 60px; padding-top: 4px; }
+@media print {
+    .no-print { display: none !important; }
+    body { background: #fff; }
+    .bulletin { max-width: 100%; box-shadow: none !important; border: none !important; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="no-print mb-3 d-flex gap-2">
+    <button onclick="window.print()" class="btn btn-primary btn-sm"><i class="bi bi-printer"></i> Imprimer / PDF</button>
+    <a href="{{ url_for('bulletins') }}" class="btn btn-outline-secondary btn-sm">Retour</a>
+</div>
+
+<div class="bulletin card border-0 shadow-sm p-4">
+    <!-- En-tête établissement -->
+    <div class="bulletin-header d-flex justify-content-between align-items-center pb-2 mb-3">
+        <div>
+            <h4 class="mb-0 fw-bold">{{ ecole.nom }}</h4>
+            <div class="text-muted small">{{ ecole.adresse }} — {{ ecole.tel }}</div>
+        </div>
+        <div class="text-end small">
+            <div><strong>Année scolaire :</strong> {{ annee }}</div>
+            <div><strong>{{ trimestre }}{{ 'er' if trimestre == 1 else 'ème' }} Trimestre</strong></div>
+        </div>
+    </div>
+
+    <!-- Identité élève -->
+    <table class="table table-sm mb-3">
+        <tr>
+            <td style="width:50%"><strong>Élève :</strong> {{ eleve.prenom }} {{ eleve.nom }}</td>
+            <td><strong>Classe :</strong> {{ classe.nom }}</td>
+        </tr>
+        <tr>
+            <td><strong>Code :</strong> {{ eleve.code }}</td>
+            <td><strong>Sexe :</strong> {{ 'Masculin' if eleve.sexe == 'M' else 'Féminin' }}</td>
+        </tr>
+    </table>
+
+    <!-- Notes -->
+    <table class="table table-sm text-center">
+        <thead class="table-dark">
+            <tr>
+                <th class="text-start">Matière</th>
+                <th style="width:100px">Moyenne /20</th>
+                <th style="width:80px">Coefficient</th>
+                <th style="width:140px">Appréciation</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for l in lignes %}
+            <tr>
+                <td class="text-start">{{ l.matiere.nom }}</td>
+                <td class="fw-bold">{{ "%.2f"|format(l.moyenne) }}</td>
+                <td>{{ l.coef }}</td>
+                <td>
+                    {% if l.moyenne >= 16 %}Excellent
+                    {% elif l.moyenne >= 14 %}Très Bien
+                    {% elif l.moyenne >= 12 %}Assez Bien
+                    {% elif l.moyenne >= 10 %}Passable
+                    {% else %}Insuffisant{% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" class="text-muted">Aucune note enregistrée</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Synthèse -->
+    <div class="row text-center mt-3">
+        <div class="col-3">
+            <div class="border rounded p-2">
+                <div class="text-muted small">Moyenne générale</div>
+                <div class="fs-4 fw-bold">{{ "%.2f"|format(moyenne_generale) }}/20</div>
+            </div>
+        </div>
+        <div class="col-3">
+            <div class="border rounded p-2">
+                <div class="text-muted small">Rang</div>
+                <div class="fs-4 fw-bold">{{ rang }}{{ 'er' if rang == 1 else 'e' }}</div>
+            </div>
+        </div>
+        <div class="col-3">
+            <div class="border rounded p-2">
+                <div class="text-muted small">Moyenne classe</div>
+                <div class="fs-4 fw-bold">{{ "%.2f"|format(moyenne_classe) }}</div>
+            </div>
+        </div>
+        <div class="col-3">
+            <div class="border rounded p-2">
+                <div class="text-muted small">Absences</div>
+                <div class="fs-4 fw-bold">{{ absences }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Décision -->
+    <div class="row mt-3">
+        <div class="col-6">
+            <strong>Appréciation :</strong> {{ appreciation }}
+        </div>
+        <div class="col-6">
+            <strong>Décision :</strong> <span class="fw-bold {{ 'text-success' if decision == 'Admis(e)' else 'text-danger' }}">{{ decision }}</span>
+        </div>
+    </div>
+
+    <!-- Signatures -->
+    <div class="row mt-5">
+        <div class="col-6 text-center">
+            <div class="sig-line">Le Directeur / Chef d'établissement</div>
+        </div>
+        <div class="col-6 text-center">
+            <div class="sig-line">Le Parent / Tuteur</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

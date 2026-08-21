@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}Journal d'audit - Développeur{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-dark border-2">
+                <div class="card-header bg-dark text-white">
+                    <h4 class="mb-0"><i class="bi bi-journal-text"></i> JOURNAL D'AUDIT</h4>
+                </div>
+                <div class="card-body">
+                    <span class="text-muted small">
+                        Trace automatique de toutes les créations, modifications et suppressions
+                        effectuées par les utilisateurs connectés.
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body py-2">
+            <form method="GET" class="row g-2 align-items-center">
+                <div class="col-auto">
+                    <label class="small fw-bold">Action</label>
+                    <select name="action" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <option value="">Toutes</option>
+                        {% for a in actions %}
+                        <option value="{{ a }}" {{ 'selected' if action == a }}>{{ a }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <label class="small fw-bold">Modèle</label>
+                    <input type="text" name="modele" class="form-control form-control-sm" placeholder="Ex: Paiement" value="{{ modele }}">
+                </div>
+                <div class="col-auto align-self-end">
+                    <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-funnel"></i> Filtrer</button>
+                    <a href="{{ url_for('admin_audit') }}" class="btn btn-outline-secondary btn-sm">Réinitialiser</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-sm table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width:150px">Date</th>
+                            <th>Utilisateur</th>
+                            <th>Action</th>
+                            <th>Modèle</th>
+                            <th>Objet</th>
+                            <th>Détails</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in logs %}
+                        <tr>
+                            <td class="small text-muted">{{ log.date_action.strftime('%d/%m/%Y %H:%M') }}</td>
+                            <td class="small fw-bold">{{ log.username or '-' }}</td>
+                            <td>
+                                {% if log.action == 'create' %}
+                                <span class="badge bg-success">création</span>
+                                {% elif log.action == 'update' %}
+                                <span class="badge bg-warning text-dark">modification</span>
+                                {% else %}
+                                <span class="badge bg-danger">suppression</span>
+                                {% endif %}
+                            </td>
+                            <td class="small"><code>{{ log.modele }}</code></td>
+                            <td class="small">#{{ log.objet_id }}</td>
+                            <td class="small text-muted text-break" style="max-width:320px">{{ log.details }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                                Aucune activité enregistrée pour l'instant.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer text-muted small">
+            {{ logs|length }} entrée(s) affichée(s) (maximum 1000)
+        </div>
+    </div>
+</div>
+{% endblock %}

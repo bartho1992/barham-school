@@ -587,6 +587,24 @@ class EcritureComptable(db.Model):
     def __repr__(self):
         return f'<Ecriture {self.id}: {self.libelle} {self.montant}>'
 
+class AuditLog(db.Model):
+    """Journal d'audit : trace automatique des creations, modifications et suppressions"""
+    id = db.Column(db.Integer, primary_key=True)
+    ecole_id = db.Column(db.Integer, db.ForeignKey('ecole.id'), nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    username = db.Column(db.String(80))
+    action = db.Column(db.String(20))  # create, update, delete
+    modele = db.Column(db.String(80))  # nom de la table / modele
+    objet_id = db.Column(db.String(50))
+    details = db.Column(db.Text)
+    date_action = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    ecole = db.relationship('Ecole', backref='audit_logs')
+    user = db.relationship('User', backref='audit_logs')
+
+    def __repr__(self):
+        return f'<Audit {self.action} {self.modele}#{self.objet_id} par {self.username}>'
+
 # ============================================================
 # NOUVEAUX MODELES — Formation Professionnelle
 # ============================================================
@@ -845,7 +863,6 @@ def init_data():
     dev_password = os.environ.get('DEV_PASSWORD') or 'admin123'
     baye.role = 'dev'
     baye.set_password(dev_password)
-    print(f"[SECURITE] Compte developpeur 'baye' actif. Mot de passe : {dev_password}")
     # S'assurer que baye a toujours une ecole
     if baye.ecole_id is None:
         first_ecole = Ecole.query.first()

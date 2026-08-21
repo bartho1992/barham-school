@@ -36,6 +36,24 @@ def admin():
                          count_paiements_attente=count_paiements_attente,
                          aucune_ecole=len(ecoles) == 0)
 
+@app.route('/admin/audit')
+@login_required
+def admin_audit():
+    if current_user.role != 'dev':
+        flash('Accès réservé au développeur.', 'danger')
+        return redirect(url_for('dashboard'))
+    from models import AuditLog
+    action = request.args.get('action', '')
+    modele = request.args.get('modele', '')
+    q = AuditLog.query
+    if action:
+        q = q.filter_by(action=action)
+    if modele:
+        q = q.filter_by(modele=modele)
+    logs = q.order_by(AuditLog.date_action.desc()).limit(1000).all()
+    actions = ['create', 'update', 'delete']
+    return render_template('admin/audit.html', logs=logs, action=action, modele=modele, actions=actions)
+
 @app.route('/admin/ecole', methods=['GET','POST'])
 @app.route('/admin/ecole/<int:id>', methods=['GET','POST'])
 @login_required

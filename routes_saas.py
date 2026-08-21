@@ -474,6 +474,9 @@ def tutoriel():
 @app.route('/etablissement', methods=['GET','POST'])
 @login_required
 def etablissement():
+    if current_user.role not in ('dev', 'super_users'):
+        flash("Accès réservé à l'administrateur de l'établissement.", 'danger')
+        return redirect(url_for('dashboard'))
     ecole_id = get_current_ecole_id()
     e = Ecole.query.get_or_404(ecole_id)
     annees = AnneeScolaire.query.filter_by(ecole_id=e.id).order_by(AnneeScolaire.annee.desc()).all()
@@ -532,6 +535,9 @@ def etablissement():
 @app.route('/utilisateurs', methods=['GET','POST'])
 @login_required
 def utilisateurs():
+    if current_user.role not in ('dev', 'super_users'):
+        flash("Accès réservé à l'administrateur.", 'danger')
+        return redirect(url_for('dashboard'))
     ecole_id = get_current_ecole_id()
     e = Ecole.query.get_or_404(ecole_id)
     
@@ -543,8 +549,11 @@ def utilisateurs():
             password = request.form.get('password', '')
             role = request.form.get('role', 'user')
             
-            if not username or len(password) < 3:
-                flash('Identifiant requis et mot de passe >= 3 caracteres.', 'danger')
+            # Interdiction de créer un compte 'dev' (super-admin global)
+            if role == 'dev':
+                flash("Le rôle 'dev' ne peut pas être créé depuis cette page.", 'danger')
+            elif not username or len(password) < 8:
+                flash('Identifiant requis et mot de passe >= 8 caracteres.', 'danger')
             elif User.query.filter_by(username=username).first():
                 flash(f"L'identifiant '{username}' existe deja.", 'danger')
             else:
@@ -557,7 +566,7 @@ def utilisateurs():
         elif action == 'delete_user':
             uid = request.form.get('user_id')
             u = User.query.get(uid)
-            if u and u.ecole_id == ecole_id and u.id != current_user.id:
+            if u and u.ecole_id == ecole_id and u.id != current_user.id and u.role != 'dev':
                 db.session.delete(u)
                 db.session.commit()
                 flash(f'Utilisateur {u.username} supprime.', 'info')
