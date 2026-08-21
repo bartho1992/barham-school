@@ -811,9 +811,10 @@ def paiement_ajouter():
 @app.route('/finances/recu/<int:id>')
 @login_required
 def paiement_recu(id):
+    """Recu imprimable d'un paiement (format PDF via impression navigateur)"""
     ecole_id = get_current_ecole_id()
     e = Ecole.query.get(ecole_id)
-    p = Paiement.query.get_or_404(id)
+    p = Paiement.query.filter_by(id=id, ecole_id=ecole_id).options(joinedload(Paiement.eleve).joinedload(Eleve.classe)).first_or_404()
     return render_template('finances/recu.html', paiement=p, ecole=e)
 
 @app.route('/finances/paiement/annuler/<int:id>', methods=['POST'])
@@ -912,15 +913,6 @@ def finances_liste():
     classes = Classe.query.filter_by(ecole_id=ecole_id).order_by(Classe.nom).all()
     eleves_list = Eleve.query.filter_by(ecole_id=ecole_id).options(joinedload(Eleve.classe)).order_by(Eleve.nom, Eleve.prenom).all()
     return render_template('finances/liste.html', paiements=ps, ecole=e, classes=classes, eleves_list=eleves_list, embed=embed)
-
-@app.route('/paiement/<int:id>/recu')
-@login_required
-def paiement_recu(id):
-    """Recu imprimable d'un paiement (format PDF via impression navigateur)"""
-    ecole_id = get_current_ecole_id()
-    e = Ecole.query.get(ecole_id)
-    p = Paiement.query.filter_by(id=id, ecole_id=ecole_id).options(joinedload(Paiement.eleve).joinedload(Eleve.classe)).first_or_404()
-    return render_template('finances/recu.html', paiement=p, ecole=e)
 
 @app.route('/finances/paiements/supprimer-bulk', methods=['POST'])
 @login_required
