@@ -304,10 +304,10 @@ def admin_ecole_supprimer(id):
             if hasattr(model, 'ecole_id'):
                 model.query.filter_by(ecole_id=id).delete()
         
-        # Utilisateurs : supprimer seulement les non-super_users
-        User.query.filter(User.ecole_id == id, User.role != 'super_users').delete()
-        # Mettre à NULL l'ecole_id des super_users liés à cette école
-        User.query.filter(User.ecole_id == id, User.role == 'super_users').update({'ecole_id': None})
+        # Utilisateurs : preserver les comptes dev et super_users (comptes techniques)
+        User.query.filter(User.ecole_id == id, User.role.notin_(['super_users', 'dev'])).delete()
+        # Mettre à NULL l'ecole_id des comptes dev/super_users liés à cette école
+        User.query.filter(User.ecole_id == id, User.role.in_(['super_users', 'dev'])).update({'ecole_id': None})
         
         # Licences (peut avoir ecole_id nullable)
         Licence.query.filter_by(ecole_id=id).delete()

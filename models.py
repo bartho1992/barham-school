@@ -1,3 +1,4 @@
+import os
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -835,13 +836,18 @@ def init_data():
     def gen_key(prefix):
         return f"{prefix}-{''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(8))}"
         
-    if not User.query.filter_by(username='baye').first():
-        baye = User(username='baye', role='dev', identifiant=gen_key("USR"))
-        baye.set_password('admin123')
-        db.session.add(baye)
-    # S'assurer que baye a toujours une ecole
     baye = User.query.filter_by(username='baye').first()
-    if baye and baye.ecole_id is None:
+    if baye is None:
+        baye = User(username='baye', role='dev', identifiant=gen_key("USR"))
+        db.session.add(baye)
+    # Garantir un mot de passe connu pour le compte dev
+    # (sinon un compte recree apres suppression d'ecole serait inaccessible)
+    dev_password = os.environ.get('DEV_PASSWORD') or 'admin123'
+    baye.role = 'dev'
+    baye.set_password(dev_password)
+    print(f"[SECURITE] Compte developpeur 'baye' actif. Mot de passe : {dev_password}")
+    # S'assurer que baye a toujours une ecole
+    if baye.ecole_id is None:
         first_ecole = Ecole.query.first()
         if first_ecole:
             baye.ecole_id = first_ecole.id
